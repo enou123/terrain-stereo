@@ -1,4 +1,4 @@
-import { perspective, lookAt } from './math.js';
+import { stereoCamera } from './stereo.js';
 import { OrbitControls } from './controls.js';
 const vertexSource = `
 attribute vec3 aPosition;
@@ -15,11 +15,14 @@ void main() {
 }`;
 const fragmentSource = `
 precision mediump float;
+uniform float uMonochrome;
 varying vec3 vColor;
 varying vec3 vNormal;
 void main() {
   float light = max(dot(normalize(vNormal), normalize(vec3(-0.6, 1.0, -0.4))), 0.0);
-  gl_FragColor = vec4(vColor * (0.38 + 0.78 * light), 1.0);
+  vec3 color = vColor * (0.38 + 0.78 * light);
+  color = mix(color, vec3(dot(color, vec3(0.299, 0.587, 0.114))), uMonochrome);
+  gl_FragColor = vec4(color, 1.0);
 }`;
 export class TerrainRenderer {
   constructor(canvas, onError) {
@@ -45,6 +48,9 @@ export class TerrainRenderer {
     this.indexBuffer = gl.createBuffer();
     this.projectionLocation = gl.getUniformLocation(this.program,'uProjection');
     this.viewLocation = gl.getUniformLocation(this.program,'uView');
+    this.monochromeLocation = gl.getUniformLocation(this.program,'uMonochrome');
+    this.mode = 'mono';
+    this.strength = 1;
     this.controls = new OrbitControls(canvas,()=>this.requestDraw());
     gl.enable(gl.DEPTH_TEST);
     canvas.addEventListener('webglcontextlost', e=>{
@@ -67,6 +73,11 @@ export class TerrainRenderer {
     this.requestDraw();
   }
   reset() { this.controls.reset(); this.requestDraw(); }
+  setStereo(mode, strength) {
+    this.mode = mode;
+    this.strength = strength;
+    this.requestDraw();
+  }
   requestDraw() {
     if (this.frame || this.lost) return;
     this.frame=requestAnimationFrame(()=>{this.frame=null; this.draw();});
@@ -77,19 +88,44 @@ export class TerrainRenderer {
     const width=Math.max(1,Math.round(canvas.clientWidth*ratio));
     const height=Math.max(1,Math.round(canvas.clientHeight*ratio));
     if (canvas.width!==width || canvas.height!==height) {canvas.width=width; canvas.height=height;}
-    gl.viewport(0,0,width,height); gl.clearColor(0,0,0,0);
+    const paired = this.mode === 'parallel' || this.mode === 'cross';
+    const anaglyph = this.mode === 'anaglyph';
+    gl.colorMask(true,true,true,true);
+    gl.viewport(0,0,width,height); gl.clearColor(0,0,0,anaglyph ? 1 : 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.useProgram(this.program);
     for (const { buffer, location } of this.buffers) {
       gl.bindBuffer(gl.ARRAY_BUFFER,buffer); gl.enableVertexAttribArray(location);
       gl.vertexAttribPointer(location,3,gl.FLOAT,false,0,0);
     }
-    gl.uniformMatrix4fv(this.projectionLocation,false,perspective(Math.PI/4,width/height,0.1,100));
+    gl.uniform1f(this.monochromeLocation,anaglyph ? 1 : 0);
+    const leftWidth = Math.floor(width/2);
+    const aspect = (paired ? leftWidth : width)/height;
     // Keep the full terrain in view on portrait screens without changing orbit state.
-    const target=this.controls.target, fit=Math.max(1,1.15/(width/height));
+    const target=this.controls.target, fit=Math.max(1,1.15/aspect);
     const eye=this.controls.eye.map((value,i)=>target[i]+(value-target[i])*fit);
-    gl.uniformMatrix4fv(this.viewLocation,false,lookAt(eye,target));
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.indexBuffer);
-    gl.drawElements(gl.TRIANGLES,this.count,gl.UNSIGNED_SHORT,0);
+    const separation = Math.hypot(...eye.map((value,i)=>value-target[i])) * 0.025 * this.strength;
+    const renderEye = (offset, x, viewportWidth) => {
+      const camera = stereoCamera(eye,target,viewportWidth/height,offset);
+      gl.viewport(x,0,viewportWidth,height);
+      gl.uniformMatrix4fv(this.projectionLocation,false,camera.projection);
+      gl.uniformMatrix4fv(this.viewLocation,false,camera.view);
+      gl.drawElements(gl.TRIANGLES,this.count,gl.UNSIGNED_SHORT,0);
+    };
+    if (paired) {
+      const order = this.mode === 'cross' ? 1 : -1;
+      renderEye(order*separation/2,0,leftWidth);
+      renderEye(-order*separation/2,width-leftWidth,leftWidth);
+    } else if (anaglyph) {
+      gl.colorMask(true,false,false,true);
+      renderEye(-separation/2,0,width);
+      gl.clear(gl.DEPTH_BUFFER_BIT);
+      gl.colorMask(false,true,true,true);
+      renderEye(separation/2,0,width);
+      gl.colorMask(true,true,true,true);
+    } else {
+      renderEye(0,0,width);
+    }
   }
 }
