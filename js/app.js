@@ -1,6 +1,6 @@
-import { loadElevation } from './elevation.js';
-import { createMesh } from './mesh.js';
-import { TerrainRenderer } from './renderer.js';
+import { loadElevation } from './elevation.js?v=0.2.1';
+import { createMesh } from './mesh.js?v=0.2.1';
+import { TerrainRenderer } from './renderer.js?v=0.2.1';
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
 const slider=document.querySelector('#exaggeration'), factor=document.querySelector('#factor');

@@ -1,5 +1,5 @@
-import { stereoCamera } from './stereo.js';
-import { OrbitControls } from './controls.js';
+import { stereoCamera } from './stereo.js?v=0.2.1';
+import { OrbitControls } from './controls.js?v=0.2.1';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
