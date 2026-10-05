@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#14251e">
   <title>terrain-stereo — 日本の地形を探索</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.5.0">
-  <script type="module" src="js/app.js?v=0.5.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.5.1">
+  <script type="module" src="js/app.js?v=0.5.1"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
@@ -40,7 +40,7 @@
         <label class="setting-label" for="quality">画質 · 地形の細かさ</label>
         <select id="quality" aria-describedby="quality-guide"><option value="standard">標準（軽い）</option><option value="high">高精細</option><option value="ultra">最高精細（重い）</option></select>
         <p id="quality-guide" class="hint" aria-live="polite">画質を変えると、表示中の範囲を読み直します。高い画質ほど通信量と描画の負荷が増えます。</p>
-        <div id="stereo-settings" hidden><div class="control-heading"><label for="stereo-strength">立体感</label><output id="stereo-factor" for="stereo-strength">1.0</output></div><input id="stereo-strength" type="range" min="0" max="2" step="0.1" value="1"><div class="range-labels"><span>弱い</span><span>強い</span></div><p class="hint">見づらいときは立体感を下げてください。</p></div><hr><div class="control-heading"><label for="exaggeration">高さ強調</label><output id="factor" for="exaggeration">1.5×</output></div><input id="exaggeration" type="range" min="0.5" max="4" step="0.1" value="1.5"><div class="range-labels"><span>0.5×</span><span>実際の比率は 1.0×</span><span>4.0×</span></div><p class="hint">高さを強調すると、小さな尾根や谷も見つけやすくなります。</p><button id="reset" class="reset">↺ 初期の視点に戻す</button><hr><h3>標高の色</h3><div class="legend" aria-hidden="true"></div><div class="range-labels"><span>低い</span><span>高い</span></div><p class="hint">色は標高、陰影は斜面の向きを表します。赤シアン表示では白黒の明るさで表します。</p><hr><dl><div><dt>表示範囲</dt><dd id="extent">約12 km四方</dd></div><div><dt>標高タイル</dt><dd id="dem-scale">DEM · ズーム12</dd></div><div><dt>取得状況</dt><dd id="data-state">読み込み中</dd></div></dl><details><summary>操作ガイド</summary><p>マウス：ドラッグで回転、ホイールでズーム、Shift＋ドラッグで移動。</p><p>タッチ：1本指で回転、2本指で拡大縮小・移動。</p><p>キーボード：地形にフォーカスして矢印で回転、＋/−でズーム、Rで視点リセット。</p></details></aside>
+        <div id="stereo-settings" hidden><div class="control-heading"><label for="stereo-strength">立体感</label><output id="stereo-factor" for="stereo-strength">1.0</output></div><input id="stereo-strength" type="range" min="0" max="2" step="0.1" value="1"><div class="range-labels"><span>弱い</span><span>強い</span></div><p class="hint">見づらいときは立体感を下げてください。</p></div><hr><div class="control-heading"><label for="exaggeration">高さ強調</label><output id="factor" for="exaggeration">1.5×</output></div><input id="exaggeration" type="range" min="0.5" max="4" step="0.1" value="1.5"><div class="range-labels"><span>0.5×</span><span>実際の比率は 1.0×</span><span>4.0×</span></div><p class="hint">高さを強調すると、小さな尾根や谷も見つけやすくなります。</p><button id="reset" class="reset">↺ 初期の視点に戻す</button><hr><h3>標高の色</h3><div class="legend" aria-hidden="true"></div><div class="range-labels"><span>低い</span><span>高い</span></div><p class="hint">色は標高、陰影は斜面の向きを表します。赤シアン表示では白黒の明るさで表します。</p><hr><dl><div><dt>表示範囲</dt><dd id="extent">約12 km四方</dd></div><div><dt>標高タイル</dt><dd id="dem-scale">DEM · ズーム12</dd></div><div><dt>取得状況</dt><dd id="data-state">読み込み中</dd></div></dl><details><summary>操作ガイド</summary><p>マウス：ドラッグで回転、ホイールでズーム、Shift＋ドラッグ、または中ボタン（ホイール押し込み）ドラッグで移動。</p><p>タッチ：1本指で回転、2本指で拡大縮小・移動。</p><p>キーボード：地形にフォーカスして矢印で回転、＋/−でズーム、Rで視点リセット。</p></details></aside>
     </section>
     <footer><span>出典：<a href="https://maps.gsi.go.jp/development/ichiran.html#dem" target="_blank" rel="noopener noreferrer">国土地理院・地理院タイル（標高タイル）</a>を加工して作成</span><span>まずは、山を自由に眺める。</span></footer>
   </main>

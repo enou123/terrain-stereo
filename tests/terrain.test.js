@@ -39,7 +39,7 @@ test('camera transforms remain finite',()=>{
     assert.equal(matrix.length,16); assert.ok([...matrix].every(Number.isFinite));
   }
 });
-test('Shift drag moves terrain in the same screen direction at different camera angles',()=>{
+test('Shift and middle-button drags move terrain in the same screen direction at different camera angles',()=>{
   const handlers={};
   const canvas={addEventListener:(name,handler)=>handlers[name]=handler,focus(){},setPointerCapture(){}};
   const controls=new OrbitControls(canvas,()=>{});
@@ -51,13 +51,15 @@ test('Shift drag moves terrain in the same screen direction at different camera 
     return [clip[0]/clip[3],-clip[1]/clip[3]];
   };
   for(const yaw of [0,.38,Math.PI/2,Math.PI,4.7]) for(const pitch of [.12,.75,1.48]) {
-    for(const [dx,dy] of [[40,0],[-40,0],[0,40],[0,-40]]) {
+    for(const button of [0,1]) for(const [dx,dy] of [[40,0],[-40,0],[0,40],[0,-40]]) {
       controls.reset(); controls.yaw=yaw; controls.pitch=pitch;
       const before=screenPoint();
-      handlers.pointerdown({pointerType:'mouse',button:0,pointerId:1,clientX:100,clientY:100});
-      handlers.pointermove({pointerId:1,clientX:100+dx,clientY:100+dy,shiftKey:true});
+      handlers.pointerdown({pointerType:'mouse',button,pointerId:1,clientX:100,clientY:100,preventDefault(){}});
+      handlers.pointermove({pointerId:1,clientX:100+dx,clientY:100+dy,shiftKey:button===0});
       handlers.pointerup({pointerId:1});
       const after=screenPoint();
+      assert.equal(controls.yaw,yaw); assert.equal(controls.pitch,pitch);
+      assert.equal(controls.distance,19);
       assert.ok(dx ? (after[0]-before[0])*dx>0 : (after[1]-before[1])*dy>0,`yaw=${yaw}, pitch=${pitch}, drag=${dx},${dy}`);
     }
   }

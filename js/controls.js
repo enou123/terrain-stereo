@@ -5,16 +5,19 @@ export class OrbitControls {
     this.pointers = new Map();
     this.reset();
     canvas.addEventListener('pointerdown', e => {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 1) return;
+      if (e.pointerType === 'mouse' && e.button === 1) e.preventDefault();
       canvas.focus({ preventScroll: true });
       canvas.setPointerCapture(e.pointerId);
-      this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, pan: e.pointerType === 'mouse' && e.button === 1 });
     });
+    // Prevent the browser's middle-button autoscroll while moving the terrain.
+    canvas.addEventListener('mousedown', e => { if (e.button === 1) e.preventDefault(); });
     canvas.addEventListener('pointermove', e => {
       const previous = this.pointers.get(e.pointerId);
       if (!previous) return;
       const before = [...this.pointers.values()];
-      this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      this.pointers.set(e.pointerId, { ...previous, x: e.clientX, y: e.clientY });
       const after = [...this.pointers.values()];
       if (before.length === 2) {
         const distance = p => Math.hypot(p[0].x-p[1].x, p[0].y-p[1].y);
@@ -24,7 +27,7 @@ export class OrbitControls {
           (after[0].y+after[1].y-before[0].y-before[1].y)/2);
       } else if (before.length === 1) {
         const dx = e.clientX-previous.x, dy = e.clientY-previous.y;
-        if (e.shiftKey) this.pan(dx,dy);
+        if (previous.pan || e.shiftKey) this.pan(dx,dy);
         else { this.yaw -= dx * 0.007; this.pitch += dy * 0.007; }
       }
       this.clamp(); this.redraw();
