@@ -14,6 +14,12 @@ python3 -m http.server 8000
 
 iPhone からは同じ Wi-Fi 上の PC の `http://<PCのLAN内IP>:8000` にアクセスできます。PC のファイアウォールで接続を許可してください。外部公開する場合は静的ファイル一式を HTTPS 対応のホスティングに配置できます。
 
+## GitHub Pagesで公開する
+
+[リポジトリの Pages 設定](https://github.com/enou123/terrain-stereo/settings/pages)で、Source を **Deploy from a branch**、Branch を **main**、フォルダを **/ (root)** に設定して Save を押します。ルートの `.nojekyll` により、静的ファイルをそのまま配信します。
+
+GitHub の公開処理が成功すると、`https://enou123.github.io/terrain-stereo/` を iPhone の Safari から開けます。初回の公開には数分かかることがあります。公開完了は Pages 設定画面または Actions の `pages build and deployment` で確認してください。
+
 必要な環境は、WebGL・ES Modules・Pointer Events・ResizeObserver・AbortSignal.timeout に対応した現行 Chrome / Edge / Firefox / Safari と、国土地理院へのインターネット接続です。APIキー・有料サービス・外部ライブラリ・CDN・外部フォント配信は使用しません。フォントは端末にインストールされた `BIZ UDPGothic`、`BIZ UDGothic` を優先し、なければシステムフォントに切り替えます。
 
 ## 操作
