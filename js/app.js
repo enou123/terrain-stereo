@@ -1,7 +1,9 @@
-import { LocationMap } from './map.js?v=0.5.1';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.5.1';
-import { createMesh } from './mesh.js?v=0.5.1';
-import { TerrainRenderer } from './renderer.js?v=0.5.1';
+import { setupViewerUI } from './viewer-ui.js?v=0.6.0';
+import { LocationMap } from './map.js?v=0.6.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.6.0';
+import { createMesh } from './mesh.js?v=0.6.0';
+import { TerrainRenderer } from './renderer.js?v=0.6.0';
+setupViewerUI();
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
 const slider=document.querySelector('#exaggeration'), factor=document.querySelector('#factor');
@@ -36,7 +38,7 @@ document.querySelector('#map-place').addEventListener('change',event=>{if(places
 showTerrain.addEventListener('click',()=>{
   if(loading) return;
   requestedLocation={...selectedLocation}; requestedQuality=qualitySelect.value; resetView=true; load();
-  document.querySelector('#viewer').scrollIntoView({behavior:'auto',block:'start'});
+  document.querySelector('#workspace').scrollIntoView({behavior:'auto',block:'start'});
 });
 function updateStereo() {
   const mode=modeSelect.value, strength=Number(strengthSlider.value);

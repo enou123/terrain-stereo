@@ -1,6 +1,6 @@
-import { fitMeshPositions } from './mesh.js?v=0.5.1';
-import { stereoCamera } from './stereo.js?v=0.5.1';
-import { OrbitControls } from './controls.js?v=0.5.1';
+import { fitMeshPositions } from './mesh.js?v=0.6.0';
+import { stereoCamera } from './stereo.js?v=0.6.0';
+import { OrbitControls } from './controls.js?v=0.6.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
