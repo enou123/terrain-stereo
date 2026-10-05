@@ -1,6 +1,6 @@
-import { fitMeshPositions } from './mesh.js?v=0.4.0';
-import { stereoCamera } from './stereo.js?v=0.4.0';
-import { OrbitControls } from './controls.js?v=0.4.0';
+import { fitMeshPositions } from './mesh.js?v=0.5.0';
+import { stereoCamera } from './stereo.js?v=0.5.0';
+import { OrbitControls } from './controls.js?v=0.5.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -31,6 +31,7 @@ export class TerrainRenderer {
     const gl = canvas.getContext('webgl', { antialias: true, alpha: true });
     if (!gl) throw new Error('この端末では WebGL を利用できません。WebGL 対応ブラウザで開いてください。');
     this.gl = gl;
+    this.uintIndices = gl.getExtension('OES_element_index_uint');
     const compile = (type, source) => {
       const shader = gl.createShader(type);
       gl.shaderSource(shader, source); gl.compileShader(shader);
@@ -64,6 +65,8 @@ export class TerrainRenderer {
   }
   setMesh(mesh) {
     const gl=this.gl;
+    if (mesh.indices instanceof Uint32Array && !this.uintIndices) throw new Error('この端末では高精細の描画に対応していません。標準を選んでください。');
+    this.indexType=mesh.indices instanceof Uint32Array ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
     const fittedPositions=fitMeshPositions(mesh);
     for (const [i,array] of [fittedPositions,mesh.normals,mesh.colors].entries()) {
       gl.bindBuffer(gl.ARRAY_BUFFER,this.buffers[i].buffer);
@@ -113,7 +116,7 @@ export class TerrainRenderer {
       gl.viewport(x,0,viewportWidth,height);
       gl.uniformMatrix4fv(this.projectionLocation,false,camera.projection);
       gl.uniformMatrix4fv(this.viewLocation,false,camera.view);
-      gl.drawElements(gl.TRIANGLES,this.count,gl.UNSIGNED_SHORT,0);
+      gl.drawElements(gl.TRIANGLES,this.count,this.indexType,0);
     };
     if (paired) {
       const order = this.mode === 'cross' ? 1 : -1;

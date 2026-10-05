@@ -61,3 +61,37 @@ test('selected location changes DEM tiles and scale, reuses cache, and allows re
     await assert.rejects(loadElevation(()=>{},{latitude:NaN,longitude:133}),/緯度・経度/);
   } finally { globalThis.fetch=original; }
 });
+
+test('quality samples finer source data over identical bounds with bounded concurrency', async () => {
+  const original=globalThis.fetch;
+  let active=0, peak=0;
+  const tile=Array.from({length:256},(_,y)=>Array.from({length:256},(_,x)=>String(x+y)).join(',')).join('\n');
+  globalThis.fetch=async()=>{
+    peak=Math.max(peak,++active);
+    await new Promise(resolve=>setTimeout(resolve,1));
+    active--;
+    return {ok:true,text:async()=>tile};
+  };
+  try {
+    const location={latitude:36.2,longitude:137.6,zoom:10};
+    const standard=await loadElevation(()=>{},location);
+    const high=await loadElevation(()=>{},location,'high');
+    const ultra=await loadElevation(()=>{},location,'ultra');
+    assert.deepEqual([standard.size,high.size,ultra.size],[193,385,769]);
+    assert.equal(high.spacing,standard.spacing/2);
+    assert.equal(ultra.spacing,standard.spacing/4);
+    for(const result of [standard,high,ultra]) {
+      assert.equal((result.size-1)*result.spacing,terrainExtent(location.latitude,location.zoom));
+      assert.deepEqual(result.location,location);
+      assert.ok(result.tileCount<=49);
+    }
+    assert.ok(peak<=4);
+    // Samples come from the source pixels, rather than interpolating a coarse grid.
+    assert.equal(high.heights[1]-high.heights[0],2);
+    assert.equal(ultra.heights[1]-ultra.heights[0],2);
+    const capped=await loadElevation(()=>{},{...location,zoom:14},'ultra');
+    assert.equal(capped.sourceZoom,14);
+    assert.equal(capped.size,385);
+    await assert.rejects(loadElevation(()=>{},location,'invalid'),/画質/);
+  } finally { globalThis.fetch=original; }
+});

@@ -28,7 +28,7 @@ export function createMesh(data, exaggeration) {
     const length=Math.hypot(normals[i],normals[i+1],normals[i+2]) || 1;
     for(let k=0;k<3;k++) normals[i+k]/=length;
   }
-  return { positions, normals, colors, indices: new Uint16Array(indices) };
+  return { positions, normals, colors, indices: new (size * size > 65536 ? Uint32Array : Uint16Array)(indices) };
 }
 
 // Keep height/distance ratios while fitting wide regions and elevated mountain patches.

@@ -1,11 +1,14 @@
-import { LocationMap } from './map.js?v=0.4.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.4.0';
-import { createMesh } from './mesh.js?v=0.4.0';
-import { TerrainRenderer } from './renderer.js?v=0.4.0';
+import { LocationMap } from './map.js?v=0.5.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.5.0';
+import { createMesh } from './mesh.js?v=0.5.0';
+import { TerrainRenderer } from './renderer.js?v=0.5.0';
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
 const slider=document.querySelector('#exaggeration'), factor=document.querySelector('#factor');
 const modeSelect=document.querySelector('#view-mode'), strengthSlider=document.querySelector('#stereo-strength');
+const qualitySelect=document.querySelector('#quality');
+const qualityNames={standard:'標準',high:'高精細',ultra:'最高精細'};
+let requestedQuality='standard', resetView=true;
 const modeNames={mono:'通常3D',parallel:'平行法',cross:'交差法',anaglyph:'赤シアン'};
 const guides={
   mono:'1つの地形を自由に回転して眺めます。',
@@ -32,7 +35,7 @@ document.querySelector('#map-zoom-out').addEventListener('click',()=>map.setZoom
 document.querySelector('#map-place').addEventListener('change',event=>{if(places[event.target.value]) map.setCenter(places[event.target.value]);});
 showTerrain.addEventListener('click',()=>{
   if(loading) return;
-  requestedLocation={...selectedLocation}; load();
+  requestedLocation={...selectedLocation}; requestedQuality=qualitySelect.value; resetView=true; load();
   document.querySelector('#viewer').scrollIntoView({behavior:'auto',block:'start'});
 });
 function updateStereo() {
@@ -53,26 +56,38 @@ function showError(error, canRetry=true) {
   status.textContent=`${error.message} ${canRetry ? '通信環境を確認して、もう一度お試しください。' : 'WebGL 対応ブラウザでページを再読み込みしてください。'}`;
   retry.hidden=!canRetry; state.textContent='表示できません';
 }
+qualitySelect.addEventListener('change',()=>{
+  if (loading) return;
+  requestedQuality=qualitySelect.value;
+  requestedLocation={...(data?.location || requestedLocation)};
+  resetView=false;
+  load();
+});
 async function load() {
   if (loading) return;
   loading=true; showTerrain.disabled=true; showTerrain.textContent='地形を読み込み中…'; retry.hidden=true; message.hidden=false; message.classList.remove('error');
-  state.textContent='読み込み中'; status.textContent='標高データを取得しています…'; slider.disabled=true;
+  state.textContent='読み込み中'; status.textContent='標高データを取得しています…'; slider.disabled=true; qualitySelect.disabled=true;
   try {
     if (!renderer) renderer=new TerrainRenderer(document.querySelector('#terrain'),showError);
+    if (!renderer.uintIndices) {
+      for (const option of qualitySelect.options) option.disabled=option.value!=='standard';
+    }
     updateStereo();
-    data=await loadElevation((done,total)=>status.textContent=`標高データを取得しています… ${done} / ${total}`,requestedLocation);
-    renderer.setMesh(createMesh(data,Number(slider.value)));
-    renderer.reset();
+    const nextData=await loadElevation((done,total)=>status.textContent=`標高データを取得しています… ${done} / ${total}`,requestedLocation,requestedQuality);
+    renderer.setMesh(createMesh(nextData,Number(slider.value)));
+    data=nextData;
+    if(resetView) renderer.reset();
+    document.querySelector('#quality-guide').textContent=`${qualityNames[data.quality]}：約${Math.round(data.spacing*1000)} m間隔で地形を表示。`+(data.sourceZoom===14 ? 'この縮尺では標高データの細かさの上限に達しています。' : '高い画質ほど通信量と描画の負荷が増えます。');
     const name=locationName(data.location);
     document.querySelector('#loaded-location').textContent=name;
     document.querySelector('#terrain-location').textContent=name;
     document.querySelector('#terrain').setAttribute('aria-label',`${name}の3D地形。矢印キーで回転、プラス・マイナスキーでズーム。`);
-    document.querySelector('#dem-scale').textContent=`DEM · ズーム${data.location.zoom}`;
+    document.querySelector('#dem-scale').textContent=`DEM · ズーム${data.sourceZoom}`;
     document.querySelector('#extent').textContent=`${((data.size-1)*data.spacing).toFixed(1)} km四方`;
     state.textContent=`${data.tileCount}タイル取得済み`;
     message.hidden=true; slider.disabled=false;
   } catch (error) { showError(error, Boolean(renderer) && !renderer.lost); }
-  finally { loading=false; showTerrain.disabled=false; showTerrain.textContent='ここを立体表示'; }
+  finally { qualitySelect.disabled=false; slider.disabled=!data; loading=false; showTerrain.disabled=false; showTerrain.textContent='ここを立体表示'; }
 }
 slider.addEventListener('input',()=>{
   const value=Number(slider.value);

@@ -75,3 +75,12 @@ test('wide and elevated terrain fit uniformly without changing relief ratios', (
     assert.equal(mesh.positions[1],3,'Physical mesh remains unchanged');
   }
 });
+
+test('high quality meshes preserve indices above the 16-bit limit', () => {
+  const size=385;
+  const mesh=createMesh({size,spacing:.01,heights:new Float32Array(size*size).fill(100)},1);
+  assert.ok(mesh.indices instanceof Uint32Array);
+  assert.equal(mesh.indices.length,(size-1)**2*6);
+  assert.equal(mesh.indices.at(-1),size*size-1);
+  assert.ok(mesh.normals.every((value,i)=>i%3===1 ? value===1 : value===0));
+});
