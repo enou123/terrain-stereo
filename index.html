@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#14251e">
+  <title>terrain-stereo — 石鎚山の地形を探索</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / MVP 01</span></span></header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">SHIKOKU, JAPAN · 33.767° N / 133.115° E</p><h1>石鎚山<span>の地形を探索</span></h1><p class="description">稜線をたどり、谷をのぞく。実際の標高から、山のかたちを立体で。</p></div><div class="location"><span>愛媛県・高知県</span><strong>石鎚山周辺</strong><small>国土地理院の標高データを使用</small></div></section>
+    <section class="workspace" aria-label="3D地形ビューア">
+      <div class="viewer" id="viewer">
+        <div class="viewer-top"><span class="mode">● 通常3D</span><span class="live-label">ISHIZUCHI TERRAIN</span></div>
+        <canvas id="terrain" tabindex="0" aria-label="石鎚山周辺の3D地形。矢印キーで回転、プラス・マイナスキーでズーム。">WebGL 対応ブラウザでご覧ください。</canvas>
+        <div class="message" id="message" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><p id="status">標高データを取得しています…</p><button id="retry" hidden>もう一度読み込む</button></div>
+        <div class="viewer-bottom"><span>ドラッグで回転 <span class="desktop-hint"> / ホイールでズーム</span><span class="touch-hint"> / ピンチでズーム</span></span><span class="axis">標高を立体表示</span></div>
+      </div>
+      <aside class="panel"><p class="eyebrow">VIEW SETTINGS</p><h2>山の見え方</h2><div class="control-heading"><label for="exaggeration">高さ強調</label><output id="factor" for="exaggeration">1.5×</output></div><input id="exaggeration" type="range" min="0.5" max="4" step="0.1" value="1.5"><div class="range-labels"><span>0.5×</span><span>実際の比率は 1.0×</span><span>4.0×</span></div><p class="hint">高さを強調すると、小さな尾根や谷も見つけやすくなります。</p><button id="reset" class="reset">↺ 初期の視点に戻す</button><hr><h3>標高の色</h3><div class="legend" aria-hidden="true"></div><div class="range-labels"><span>低い</span><span>高い</span></div><p class="hint">色は標高、陰影は斜面の向きを表します。</p><hr><dl><div><dt>表示範囲</dt><dd id="extent">約12 km四方</dd></div><div><dt>標高タイル</dt><dd>DEM · ズーム12</dd></div><div><dt>取得状況</dt><dd id="data-state">読み込み中</dd></div></dl><details><summary>操作ガイド</summary><p>マウス：ドラッグで回転、ホイールでズーム、Shift＋ドラッグで移動。</p><p>タッチ：1本指で回転、2本指で拡大縮小・移動。</p><p>キーボード：地形にフォーカスして矢印で回転、＋/−でズーム、Rで視点リセット。</p></details></aside>
+    </section>
+    <footer><span>出典：<a href="https://maps.gsi.go.jp/development/ichiran.html#dem" target="_blank" rel="noopener noreferrer">国土地理院・地理院タイル（標高タイル）</a>を加工して作成</span><span>まずは、山を自由に眺める。</span></footer>
+  </main>
+</body>
+</html>
