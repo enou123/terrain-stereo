@@ -3,6 +3,8 @@ export const LOCATION = Object.freeze({ latitude: 33.767, longitude: 133.115, zo
 export const GRID_SIZE = 193;
 const TILE_SIZE = 256;
 const STEP = 2;
+const tileCache = new Map();
+const CACHE_LIMIT = 24;
 export function worldPixel(latitude, longitude, zoom) {
   const scale = TILE_SIZE * 2 ** zoom;
   return [(longitude + 180) / 360 * scale,
@@ -22,8 +24,12 @@ export function parseTile(text) {
   });
   return values;
 }
-export async function loadElevation(onProgress = () => {}) {
-  const [cx, cy] = worldPixel(LOCATION.latitude, LOCATION.longitude, LOCATION.zoom);
+export async function loadElevation(onProgress = () => {}, location = LOCATION) {
+  const { latitude, longitude, zoom = 12 } = location;
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < 20 || latitude > 46 || longitude < 122 || longitude > 154 || zoom !== 12) {
+    throw new Error('日本周辺の緯度・経度を指定してください。');
+  }
+  const [cx, cy] = worldPixel(latitude, longitude, zoom);
   const half = (GRID_SIZE - 1) * STEP / 2;
   const startX = Math.floor(cx) - half, startY = Math.floor(cy) - half;
   const tiles = new Map();
@@ -34,10 +40,16 @@ export async function loadElevation(onProgress = () => {}) {
   let completed = 0, failed = false;
   // Small bounded batch (at most 9 tiles); no synthetic fallback on a failed request.
   try { await Promise.all(jobs.map(async ({ x, y }) => {
-    const url = `https://cyberjapandata.gsi.go.jp/xyz/dem/${LOCATION.zoom}/${x}/${y}.txt`;
-    const response = await fetch(url, { signal: AbortSignal.timeout(25000), mode: 'cors' });
-    if (!response.ok) throw new Error(`標高タイルの取得に失敗しました（HTTP ${response.status}）。`);
-    tiles.set(`${x}/${y}`, parseTile(await response.text()));
+    const url = `https://cyberjapandata.gsi.go.jp/xyz/dem/${zoom}/${x}/${y}.txt`;
+    let values = tileCache.get(url);
+    if (!values) {
+      const response = await fetch(url, { signal: AbortSignal.timeout(25000), mode: 'cors' });
+      if (!response.ok) throw new Error(`標高タイルの取得に失敗しました（HTTP ${response.status}）。`);
+      values = parseTile(await response.text());
+    }
+    tileCache.delete(url); tileCache.set(url, values);
+    if (tileCache.size > CACHE_LIMIT) tileCache.delete(tileCache.keys().next().value);
+    tiles.set(`${x}/${y}`, values);
     if (!failed) onProgress(++completed, jobs.length);
   })); } catch (error) {
     failed = true;
@@ -53,6 +65,6 @@ export async function loadElevation(onProgress = () => {}) {
     if (Number.isFinite(value)) { validCount++; min = Math.min(min, value); max = Math.max(max, value); }
   }
   if (!validCount) throw new Error('この範囲には有効な標高データがありません。');
-  const spacing = 40075016.6856 * Math.cos(LOCATION.latitude * Math.PI / 180) / (TILE_SIZE * 2 ** LOCATION.zoom) * STEP / 1000;
-  return { heights, size: GRID_SIZE, spacing, min, max, tileCount: jobs.length, validCount };
+  const spacing = 40075016.6856 * Math.cos(latitude * Math.PI / 180) / (TILE_SIZE * 2 ** zoom) * STEP / 1000;
+  return { heights, size: GRID_SIZE, spacing, min, max, tileCount: jobs.length, validCount, location: { latitude, longitude, zoom } };
 }

@@ -4,24 +4,36 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#14251e">
-  <title>terrain-stereo — 石鎚山の地形を探索</title>
+  <title>terrain-stereo — 日本の地形を探索</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.2.1">
-  <script type="module" src="js/app.js?v=0.2.1"></script>
+  <link rel="stylesheet" href="styles.css?v=0.3.0">
+  <script type="module" src="js/app.js?v=0.3.0"></script>
 </head>
 <body>
-  <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / STEREO 02</span></span></header>
+  <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
   <main>
-    <section class="intro"><div><p class="eyebrow">SHIKOKU, JAPAN · 33.767° N / 133.115° E</p><h1>石鎚山<span>の地形を探索</span></h1><p class="description">稜線をたどり、谷をのぞく。実際の標高から、山のかたちを立体で。</p></div><div class="location"><span>愛媛県・高知県</span><strong>石鎚山周辺</strong><small>国土地理院の標高データを使用</small></div></section>
+    <section class="intro"><div><p class="eyebrow">EXPLORE JAPAN</p><h1>日本<span>の地形を探索</span></h1><p class="description">地図で見つけて、立体で眺める。日本各地の尾根や谷を探索。</p></div><div class="location"><span>立体表示中の場所</span><strong id="loaded-location">石鎚山周辺</strong><small>国土地理院の標高データを使用</small></div></section>
+    <section class="location-picker" aria-labelledby="map-heading">
+      <div class="map-heading"><div><p class="eyebrow">FIND A PLACE</p><h2 id="map-heading">見たい場所を探す</h2></div><a href="#viewer" class="viewer-link">立体表示へ ↓</a></div>
+      <p class="map-help">地図を動かして中央の＋を見たい場所に合わせ、「ここを立体表示」を押してください。枠が表示範囲です。</p>
+      <div class="map-shell">
+        <div id="location-map" class="location-map" tabindex="0" role="region" aria-label="場所を選ぶ日本地図。ドラッグで移動、ピンチまたはプラス・マイナスで拡大縮小、矢印キーで移動。">
+          <div class="map-tiles" aria-hidden="true"></div><div class="map-footprint" aria-hidden="true"></div><span class="map-crosshair" aria-hidden="true">＋</span><p class="map-notice" role="status" hidden></p>
+        </div>
+        <div class="map-zoom"><button id="map-zoom-in" aria-label="地図を拡大">＋</button><button id="map-zoom-out" aria-label="地図を縮小">−</button></div>
+        <a class="map-attribution" href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">地図：国土地理院</a>
+      </div>
+      <div class="map-actions"><div><label for="map-place" class="setting-label">山から探す</label><select id="map-place"><option value="">地図で自由に選択</option><option value="ishizuchi">石鎚山</option><option value="fuji">富士山</option><option value="aso">阿蘇山</option><option value="daisetsu">大雪山・旭岳</option><option value="yakushima">屋久島・宮之浦岳</option></select></div><div class="selection"><span>選択地点</span><output id="selected-location"></output><small>周辺の約10〜14 km四方を表示</small></div><button id="show-terrain" class="show-terrain">ここを立体表示</button></div>
+    </section>
     <section class="workspace" aria-label="3D地形ビューア">
       <div class="viewer" id="viewer">
-        <div class="viewer-top"><span class="mode" id="mode-label">● 通常3D</span><span class="live-label">ISHIZUCHI TERRAIN</span></div>
-        <canvas id="terrain" tabindex="0" aria-label="石鎚山周辺の3D地形。矢印キーで回転、プラス・マイナスキーでズーム。">WebGL 対応ブラウザでご覧ください。</canvas>
+        <div class="viewer-top"><span class="mode" id="mode-label">● 通常3D</span><span class="live-label"><span id="terrain-location">石鎚山周辺</span></span></div>
+        <canvas id="terrain" tabindex="0" aria-label="選択した場所の3D地形。矢印キーで回転、プラス・マイナスキーでズーム。">WebGL 対応ブラウザでご覧ください。</canvas>
         <div id="eye-labels" class="eye-labels" hidden aria-hidden="true"><span id="left-eye">左眼用</span><span id="right-eye">右眼用</span></div>
         <div class="message" id="message" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><p id="status">標高データを取得しています…</p><button id="retry" hidden>もう一度読み込む</button></div>
         <div class="viewer-bottom"><span>ドラッグで回転 <span class="desktop-hint"> / ホイールでズーム</span><span class="touch-hint"> / ピンチでズーム</span></span><span class="axis">標高を立体表示</span></div>
       </div>
-      <aside class="panel"><p class="eyebrow">VIEW SETTINGS</p><h2>山の見え方</h2>
+      <aside class="panel"><p class="eyebrow">VIEW SETTINGS</p><h2>地形の見え方</h2>
         <label class="setting-label" for="view-mode">表示モード</label>
         <select id="view-mode" aria-describedby="stereo-guide"><option value="mono">通常3D</option><option value="parallel">立体視 · 平行法</option><option value="cross">立体視 · 交差法</option><option value="anaglyph">立体視 · 赤シアン</option></select>
         <p id="stereo-guide" class="hint">1つの地形を自由に回転して眺めます。</p>
