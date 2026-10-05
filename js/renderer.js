@@ -1,5 +1,6 @@
-import { stereoCamera } from './stereo.js?v=0.3.0';
-import { OrbitControls } from './controls.js?v=0.3.0';
+import { fitMeshPositions } from './mesh.js?v=0.4.0';
+import { stereoCamera } from './stereo.js?v=0.4.0';
+import { OrbitControls } from './controls.js?v=0.4.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -63,7 +64,8 @@ export class TerrainRenderer {
   }
   setMesh(mesh) {
     const gl=this.gl;
-    for (const [i,array] of [mesh.positions,mesh.normals,mesh.colors].entries()) {
+    const fittedPositions=fitMeshPositions(mesh);
+    for (const [i,array] of [fittedPositions,mesh.normals,mesh.colors].entries()) {
       gl.bindBuffer(gl.ARRAY_BUFFER,this.buffers[i].buffer);
       gl.bufferData(gl.ARRAY_BUFFER,array,gl.STATIC_DRAW);
     }

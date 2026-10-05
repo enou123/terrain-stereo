@@ -30,3 +30,17 @@ export function createMesh(data, exaggeration) {
   }
   return { positions, normals, colors, indices: new Uint16Array(indices) };
 }
+
+// Keep height/distance ratios while fitting wide regions and elevated mountain patches.
+export function fitMeshPositions(mesh) {
+  // Fit the visible terrain uniformly and remove its altitude baseline.
+  let minX=Infinity, maxX=-Infinity, minHeight=Infinity, maxHeight=-Infinity;
+  for(let i=0;i<mesh.positions.length;i+=3) { minX=Math.min(minX,mesh.positions[i]); maxX=Math.max(maxX,mesh.positions[i]); }
+  for(const index of mesh.indices) {
+    const height=mesh.positions[index*3+1];
+    minHeight=Math.min(minHeight,height); maxHeight=Math.max(maxHeight,height);
+  }
+  if(!Number.isFinite(minHeight)) minHeight=maxHeight=0;
+  const scale=12.2/Math.max(.001,maxX-minX,(maxHeight-minHeight)*1.5);
+  return mesh.positions.map((value,index)=>(value-(index%3===1 ? minHeight : 0))*scale);
+}

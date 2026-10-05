@@ -3,6 +3,14 @@ export const LOCATION = Object.freeze({ latitude: 33.767, longitude: 133.115, zo
 export const GRID_SIZE = 193;
 const TILE_SIZE = 256;
 const STEP = 2;
+export const MIN_TERRAIN_ZOOM = 6;
+export const MAX_TERRAIN_ZOOM = 14;
+export function terrainZoom(mapZoom) {
+  return Math.max(MIN_TERRAIN_ZOOM, Math.min(MAX_TERRAIN_ZOOM, mapZoom + 1));
+}
+export function terrainExtent(latitude, zoom) {
+  return 40075016.6856 * Math.cos(latitude * Math.PI / 180) / (TILE_SIZE * 2 ** zoom) * (GRID_SIZE - 1) * STEP / 1000;
+}
 const tileCache = new Map();
 const CACHE_LIMIT = 24;
 export function worldPixel(latitude, longitude, zoom) {
@@ -26,8 +34,8 @@ export function parseTile(text) {
 }
 export async function loadElevation(onProgress = () => {}, location = LOCATION) {
   const { latitude, longitude, zoom = 12 } = location;
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < 20 || latitude > 46 || longitude < 122 || longitude > 154 || zoom !== 12) {
-    throw new Error('日本周辺の緯度・経度を指定してください。');
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < 20 || latitude > 46 || longitude < 122 || longitude > 154 || !Number.isInteger(zoom) || zoom < MIN_TERRAIN_ZOOM || zoom > MAX_TERRAIN_ZOOM) {
+    throw new Error('日本周辺の緯度・経度と対応する縮尺を指定してください。');
   }
   const [cx, cy] = worldPixel(latitude, longitude, zoom);
   const half = (GRID_SIZE - 1) * STEP / 2;

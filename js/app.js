@@ -1,7 +1,7 @@
-import { LocationMap } from './map.js?v=0.3.0';
-import { LOCATION, loadElevation } from './elevation.js?v=0.3.0';
-import { createMesh } from './mesh.js?v=0.3.0';
-import { TerrainRenderer } from './renderer.js?v=0.3.0';
+import { LocationMap } from './map.js?v=0.4.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.4.0';
+import { createMesh } from './mesh.js?v=0.4.0';
+import { TerrainRenderer } from './renderer.js?v=0.4.0';
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
 const slider=document.querySelector('#exaggeration'), factor=document.querySelector('#factor');
@@ -22,7 +22,9 @@ const locationName=location=>{
   return name ? document.querySelector(`#map-place option[value="${name}"]`).textContent+'周辺' : coordinates(location);
 };
 const map=new LocationMap(document.querySelector('#location-map'),LOCATION,location=>{
-  selectedLocation=location; document.querySelector('#selected-location').textContent=coordinates(location);
+  selectedLocation=location;
+  document.querySelector('#selected-extent').textContent=`表示範囲：約${terrainExtent(location.latitude,location.zoom).toFixed(1)} km四方（地図の縮尺と連動）`;
+  document.querySelector('#selected-location').textContent=coordinates(location);
   document.querySelector('#map-place').value=Object.keys(places).find(key=>Math.abs(places[key].latitude-location.latitude)<.0001 && Math.abs(places[key].longitude-location.longitude)<.0001)||'';
 });
 document.querySelector('#map-zoom-in').addEventListener('click',()=>map.setZoom(map.zoom+1));
@@ -65,6 +67,7 @@ async function load() {
     document.querySelector('#loaded-location').textContent=name;
     document.querySelector('#terrain-location').textContent=name;
     document.querySelector('#terrain').setAttribute('aria-label',`${name}の3D地形。矢印キーで回転、プラス・マイナスキーでズーム。`);
+    document.querySelector('#dem-scale').textContent=`DEM · ズーム${data.location.zoom}`;
     document.querySelector('#extent').textContent=`${((data.size-1)*data.spacing).toFixed(1)} km四方`;
     state.textContent=`${data.tileCount}タイル取得済み`;
     message.hidden=true; slider.disabled=false;

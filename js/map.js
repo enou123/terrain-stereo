@@ -1,4 +1,4 @@
-import { worldPixel } from './elevation.js?v=0.3.0';
+import { worldPixel, terrainZoom } from './elevation.js?v=0.4.0';
 
 export function pixelLocation(x, y, zoom) {
   const scale = 256 * 2 ** zoom;
@@ -13,7 +13,7 @@ export function constrainLocation(location) {
 // Small slippy map using GSI standard tiles; terrain is fetched only on explicit selection.
 export class LocationMap {
   constructor(element, location, onChange) {
-    this.element = element; this.center = constrainLocation(location); this.zoom = 6;
+    this.element = element; this.center = constrainLocation(location); this.zoom = 11;
     this.onChange = onChange; this.tiles = new Map(); this.pointers = new Map();
     this.layer = element.querySelector('.map-tiles'); this.notice = element.querySelector('.map-notice');
     element.addEventListener('pointerdown', event => {
@@ -53,8 +53,8 @@ export class LocationMap {
     const [x, y] = worldPixel(this.center.latitude, this.center.longitude, this.zoom);
     this.center = constrainLocation(pixelLocation(x - dx, y - dy, this.zoom)); this.render();
   }
-  setZoom(zoom) { this.zoom = Math.max(4, Math.min(15, zoom)); this.render(); }
-  setCenter(location) { this.center = constrainLocation(location); this.zoom = 10; this.render(); }
+  setZoom(zoom) { this.zoom = Math.max(4, Math.min(13, zoom)); this.render(); }
+  setCenter(location) { this.center = constrainLocation(location); this.zoom = 11; this.render(); }
   render() {
     const width = this.element.clientWidth, height = this.element.clientHeight;
     if (!width || !height) return;
@@ -76,11 +76,11 @@ export class LocationMap {
     }
     for (const [key, tile] of this.tiles) if (!visible.has(key)) { tile.remove(); this.tiles.delete(key); }
     // The footprint is the same 384 DEM pixels used by the terrain grid.
-    const footprint = 384 * 2 ** (this.zoom - 12);
+    const footprint = 384 * 2 ** (this.zoom - terrainZoom(this.zoom));
     this.element.querySelector('.map-footprint').style.width = `${footprint}px`;
     this.element.querySelector('.map-footprint').style.height = `${footprint}px`;
-    this.updateNotice(); this.onChange({ ...this.center });
-    document.querySelector('#map-zoom-in').disabled = this.zoom === 15;
+    this.updateNotice(); this.onChange({ ...this.center, zoom: terrainZoom(this.zoom) });
+    document.querySelector('#map-zoom-in').disabled = this.zoom === 13;
     document.querySelector('#map-zoom-out').disabled = this.zoom === 4;
   }
   updateNotice() {

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { worldPixel, loadElevation } from '../js/elevation.js';
+import { worldPixel, loadElevation, terrainZoom, terrainExtent } from '../js/elevation.js';
 import { pixelLocation, constrainLocation } from '../js/map.js';
 
 test('map coordinates round trip across Japan and constrain navigation at its edges', () => {
@@ -13,6 +13,13 @@ test('map coordinates round trip across Japan and constrain navigation at its ed
   }
   assert.deepEqual(constrainLocation({latitude:90,longitude:180}),{latitude:46,longitude:154,zoom:12});
   assert.deepEqual(constrainLocation({latitude:0,longitude:100}),{latitude:20,longitude:122,zoom:12});
+});
+
+test('map zoom changes terrain extent by powers of two within supported limits', () => {
+  assert.equal(terrainZoom(11),12);
+  assert.equal(terrainZoom(4),6);
+  assert.equal(terrainZoom(15),14);
+  assert.equal(terrainExtent(33.767,8),terrainExtent(33.767,12)*16);
 });
 
 test('selected location changes DEM tiles and scale, reuses cache, and allows retry after failures', async () => {
@@ -29,6 +36,13 @@ test('selected location changes DEM tiles and scale, reuses cache, and allows re
     assert.deepEqual(first.location,fuji);
     const [x,y]=worldPixel(fuji.latitude,fuji.longitude,12);
     assert.ok(requests.includes(`https://cyberjapandata.gsi.go.jp/xyz/dem/12/${Math.floor(x/256)}/${Math.floor(y/256)}.txt`));
+    const wide=await loadElevation(()=>{},{...fuji,zoom:8});
+    assert.equal(wide.spacing,first.spacing*16);
+    assert.equal(wide.size,first.size);
+    assert.ok(wide.tileCount<=9);
+    assert.ok(requests.some(url=>url.includes('/dem/8/')));
+    await assert.rejects(loadElevation(()=>{},{...fuji,zoom:15}),/縮尺/);
+    await assert.rejects(loadElevation(()=>{},{...fuji,zoom:8.5}),/縮尺/);
     const count=requests.length;
     await loadElevation(()=>{},fuji);assert.equal(requests.length,count);
     const north=await loadElevation(()=>{},{latitude:43.6636,longitude:142.8541,zoom:12});

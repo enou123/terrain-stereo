@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { parseTile, worldPixel } from '../js/elevation.js';
-import { createMesh } from '../js/mesh.js';
+import { createMesh, fitMeshPositions } from '../js/mesh.js';
 import { perspective, lookAt } from '../js/math.js';
 import { OrbitControls } from '../js/controls.js';
 
@@ -60,5 +60,18 @@ test('Shift drag moves terrain in the same screen direction at different camera 
       const after=screenPoint();
       assert.ok(dx ? (after[0]-before[0])*dx>0 : (after[1]-before[1])*dy>0,`yaw=${yaw}, pitch=${pitch}, drag=${dx},${dy}`);
     }
+  }
+});
+
+
+test('wide and elevated terrain fit uniformly without changing relief ratios', () => {
+  for (const spacing of [.015,1,100]) {
+    const mesh=createMesh({heights:new Float32Array([3000,3100,3200,3300]),size:2,spacing},1);
+    const positions=fitMeshPositions(mesh);
+    const scale=positions[3]/mesh.positions[3];
+    assert.ok(Math.abs((positions[4]-positions[1])/(mesh.positions[4]-mesh.positions[1])-scale)<.0001);
+    assert.equal(positions[1],0);
+    assert.ok(Math.max(...positions.map(Math.abs))<=12.2);
+    assert.equal(mesh.positions[1],3,'Physical mesh remains unchanged');
   }
 });
