@@ -1,9 +1,9 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.11.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.11.0';
-import { LocationMap } from './map.js?v=0.11.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.11.0';
-import { createMesh } from './mesh.js?v=0.11.0';
-import { TerrainRenderer } from './renderer.js?v=0.11.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.11.1';
+import { setupViewerUI } from './viewer-ui.js?v=0.11.1';
+import { LocationMap } from './map.js?v=0.11.1';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.11.1';
+import { createMesh } from './mesh.js?v=0.11.1';
+import { TerrainRenderer } from './renderer.js?v=0.11.1';
 setupViewerUI();
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');

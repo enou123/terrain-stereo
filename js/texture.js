@@ -1,4 +1,4 @@
-import { worldPixel } from './elevation.js?v=0.11.0';
+import { worldPixel } from './elevation.js?v=0.11.1';
 
 const sources = {map:{id:'std',extension:'png',label:'地図画像'},photo:{id:'seamlessphoto',extension:'jpg',label:'航空写真'}};
 function sourceFor(surface) {

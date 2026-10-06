@@ -433,8 +433,8 @@ footer a {
 .setting-label { display:block; font-size:12px; margin-bottom:10px; }
 select { width:100%; min-height:44px; padding:10px; border:1px solid #d3dbce; border-radius:6px; background:#f4f6ee; color:#233a30; font:inherit; font-size:12px; }
 select:focus-visible { outline:2px solid #71914f; outline-offset:3px; }
-.eye-labels { position:absolute; inset:65px 0 58px; display:grid; grid-template-columns:1fr 1fr; pointer-events:none; color:#b6c2ad; font-size:10px; text-align:center; }
-.eye-labels span + span { border-left:1px solid #81988050; }
+.eye-labels { position:absolute; inset:0; display:grid; grid-template-columns:1fr 1fr; align-items:end; pointer-events:none; color:#b6c2ad; font-size:10px; line-height:12px; text-align:left; text-shadow:0 1px 3px #14251e; }
+.eye-labels span { padding:0 12px 48px 28px; }
 .eye-labels[hidden], #stereo-settings[hidden] { display:none; }
 
 .location-picker { margin-bottom:28px; padding:24px; border:1px solid #d3dbce; border-radius:12px; background:#fbfcf8; }
@@ -537,13 +537,12 @@ body.view-focused { overflow:hidden; }
 .compass text { font:9px ui-sans-serif,system-ui,sans-serif; stroke:none !important; }
 .compass .north { stroke:#c5df99; fill:#c5df99; }
 .compass-arrow { stroke:none !important; }
-.alignment-mark { position:absolute; top:88px; left:50%; width:8px; height:8px; transform:translate(-50%,-50%); filter:drop-shadow(0 0 2px #14251e); }
+.alignment-mark { position:absolute; bottom:50px; left:12px; width:8px; height:8px; filter:drop-shadow(0 0 2px #14251e); }
 .alignment-mark::before,.alignment-mark::after { content:''; position:absolute; background:#d4dfccc9; }
 .alignment-mark::before { left:0; top:3px; width:8px; height:2px; }
 .alignment-mark::after { left:3px; top:0; width:2px; height:8px; }
 @media(max-width:640px),(orientation:landscape) and (max-height:600px) and (max-width:1100px) {
  .compass { width:56px; height:56px; right:8px; bottom:34px; }
- .alignment-mark { top:82px; }
 }
 
 /* One observation setting with a full-height touch target. */

@@ -85,9 +85,20 @@ with sync_playwright() as p:
                 assert panes.nth(0).locator('.compass').inner_html()==panes.nth(1).locator('.compass').inner_html()
                 a=panes.nth(0).bounding_box();b=panes.nth(1).bounding_box()
                 m=page.locator('.alignment-mark').nth(0).bounding_box();n=page.locator('.alignment-mark').nth(1).bounding_box()
-                assert abs(m['x']+m['width']/2-a['x']-a['width']/2)<.05
-                assert abs(n['x']+n['width']/2-b['x']-b['width']/2)<.05
+                assert abs(m['x']-a['x']-12)<.05
+                assert abs(n['x']-b['x']-12)<1.05
                 assert abs(m['y']-n['y'])<.01
+                assert abs(a['y']+a['height']-m['y']-m['height']-50)<.05
+                # Labels occupy only a corner; the centre of each pane remains clear.
+                for i,pane in enumerate([a,b]):
+                    label=page.locator('#eye-labels span').nth(i).evaluate('(e)=>{const r=document.createRange();r.selectNodeContents(e);const b=r.getBoundingClientRect();return {x:b.x,y:b.y,width:b.width,height:b.height}}')
+                    mark=[m,n][i]
+                    assert abs(label['x']-pane['x']-28)<1.05
+                    assert abs(label['y']+label['height']/2-mark['y']-mark['height']/2)<3
+                    assert label['x']+label['width']<pane['x']+pane['width']-64
+                    assert label['y']>pane['y']+pane['height']*.5
+                assert page.locator('#left-eye').inner_text()==('右眼用' if mode=='cross' else '左眼用')
+                assert page.locator('#right-eye').inner_text()==('左眼用' if mode=='cross' else '右眼用')
             for box in page.locator('.compass:visible').all():
                 size=box.bounding_box()
                 assert size['width']<=64 and size['height']<=64
