@@ -1,9 +1,9 @@
-import { worldPixel } from './elevation.js?v=0.21.1';
+import { worldPixel } from './elevation.js?v=0.21.2';
 
 const sources = {
   map:{url:'https://cyberjapandata.gsi.go.jp/xyz/std',extension:'png',label:'地図画像'},
   photo:{url:'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto',extension:'jpg',label:'航空写真'},
-  geology:{url:'https://gbank.gsj.jp/seamless/v2/api/1.3.1/tiles',extension:'png',label:'地質図',yBeforeX:true,maxZoom:13,query:'?type=level1'}
+  geology:{url:'https://gbank.gsj.jp/seamless/v2/api/1.3.1/tiles',extension:'png',label:'地質図',yBeforeX:true,maxZoom:13,query:'?type=original'}
 };
 function sourceFor(surface) {
   const source=sources[surface];

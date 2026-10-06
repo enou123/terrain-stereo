@@ -10,7 +10,7 @@ test('geology legend requests only the visible extent using detailed map categor
     const location={latitude:33.767,longitude:133.115},legend=await fetchGeologyLegend(location,12);
     assert.equal(requests.length,1);
     const url=new URL(requests[0].url);
-    assert.equal(url.searchParams.get('type'),'level1');
+    assert.equal(url.searchParams.get('type'),'original');
     assert.equal(url.searchParams.get('z'),'13');
     assert.equal(url.searchParams.get('box'),'33.71310,133.05016,33.82090,133.17984');
     assert.deepEqual(legend,[{value:'7f9b72',title:'新生代 第四紀, 火山岩',group_ja:'火成岩',formationAge_ja:'新生代 第四紀',lithology_ja:'火山岩'}]);
