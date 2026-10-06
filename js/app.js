@@ -1,8 +1,9 @@
-import { setupViewerUI } from './viewer-ui.js?v=0.9.0';
-import { LocationMap } from './map.js?v=0.9.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.9.0';
-import { createMesh } from './mesh.js?v=0.9.0';
-import { TerrainRenderer } from './renderer.js?v=0.9.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.10.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.10.0';
+import { LocationMap } from './map.js?v=0.10.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.10.0';
+import { createMesh } from './mesh.js?v=0.10.0';
+import { TerrainRenderer } from './renderer.js?v=0.10.0';
 setupViewerUI();
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
@@ -11,6 +12,33 @@ const modeSelect=document.querySelector('#view-mode'), strengthSlider=document.q
 const qualitySelect=document.querySelector('#quality');
 const contoursToggle=document.querySelector('#contours');
 const surfaceSelect=document.querySelector('#surface');
+const textureStatus=document.querySelector('#texture-status'), textureRetry=document.querySelector('#texture-retry');
+let textureCache=null, textureController=null, textureRequest=0, activeTextureKey=null;
+async function updateTexture() {
+  const request=++textureRequest;
+  textureController?.abort();textureController=null;
+  textureRetry.hidden=true;textureStatus.hidden=true;
+  if(surfaceSelect.value!=='map' || !data || renderer?.lost) return;
+  const key=textureKey(data.location);
+  if(textureCache?.key===key) {
+    if(activeTextureKey!==key) {renderer.setTexture(textureCache.canvas);activeTextureKey=key;}
+    updateSurface();return;
+  }
+  const controller=new AbortController();textureController=controller;
+  const timeout=setTimeout(()=>controller.abort(),25000);
+  textureStatus.hidden=false;textureStatus.textContent='地図画像を読み込み中…';
+  try {
+    const canvas=await loadMapTexture(data.location,controller.signal);
+    if(request!==textureRequest) return;
+    textureCache={key,canvas};renderer.setTexture(canvas);activeTextureKey=key;
+    textureStatus.hidden=true;updateSurface();
+  } catch(error) {
+    if(request!==textureRequest) return;
+    textureStatus.hidden=false;textureStatus.textContent=(controller.signal.aborted ? '地図画像の通信がタイムアウトしました。' : error.message)+' 地形は標高の色で表示しています。';
+    textureRetry.hidden=false;
+  } finally {clearTimeout(timeout);if(request===textureRequest)textureController=null;}
+}
+textureRetry.addEventListener('click',updateTexture);
 contoursToggle.addEventListener('change',()=>renderer?.setContours(contoursToggle.checked));
 const qualityNames={standard:'標準',high:'高精細',ultra:'最高精細'};
 let requestedQuality='standard', resetView=true;
@@ -44,12 +72,12 @@ showTerrain.addEventListener('click',()=>{
   document.querySelector('#workspace').scrollIntoView({behavior:'auto',block:'start'});
 });
 function updateSurface() {
-  const shaded=surfaceSelect.value==='shading', anaglyph=modeSelect.value==='anaglyph';
+  const mapped=surfaceSelect.value==='map', shaded=surfaceSelect.value==='shading', anaglyph=modeSelect.value==='anaglyph';
   renderer?.setSurface(surfaceSelect.value);
-  document.querySelector('#surface-guide').textContent=(shaded ? '標高の色を使わず、斜面の向きによる明暗で尾根や谷を眺めます。' : '色は標高、陰影は斜面の向きを表します。')+(anaglyph ? '赤シアン表示では白黒の明るさで表します。' : '');
-  document.querySelector('#elevation-legend').hidden=shaded || anaglyph;
+  document.querySelector('#surface-guide').textContent=(mapped ? '国土地理院の地図を地形に重ねます。画像は選択時に取得し、地形の画質とは別の細かさです。' : shaded ? '標高の色を使わず、斜面の向きによる明暗で尾根や谷を眺めます。' : '色は標高、陰影は斜面の向きを表します。')+(anaglyph ? '赤シアン表示では白黒の明るさで表します。' : '');
+  document.querySelector('#elevation-legend').hidden=mapped || shaded || anaglyph;
 }
-surfaceSelect.addEventListener('change',updateSurface);
+surfaceSelect.addEventListener('change',()=>{updateSurface();updateTexture();});
 function updateStereo() {
   const mode=modeSelect.value, strength=Number(strengthSlider.value);
   renderer?.setStereo(mode,strength);
@@ -94,7 +122,10 @@ async function load() {
     updateStereo();
     const nextData=await loadElevation((done,total)=>status.textContent=`標高データを取得しています… ${done} / ${total}`,requestedLocation,requestedQuality);
     renderer.setMesh(createMesh(nextData,Number(slider.value)));
+    const newKey=textureKey(nextData.location);
+    if(activeTextureKey!==newKey) {renderer.setTexture(null);activeTextureKey=null;}
     data=nextData;
+    updateSurface();updateTexture();
     if(resetView) renderer.reset();
     document.querySelector('#quality-guide').textContent=`${qualityNames[data.quality]}：約${Math.round(data.spacing*1000)} m間隔で地形を表示。`+(data.sourceZoom===14 ? 'この縮尺では標高データの細かさの上限に達しています。' : '高い画質ほど通信量と描画の負荷が増えます。');
     if (data.fallbackTileCount) document.querySelector('#quality-guide').textContent += ' 一部の範囲は細かな標高データがないため、広域のデータで補完しています。補完部分の細かさは上記の間隔と異なります。';

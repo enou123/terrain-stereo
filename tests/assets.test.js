@@ -22,5 +22,5 @@ test('stylesheet and complete browser module graph share the release version', a
     }
   }
   for (const reference of references) await check(reference, root);
-  assert.equal(visited.size, 11, 'All ten browser modules and the stylesheet must be checked');
+  assert.equal(visited.size, 12, 'All eleven browser modules and the stylesheet must be checked');
 });

@@ -20,7 +20,7 @@ iPhone からは同じ Wi-Fi 上の PC の `http://<PCのLAN内IP>:8000` にア�
 
 GitHub の公開処理が成功すると、`https://enou123.github.io/terrain-stereo/` を iPhone の Safari から開けます。初回の公開には数分かかることがあります。公開完了は Pages 設定画面または Actions の `pages build and deployment` で確認してください。
 
-必要な環境は、WebGL・ES Modules・Pointer Events・ResizeObserver・AbortSignal.timeout に対応した現行 Chrome / Edge / Firefox / Safari と、国土地理院へのインターネット接続です。APIキー・有料サービス・外部ライブラリ・CDN・外部フォント配信は使用しません。フォントは端末にインストールされた `BIZ UDPGothic`、`BIZ UDGothic` を優先し、なければシステムフォントに切り替えます。
+必要な環境は、WebGL・ES Modules・Pointer Events・ResizeObserver・createImageBitmap・AbortSignal.timeout に対応した現行 Chrome / Edge / Firefox / Safari と、国土地理院へのインターネット接続です。APIキー・有料サービス・外部ライブラリ・CDN・外部フォント配信は使用しません。フォントは端末にインストールされた `BIZ UDPGothic`、`BIZ UDGothic` を優先し、なければシステムフォントに切り替えます。
 
 ## 場所を選ぶ
 
@@ -70,7 +70,7 @@ GitHub の公開処理が成功すると、`https://enou123.github.io/terrain-st
 - 欠測値を含む三角形は省きます。タイル取得失敗時はエラーと再試行を表示し、代替の架空地形は表示しません。25秒の通信タイムアウトを設けています。
 - データはブラウザから直接取得し、サーバー側の代理取得やローカルへの同梱は行いません。
 
-画面内にも「国土地理院の標高タイルを加工して作成」と出典を記載しています。[国土地理院コンテンツ利用規約](https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html)も参照してください。この表示は地形を楽しむための簡易ビューアで、測量や登山経路の判断用ではありません。
+画面内にも「国土地理院の標高・標準地図を加工して作成」と出典を記載しています。[国土地理院コンテンツ利用規約](https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html)も参照してください。この表示は地形を楽しむための簡易ビューアで、測量や登山経路の判断用ではありません。
 
 ## ファイル構成
 
@@ -79,6 +79,7 @@ index.html             画面構造・操作UI・出典
 styles.css             レスポンシブレイアウト・配色・フォント
 js/app.js              読み込み状態・UIと描画の接続
 js/elevation.js        任意地点の標高取得・解析・タイル再利用
+js/texture.js          地形範囲に合わせた地図画像取得・合成
 js/map.js              地理院地図・地点選択・パンとズーム
 js/mesh.js             三角形メッシュ・色・法線の生成
 js/math.js             透視投影・視点の行列
@@ -168,3 +169,11 @@ python tests/ui.browser.py
 4つの表示モード・等高線と併用できます。陰影のみ・赤シアンでは標高色の凡例を隠します。設定開閉・拡大・縦横回転・高さ強調・画質変更・地点変更・視点リセットでも選択を保持します。切替は追加の通信・メッシュ再生成を行いません。航空写真・地質図・画像テクスチャは今回含みません。
 
 描画回帰確認は`python tests/contours.browser.py`にも追加しています。陰影が標高色に依存せず斜面の向きに応じて変わること、全4モードで元の表示に戻せること、両表面で等高線と欠損部分を検証します。結果は`terrain-stereo-preview/surface-shader/`に保存します。
+
+## 地図テクスチャ（0.10.0）
+
+「地形表面」の「地理院地図」で、標準地図を3D地形に重ねます。初期表示は従来の標高色です。画像は選択時だけ読み込み、画質・高さ・視点を変えても同じ地理的位置に重なります。等高線と全立体視モードも併用できます。標準地図に印刷された等高線は、追加の等高線チェックをOFFにしても残ります。
+
+画像は地形の縮尺に合わせたズーム（上限14）から取得し、1024×1024の画像1枚にまとめます。地形の画質とは別の細かさで、文字を拡大しても精細さは増えません。最大16タイル・並列4取得・25秒タイムアウト。現在の範囲の画像1枚だけをメモリで再利用し、地点を変えると置き換えます。失敗時も標高色の地形は操作でき、設定から地図画像だけを再試行できます。
+
+新規回帰：`node --test tests/texture.test.js`、`python tests/texture.browser.py`、`python tests/texture.gpu.browser.py`。実地図の8画面テストと画像は `terrain-stereo-preview/map-texture-phase-1/`、既知配色によるGPU結果は `map-texture-shader/` に保存します。

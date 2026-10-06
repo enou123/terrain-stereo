@@ -8,7 +8,8 @@ import urllib.request,urllib.error,hashlib,math,os
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 CACHE=Path('/tmp/terrain-ui-gsi-cache');CACHE.mkdir(exist_ok=True)
-OUT=ROOT.parent/'terrain-stereo-preview'/'surface-coastal';OUT.mkdir(parents=True,exist_ok=True)
+MAP_TEST=os.environ.get('TEXTURE_MAP_TEST')=='1'
+OUT=ROOT.parent/'terrain-stereo-preview'/('map-texture-coastal' if MAP_TEST else 'surface-coastal');OUT.mkdir(parents=True,exist_ok=True)
 fixtures={};lock=Lock()
 def get(url):
     with lock:
@@ -36,6 +37,10 @@ for quality in range(3):
     jobs.extend((z+quality,x,y) for y in range(int(sy//256),int((sy+2*half)//256)+1) for x in range(int(sx//256),int((sx+2*half)//256)+1))
 with ThreadPoolExecutor(4) as pool:list(pool.map(lambda args:tile(*args),jobs))
 print('Real DEM fixtures:',len(fixtures),'404:',sum(code==404 for code,_ in fixtures.values()),flush=True)
+if MAP_TEST:
+    sx=(math.floor(cx)-192)*2;sy=(math.floor(cy)-192)*2
+    images=[f'https://cyberjapandata.gsi.go.jp/xyz/std/10/{x}/{y}.png' for y in range(math.floor(sy/256),math.ceil((sy+768)/256)) for x in range(math.floor(sx/256),math.ceil((sx+768)/256))]
+    with ThreadPoolExecutor(4) as pool:list(pool.map(get,images))
 class Handler(SimpleHTTPRequestHandler):
     def log_message(self,*args):pass
 server=ThreadingHTTPServer(('127.0.0.1',0),partial(Handler,directory=str(ROOT)))
@@ -51,7 +56,9 @@ with sync_playwright() as p:
                 assert u in fixtures,u
                 code,body=fixtures[u]
                 r.fulfill(status=code,body=body,headers={'Access-Control-Allow-Origin':'*'})
-            else:r.fulfill(status=404,body='') # Map imagery is outside this focused DEM check.
+            elif MAP_TEST and '/std/10/' in u:
+                code,body=get(u);r.fulfill(status=code,body=body,content_type='image/png',headers={'Access-Control-Allow-Origin':'*'})
+            else:r.fulfill(status=404,body='') # Selection map imagery is outside this focused check.
         page.route('https://cyberjapandata.gsi.go.jp/**',route)
         source=(ROOT/'js/app.js').read_text()
         # Only the initial location is changed in the test-served module.
@@ -61,7 +68,8 @@ with sync_playwright() as p:
         page.goto(f'http://127.0.0.1:{server.server_port}/')
         page.wait_for_function('window.fallbackTest && fallbackTest.data && !document.querySelector("#quality").disabled',timeout=120000)
         if page.locator('#view-settings').is_hidden():page.click('#toggle-settings')
-        page.select_option('#surface','shading')
+        page.select_option('#surface','map' if MAP_TEST else 'shading')
+        if MAP_TEST:page.wait_for_function('fallbackTest.renderer.surface==="map"',timeout=40000)
         page.check('#contours')
         view=page.evaluate('({yaw:fallbackTest.renderer.controls.yaw,pitch:fallbackTest.renderer.controls.pitch,location:fallbackTest.data.location})')
         extent=page.locator('#extent').inner_text()
@@ -80,7 +88,7 @@ with sync_playwright() as p:
                 page.select_option('#view-mode',mode)
                 page.wait_for_function('fallbackTest.renderer.frame===null')
                 assert page.evaluate('fallbackTest.renderer.gl.getError()')==0
-                assert page.evaluate('fallbackTest.renderer.contours && fallbackTest.renderer.surface==="shading"')
+                assert page.evaluate('(surface)=>fallbackTest.renderer.contours && fallbackTest.renderer.surface===surface','map' if MAP_TEST else 'shading')
             page.locator('#workspace').evaluate('e=>e.scrollIntoView({block:"start"})')
             page.screenshot(path=str(OUT/f'{width}x{height}-{quality}.png'))
         assert not errors,errors

@@ -1,19 +1,22 @@
-import { lookAt } from './math.js?v=0.9.0';
-import { ObservationOverlay } from './observation.js?v=0.9.0';
-import { fitMeshPositions } from './mesh.js?v=0.9.0';
-import { stereoCamera } from './stereo.js?v=0.9.0';
-import { OrbitControls } from './controls.js?v=0.9.0';
+import { lookAt } from './math.js?v=0.10.0';
+import { ObservationOverlay } from './observation.js?v=0.10.0';
+import { fitMeshPositions } from './mesh.js?v=0.10.0';
+import { stereoCamera } from './stereo.js?v=0.10.0';
+import { OrbitControls } from './controls.js?v=0.10.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
 attribute vec3 aColor;
 attribute float aElevation;
+attribute vec2 aUV;
 uniform mat4 uProjection;
 uniform mat4 uView;
+varying vec2 vUV;
 varying vec3 vColor;
 varying vec3 vNormal;
 varying float vContourHeight;
 void main() {
+  vUV = aUV;
   vNormal = aNormal;
   vColor = aColor;
   vContourHeight = aElevation / 100.0;
@@ -27,14 +30,18 @@ precision mediump float;
 #endif
 uniform float uMonochrome;
 uniform float uShading;
+uniform float uTextureEnabled;
+uniform sampler2D uTexture;
 uniform float uContours;
 uniform float uPixelRatio;
+varying vec2 vUV;
 varying vec3 vColor;
 varying vec3 vNormal;
 varying float vContourHeight;
 void main() {
   float light = max(dot(normalize(vNormal), normalize(vec3(-0.6, 1.0, -0.4))), 0.0);
   vec3 color = mix(vColor, vec3(0.68), uShading) * (0.38 + 0.78 * light);
+  if (uTextureEnabled > 0.5) color = texture2D(uTexture, vUV).rgb * (0.65 + 0.35 * light);
   #ifdef CONTOUR_DERIVATIVES
   if (uContours > 0.5) {
     // One contour every 100 real metres; derivatives maintain a thin screen-space line.
@@ -75,6 +82,14 @@ export class TerrainRenderer {
     for (const shader of shaders) gl.deleteShader(shader);
     if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) throw new Error('3D描画の初期化に失敗しました。');
     this.buffers = ['aPosition','aNormal','aColor','aElevation'].map(name=>({ buffer: gl.createBuffer(), location: gl.getAttribLocation(this.program,name), size: name === 'aElevation' ? 1 : 3 }));
+    this.uvBuffer = gl.createBuffer();
+    this.uvLocation = gl.getAttribLocation(this.program,'aUV');
+    this.textureLocation = gl.getUniformLocation(this.program,'uTexture');
+    this.textureEnabledLocation = gl.getUniformLocation(this.program,'uTextureEnabled');
+    this.texture = null;
+    this.emptyTexture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,this.emptyTexture);
+    gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));
+    gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
     this.indexBuffer = gl.createBuffer();
     this.projectionLocation = gl.getUniformLocation(this.program,'uProjection');
     this.viewLocation = gl.getUniformLocation(this.program,'uView');
@@ -100,6 +115,9 @@ export class TerrainRenderer {
     if (mesh.indices instanceof Uint32Array && !this.uintIndices) throw new Error('この端末では高精細の描画に対応していません。標準を選んでください。');
     this.indexType=mesh.indices instanceof Uint32Array ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
     const fittedPositions=fitMeshPositions(mesh);
+    const side=Math.sqrt(mesh.positions.length/3), uv=new Float32Array(side*side*2);
+    for(let row=0;row<side;row++) for(let col=0;col<side;col++) uv.set([col/(side-1),row/(side-1)],(row*side+col)*2);
+    gl.bindBuffer(gl.ARRAY_BUFFER,this.uvBuffer);gl.bufferData(gl.ARRAY_BUFFER,uv,gl.STATIC_DRAW);
     for (const [i,array] of [fittedPositions,mesh.normals,mesh.colors,mesh.elevations].entries()) {
       gl.bindBuffer(gl.ARRAY_BUFFER,this.buffers[i].buffer);
       gl.bufferData(gl.ARRAY_BUFFER,array,gl.STATIC_DRAW);
@@ -114,7 +132,22 @@ export class TerrainRenderer {
     this.requestDraw();
   }
   setSurface(surface) {
-    this.surface = surface === 'shading' ? 'shading' : 'elevation';
+    this.surface = surface === 'map' && this.texture ? 'map' : surface === 'shading' ? 'shading' : 'elevation';
+    this.requestDraw();
+  }
+  setTexture(canvas) {
+    const gl=this.gl;
+    if(this.texture) gl.deleteTexture(this.texture);
+    this.texture=null;
+    if(canvas) {
+      this.texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,this.texture);
+      gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+      gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,canvas);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+    }
     this.requestDraw();
   }
   reset() { this.controls.reset(); this.requestDraw(); }
@@ -145,6 +178,11 @@ export class TerrainRenderer {
       gl.bindBuffer(gl.ARRAY_BUFFER,buffer); gl.enableVertexAttribArray(location);
       gl.vertexAttribPointer(location,size,gl.FLOAT,false,0,0);
     }
+    gl.bindBuffer(gl.ARRAY_BUFFER,this.uvBuffer);gl.enableVertexAttribArray(this.uvLocation);
+    gl.vertexAttribPointer(this.uvLocation,2,gl.FLOAT,false,0,0);
+    gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,this.texture || this.emptyTexture);
+    gl.uniform1i(this.textureLocation,0);
+    gl.uniform1f(this.textureEnabledLocation,this.surface==='map' && this.texture ? 1 : 0);
     gl.uniform1f(this.monochromeLocation,anaglyph ? 1 : 0);
     gl.uniform1f(this.shadingLocation,this.surface === 'shading' ? 1 : 0);
     gl.uniform1f(this.contoursLocation,this.contours ? 1 : 0);
