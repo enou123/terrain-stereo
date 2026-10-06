@@ -22,5 +22,5 @@ test('stylesheet and complete browser module graph share the release version', a
     }
   }
   for (const reference of references) await check(reference, root);
-  assert.equal(visited.size, 15, 'All fourteen browser modules, including lazy section modules, and the stylesheet must be checked');
+  assert.equal(visited.size, 16, 'All fifteen browser modules, including lazy section modules, and the stylesheet must be checked');
 });

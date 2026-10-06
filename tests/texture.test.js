@@ -56,10 +56,10 @@ test('geology uses GSJ seamless geology tiles over the same terrain footprint',(
   const geology=texturePlan(location,'geology'),map=texturePlan(location,'map');
   assert.deepEqual({...geology,tiles:[]},{...map,tiles:[]});
   assert.equal(geology.tiles.length,map.tiles.length);
-  assert.ok(geology.tiles.every(t=>t.url.startsWith('https://gbank.gsj.jp/seamless/v2/api/1.3.1/tiles/13/')&&t.url.endsWith('.png')));
+  assert.ok(geology.tiles.every(t=>t.url.startsWith('https://gbank.gsj.jp/seamless/v2/api/1.3.1/tiles/13/')&&t.url.endsWith('.png?type=level2')));
   const z13=texturePlan({...location,zoom:14},'geology');
   assert.equal(z13.zoom,13);
-  assert.ok(z13.tiles.every(t=>/^https:\/\/gbank\.gsj\.jp\/seamless\/v2\/api\/1\.3\.1\/tiles\/13\/\d+\/\d+\.png$/.test(t.url)));
+  assert.ok(z13.tiles.every(t=>/^https:\/\/gbank\.gsj\.jp\/seamless\/v2\/api\/1\.3\.1\/tiles\/13\/\d+\/\d+\.png\?type=level2$/.test(t.url)));
   assert.notEqual(textureKey(location,'geology'),textureKey(location,'map'));
   assert.throws(()=>texturePlan(location,'unknown'));
 });

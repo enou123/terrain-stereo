@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#14251e">
   <title>terrain-stereo — 日本の地形を探索</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.20.1">
-  <script type="module" src="js/app.js?v=0.20.1"></script>
+  <link rel="stylesheet" href="styles.css?v=0.21.0">
+  <script type="module" src="js/app.js?v=0.21.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
@@ -15,7 +15,7 @@
     <section class="intro"><div><p class="eyebrow">EXPLORE JAPAN</p><h1>日本<span>の地形を探索</span></h1><p class="description">地図で見つけて、立体で眺める。日本各地の尾根や谷を探索。</p></div><div class="location"><span>立体表示中の場所</span><strong id="loaded-location">石鎚山周辺</strong><small>国土地理院の標高データを使用</small></div></section>
     <section id="place-picker" class="location-picker" aria-labelledby="map-heading" tabindex="-1">
       <div class="map-heading"><div><p class="eyebrow">FIND A PLACE</p><h2 id="map-heading">見たい場所を探す</h2></div><a href="#workspace" class="viewer-link">立体表示へ ↓</a></div>
-      <p class="map-help">地図を動かして中央の＋を見たい場所に合わせ、「ここを立体表示」を押してください。枠が表示範囲です。地図を縮小すると広く、拡大すると狭く表示します。</p>
+      <p class="map-help">地図を動かして中央の＋を見たい場所に合わせ、「ここを立体表示」を押してください。枠が表示範囲です。ホイールやピンチでなめらかに縮尺を変えられます。</p>
       <div class="map-shell">
         <div id="location-map" class="location-map" tabindex="0" role="region" aria-label="場所を選ぶ日本地図。ドラッグで移動、ピンチまたはプラス・マイナスで拡大縮小、矢印キーで移動。">
           <div class="map-tiles" aria-hidden="true"></div><div class="map-footprint" aria-hidden="true"></div><span class="map-crosshair" aria-hidden="true">＋</span><p class="map-notice" role="status" hidden></p>
@@ -58,6 +58,16 @@
         <label class="setting-label" for="surface">地形表面</label>
         <select id="surface" aria-describedby="surface-guide"><option value="elevation">標高の色</option><option value="shading">陰影のみ</option><option value="map">地理院地図</option><option value="photo">航空写真</option><option value="geology">地質図</option></select>
         <p id="surface-guide" class="hint">色は標高、陰影は斜面の向きを表します。</p>
+        <section id="geology-legend" class="geology-legend" hidden aria-label="表示範囲の地質凡例">
+          <button id="geology-legend-open" type="button" aria-expanded="false" aria-controls="geology-legend-panel">この場所の地質を見てみる <span aria-hidden="true">＋</span></button>
+          <div id="geology-legend-panel" class="geology-legend-panel" hidden>
+            <p class="geology-legend-intro">色は地質区分を表します。地形の下にある岩石や地層を、年代とあわせて見てみましょう。</p>
+            <p id="geology-legend-status" class="hint" role="status" aria-live="polite"></p>
+            <div id="geology-legend-list" class="geology-legend-list"></div>
+            <p class="geology-legend-note">地質境界は概略です。地質図は約20万分の1の縮尺をもとにした広域情報です。</p>
+            <a href="https://gbank.gsj.jp/seamless/v2/legend.html" target="_blank" rel="noopener noreferrer">凡例の詳しい説明 ↗</a>
+          </div>
+        </section>
         <div id="sun-settings" hidden>
           <div class="control-heading"><label for="sun-azimuth">太陽の方位</label><output id="sun-azimuth-value" for="sun-azimuth">北西</output></div>
           <input id="sun-azimuth" type="range" min="0" max="359" step="1" value="315" aria-label="太陽の方位">

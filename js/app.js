@@ -1,11 +1,12 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.20.1';
-import { setupViewerUI } from './viewer-ui.js?v=0.20.1';
-import { LocationMap } from './map.js?v=0.20.1';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.20.1';
-import { createMesh } from './mesh.js?v=0.20.1';
-import { TerrainRenderer } from './renderer.js?v=0.20.1';
-import { createShareUrl, readSharedView } from './share.js?v=0.20.1';
-import { flightTourPose } from './controls.js?v=0.20.1';
+import { loadMapTexture, textureKey } from './texture.js?v=0.21.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.21.0';
+import { LocationMap } from './map.js?v=0.21.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.21.0';
+import { createMesh } from './mesh.js?v=0.21.0';
+import { TerrainRenderer } from './renderer.js?v=0.21.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.21.0';
+import { flightTourPose } from './controls.js?v=0.21.0';
+import { fetchGeologyLegend } from './geology-legend.js?v=0.21.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -66,6 +67,38 @@ async function updateTexture() {
   } finally {clearTimeout(timeout);if(request===textureRequest)textureController=null;}
 }
 textureRetry.addEventListener('click',updateTexture);
+
+const geologyLegendButton=document.querySelector('#geology-legend-open'), geologyLegendPanel=document.querySelector('#geology-legend-panel');
+let geologyLegendKey='', geologyLegendController;
+geologyLegendButton.addEventListener('click',async()=>{
+  const opening=geologyLegendPanel.hidden;
+  geologyLegendPanel.hidden=!opening;
+  geologyLegendButton.setAttribute('aria-expanded',String(opening));
+  geologyLegendButton.querySelector('span').textContent=opening?'−':'＋';
+  if(opening) geologyLegendPanel.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'});
+  if(!opening || !data) return;
+  const location=data.location, extent=terrainExtent(location.latitude,location.zoom);
+  const key=`${location.latitude}/${location.longitude}/${extent}`;
+  if(geologyLegendKey===key && geologyLegendPanel.dataset.loaded==='true') return;
+  geologyLegendController?.abort(); geologyLegendController=new AbortController();
+  const status=document.querySelector('#geology-legend-status'),list=document.querySelector('#geology-legend-list');
+  status.hidden=false;status.textContent='表示範囲の凡例を読み込んでいます…';list.replaceChildren();geologyLegendPanel.dataset.loaded='false';
+  try {
+    const entries=await fetchGeologyLegend(location,extent,geologyLegendController.signal);
+    if(geologyLegendPanel.hidden) return;
+    geologyLegendKey=key;geologyLegendPanel.dataset.loaded='true';
+    if(!entries.length){status.textContent='この範囲の凡例情報は見つかりませんでした。';return;}
+    status.textContent=`表示範囲で使われている地質区分 · ${entries.length}種類`;
+    for(const entry of entries){
+      const item=document.createElement('article');item.className='geology-legend-item';
+      const swatch=document.createElement('span');swatch.className='geology-swatch';swatch.style.backgroundColor=`#${entry.value}`;swatch.setAttribute('aria-hidden','true');
+      const body=document.createElement('div'),title=document.createElement('strong'),age=document.createElement('span'),rock=document.createElement('small');
+      title.textContent=entry.lithology_ja||entry.title;age.textContent=entry.formationAge_ja||'';rock.textContent=entry.group_ja?`大区分 · ${entry.group_ja}`:entry.title;
+      body.append(title,age,rock);item.append(swatch,body);list.append(item);
+    }
+  } catch(error){if(error.name!=='AbortError') status.textContent='凡例を読み込めませんでした。通信を確認して、もう一度お試しください。';}
+});
+
 contoursToggle.addEventListener('change',()=>renderer?.setContours(contoursToggle.checked));
 const qualityNames={standard:'標準',high:'高精細',ultra:'最高精細'};
 let requestedQuality=sharedView?.quality ?? 'standard', resetView=!sharedView, sharedQualityFallback=false;
@@ -92,12 +125,12 @@ const locationName=location=>{
 };
 const map=new LocationMap(document.querySelector('#location-map'),sharedView?.location ?? LOCATION,location=>{
   selectedLocation=location;
-  document.querySelector('#selected-extent').textContent=`表示範囲：約${terrainExtent(location.latitude,location.zoom).toFixed(1)} km四方（地図の縮尺と連動）`;
+  document.querySelector('#selected-extent').textContent=`表示範囲：約${terrainExtent(location.latitude,location.mapZoom+1).toFixed(1)} km四方（地図の縮尺と連動）`;
   document.querySelector('#selected-location').textContent=coordinates(location);
   document.querySelector('#map-place').value=Object.keys(places).find(key=>Math.abs(places[key].latitude-location.latitude)<.0001 && Math.abs(places[key].longitude-location.longitude)<.0001)||'';
 });
-document.querySelector('#map-zoom-in').addEventListener('click',()=>map.setZoom(map.zoom+1));
-document.querySelector('#map-zoom-out').addEventListener('click',()=>map.setZoom(map.zoom-1));
+document.querySelector('#map-zoom-in').addEventListener('click',()=>map.setZoom(map.zoom+0.5));
+document.querySelector('#map-zoom-out').addEventListener('click',()=>map.setZoom(map.zoom-0.5));
 document.querySelector('#map-place').addEventListener('change',event=>{if(places[event.target.value]) map.setCenter(places[event.target.value]);});
 showTerrain.addEventListener('click',()=>{
   if(loading) return;
@@ -111,6 +144,7 @@ function updateSurface() {
   sunSettings.hidden=false;
   document.querySelector('#surface-guide').textContent=(photo ? '国土地理院の航空写真を地形に重ねます。撮影時期は地域で異なり、最新の状況とは限りません。' : mapped ? '国土地理院の地図を地形に重ねます。画像は選択時に取得し、地形の画質とは別の細かさです。' : geology ? '産総研・地質調査総合センターのシームレス地質図を重ねます。地質境界は概略で、地形の画質とは別に読み込みます。' : shaded ? '標高の色を使わず、斜面の向きによる明暗で尾根や谷を眺めます。' : '色は標高、陰影は斜面の向きを表します。')+(anaglyph ? '赤シアン表示では白黒の明るさで表します。' : '');
   document.querySelector('#elevation-legend').hidden=true;
+  document.querySelector('#geology-legend').hidden=!geology;
 }
 surfaceSelect.addEventListener('change',()=>{updateSurface();updateTexture();});
 function updateStereo() {
@@ -291,7 +325,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.20.1');
+      const {SectionTool}=await import('./profile-ui.js?v=0.21.0');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();

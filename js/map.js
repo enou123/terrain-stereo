@@ -1,4 +1,4 @@
-import { worldPixel, terrainZoom } from './elevation.js?v=0.20.1';
+import { worldPixel, terrainZoom } from './elevation.js?v=0.21.0';
 
 export function pixelLocation(x, y, zoom) {
   const scale = 256 * 2 ** zoom;
@@ -33,36 +33,51 @@ export class LocationMap {
         const distance = points => Math.hypot(points[0][0] - points[1][0], points[0][1] - points[1][1]);
         if (!this.pinchStart) this.pinchStart = { distance: distance(before), zoom: this.zoom };
         const ratio = distance(after) / Math.max(1, this.pinchStart.distance);
-        this.setZoom(this.pinchStart.zoom + Math.round(Math.log2(ratio)));
+        this.setZoom(this.pinchStart.zoom + Math.log2(ratio), b[0], b[1]);
       }
     });
     const release = event => { this.pointers.delete(event.pointerId); this.pinchStart = null; };
     for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) element.addEventListener(type, release);
     element.addEventListener('wheel', event => {
-      event.preventDefault(); this.setZoom(this.zoom + (event.deltaY < 0 ? 1 : -1));
+      event.preventDefault(); this.setZoom(this.zoom - event.deltaY * 0.004, event.clientX, event.clientY);
     }, { passive: false });
     element.addEventListener('keydown', event => {
       const directions = { ArrowLeft: [80, 0], ArrowRight: [-80, 0], ArrowUp: [0, 80], ArrowDown: [0, -80] };
       if (directions[event.key]) { event.preventDefault(); this.pan(...directions[event.key]); }
-      else if (['+', '=', '-'].includes(event.key)) { event.preventDefault(); this.setZoom(this.zoom + (event.key === '-' ? -1 : 1)); }
+      else if (['+', '=', '-'].includes(event.key)) { event.preventDefault(); this.setZoom(this.zoom + (event.key === '-' ? -0.5 : 0.5)); }
     });
     this.observer = new ResizeObserver(() => this.render()); this.observer.observe(element);
     this.render();
   }
   pan(dx, dy) {
-    const [x, y] = worldPixel(this.center.latitude, this.center.longitude, this.zoom);
-    this.center = constrainLocation(pixelLocation(x - dx, y - dy, this.zoom)); this.render();
+    const tileZoom = Math.floor(this.zoom), visualScale = 2 ** (this.zoom - tileZoom);
+    const [x, y] = worldPixel(this.center.latitude, this.center.longitude, tileZoom);
+    this.center = constrainLocation(pixelLocation(x - dx / visualScale, y - dy / visualScale, tileZoom)); this.render();
   }
-  setZoom(zoom) { this.zoom = Math.max(4, Math.min(13, zoom)); this.render(); }
+  setZoom(zoom, anchorX, anchorY) {
+    const next = Math.max(4, Math.min(13, zoom));
+    if (next === this.zoom) return;
+    const rect = this.element.getBoundingClientRect();
+    const sx = (anchorX ?? (rect.left + rect.width / 2)) - rect.left - rect.width / 2;
+    const sy = (anchorY ?? (rect.top + rect.height / 2)) - rect.top - rect.height / 2;
+    const oldTileZoom = Math.floor(this.zoom), oldScale = 2 ** (this.zoom - oldTileZoom);
+    const [cx, cy] = worldPixel(this.center.latitude, this.center.longitude, oldTileZoom);
+    const focus = pixelLocation(cx + sx / oldScale, cy + sy / oldScale, oldTileZoom);
+    const newTileZoom = Math.floor(next), newScale = 2 ** (next - newTileZoom);
+    const [fx, fy] = worldPixel(focus.latitude, focus.longitude, newTileZoom);
+    this.center = constrainLocation(pixelLocation(fx - sx / newScale, fy - sy / newScale, newTileZoom));
+    this.zoom = next; this.render();
+  }
   setCenter(location) { this.center = constrainLocation(location); this.zoom = 11; this.render(); }
   render() {
     const width = this.element.clientWidth, height = this.element.clientHeight;
     if (!width || !height) return;
-    const [cx, cy] = worldPixel(this.center.latitude, this.center.longitude, this.zoom);
-    const left = cx - width / 2, top = cy - height / 2, visible = new Set();
-    for (let y = Math.floor(top / 256); y <= Math.floor((top + height) / 256); y++) {
-      for (let x = Math.floor(left / 256); x <= Math.floor((left + width) / 256); x++) {
-        const key = `${this.zoom}/${x}/${y}`; visible.add(key);
+    const tileZoom = Math.floor(this.zoom), visualScale = 2 ** (this.zoom - tileZoom);
+    const [cx, cy] = worldPixel(this.center.latitude, this.center.longitude, tileZoom);
+    const left = cx - width / 2 / visualScale, top = cy - height / 2 / visualScale, visible = new Set();
+    for (let y = Math.floor(top / 256); y <= Math.floor((top + height / visualScale) / 256); y++) {
+      for (let x = Math.floor(left / 256); x <= Math.floor((left + width / visualScale) / 256); x++) {
+        const key = `${tileZoom}/${x}/${y}`; visible.add(key);
         let tile = this.tiles.get(key);
         if (!tile) {
           tile = document.createElement('img'); tile.alt = ''; tile.draggable = false;
@@ -71,17 +86,18 @@ export class LocationMap {
           tile.src = `https://cyberjapandata.gsi.go.jp/xyz/std/${key}.png`;
           this.tiles.set(key, tile); this.layer.append(tile);
         }
-        tile.style.transform = `translate(${x * 256 - left}px, ${y * 256 - top}px)`;
+        tile.style.width = `${256 * visualScale}px`; tile.style.height = `${256 * visualScale}px`;
+        tile.style.transform = `translate(${(x * 256 - left) * visualScale}px, ${(y * 256 - top) * visualScale}px)`;
       }
     }
     for (const [key, tile] of this.tiles) if (!visible.has(key)) { tile.remove(); this.tiles.delete(key); }
-    // The footprint is the same 384 DEM pixels used by the terrain grid.
-    const footprint = 384 * 2 ** (this.zoom - terrainZoom(this.zoom));
+    // The footprint tracks the exact continuous map scale while DEM requests stay on supported integer zooms.
+    const footprint = 192;
     this.element.querySelector('.map-footprint').style.width = `${footprint}px`;
     this.element.querySelector('.map-footprint').style.height = `${footprint}px`;
-    this.updateNotice(); this.onChange({ ...this.center, zoom: terrainZoom(this.zoom) });
-    document.querySelector('#map-zoom-in').disabled = this.zoom === 13;
-    document.querySelector('#map-zoom-out').disabled = this.zoom === 4;
+    this.updateNotice(); this.onChange({ ...this.center, zoom: terrainZoom(Math.round(this.zoom)), mapZoom: this.zoom });
+    document.querySelector('#map-zoom-in').disabled = this.zoom >= 13;
+    document.querySelector('#map-zoom-out').disabled = this.zoom <= 4;
   }
   updateNotice() {
     const failed = [...this.tiles.values()].some(tile => tile.dataset.state === 'error');

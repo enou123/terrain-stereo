@@ -589,3 +589,17 @@ body.view-focused { overflow:hidden; }
 .workspace.section-selecting .viewer-toolbar > a,.workspace.section-selecting .viewer-actions { display:none; }
 .section-selecting { cursor:crosshair; }
 .profile-overlay[hidden],.profile-prompt[hidden],#profile-chart[hidden] { display:none; }
+
+.geology-legend[hidden],.geology-legend-panel[hidden]{display:none}
+.geology-legend{margin:16px 0}
+.geology-legend>button{width:100%;display:flex;justify-content:space-between;align-items:center;padding:13px 15px;border:1px solid #cbd5c5;border-radius:8px;background:#f6f8f1;color:#344a37;font:inherit;font-weight:650;text-align:left;cursor:pointer}
+.geology-legend>button span{font-size:20px;line-height:1;color:#738751}
+.geology-legend-panel{margin-top:9px;padding:16px;border:1px solid #d9dfd5;border-radius:10px;background:#fbfcf8}
+.geology-legend-intro,.geology-legend-note{font-size:12px;line-height:1.7;color:#6f7d6d}
+.geology-legend-list{display:grid;gap:7px;margin:12px 0}
+.geology-legend-item{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;padding:10px 11px;border:1px solid #e4e8e0;border-radius:7px;background:white}
+.geology-swatch{width:18px;height:18px;margin-top:2px;border:1px solid #62715e55;border-radius:5px;box-shadow:inset 0 0 0 2px #ffffff55}
+.geology-legend-item div{display:grid;gap:3px}
+.geology-legend-item strong{font-size:12px;color:#2e4034}
+.geology-legend-item span,.geology-legend-item small{font-size:11px;line-height:1.5;color:#768174}
+.geology-legend-panel>a{color:#536b40;font-size:12px}

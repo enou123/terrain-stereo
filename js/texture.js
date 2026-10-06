@@ -1,9 +1,9 @@
-import { worldPixel } from './elevation.js?v=0.20.1';
+import { worldPixel } from './elevation.js?v=0.21.0';
 
 const sources = {
   map:{url:'https://cyberjapandata.gsi.go.jp/xyz/std',extension:'png',label:'地図画像'},
   photo:{url:'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto',extension:'jpg',label:'航空写真'},
-  geology:{url:'https://gbank.gsj.jp/seamless/v2/api/1.3.1/tiles',extension:'png',label:'地質図',yBeforeX:true,maxZoom:13}
+  geology:{url:'https://gbank.gsj.jp/seamless/v2/api/1.3.1/tiles',extension:'png',label:'地質図',yBeforeX:true,maxZoom:13,query:'?type=level2'}
 };
 function sourceFor(surface) {
   const source=sources[surface];
@@ -21,7 +21,7 @@ export function texturePlan(location, surface = 'map') {
   for (let ty = Math.floor(top / 256); ty < Math.ceil((top + span) / 256); ty++) {
     for (let tx = Math.floor(left / 256); tx < Math.ceil((left + span) / 256); tx++) {
       const coordinates=source.yBeforeX ? `${zoom}/${ty}/${tx}` : `${zoom}/${tx}/${ty}`;
-      tiles.push({ x: tx, y: ty, url: `${source.url}/${coordinates}.${source.extension}` });
+      tiles.push({ x: tx, y: ty, url: `${source.url}/${coordinates}.${source.extension}${source.query ?? ''}` });
     }
   }
   return { zoom, left, top, span, tiles };

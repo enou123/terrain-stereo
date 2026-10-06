@@ -67,7 +67,7 @@ with sync_playwright() as p:
             try:request.fulfill(status=200,body=real(u),content_type='image/png' if u.endswith('.png') else 'text/plain',headers={'Access-Control-Allow-Origin':'*'})
             except Exception as error:request.fulfill(status=404,body=str(error))
         page.route('https://cyberjapandata.gsi.go.jp/**',route)
-        page.route('https://gbank.gsj.jp/**',lambda r:r.fulfill(status=200,body=geology_fixture(),content_type='image/png',headers={'Access-Control-Allow-Origin':'*'}))
+        page.route('https://gbank.gsj.jp/**',lambda r:r.fulfill(status=200,body=json.dumps([{'value':'7f9b72','title':'新生代 第四紀, 火山岩','group_ja':'火成岩','formationAge_ja':'新生代 第四紀','lithology_ja':'火山岩'}]),content_type='application/json',headers={'Access-Control-Allow-Origin':'*'}) if 'legend.json' in r.request.url else r.fulfill(status=200,body=geology_fixture(),content_type='image/png',headers={'Access-Control-Allow-Origin':'*'}))
         # Expose existing objects only inside this test to verify view/data preservation.
         page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.uiTest={get renderer(){return renderer},get data(){return data},get map(){return map}};",content_type='text/javascript'))
         page.goto(url)
@@ -124,6 +124,14 @@ with sync_playwright() as p:
             page.wait_for_function("uiTest.renderer.surface==='geology'",timeout=30000)
             assert page.locator('#elevation-legend').is_hidden()
             assert '地質図' in page.locator('#surface-guide').inner_text()
+            assert page.locator('#geology-legend').is_visible()
+            page.click('#geology-legend-open')
+            page.wait_for_function("document.querySelector('#geology-legend-list').children.length===1")
+            assert '火山岩' in page.locator('#geology-legend-list').inner_text()
+            assert '火成岩' in page.locator('#geology-legend-list').inner_text()
+            assert page.locator('.geology-swatch').first.evaluate("e=>e.style.backgroundColor")== 'rgb(127, 155, 114)'
+            page.locator('#geology-legend-panel').scroll_into_view_if_needed()
+            page.screenshot(path=str(ARTIFACTS/'geology-legend-panel.png'))
             assert page.evaluate('uiTest.renderer.gl.getError()')==0
             page.locator('#workspace').scroll_into_view_if_needed()
             page.screenshot(path=str(ARTIFACTS/'1440x900-geology-test-tiles.png'))
@@ -321,8 +329,22 @@ with sync_playwright() as p:
             count=len(dem);coord=page.locator('#selected-location').inner_text()
             page.locator('#location-map').focus();page.keyboard.press('ArrowRight')
             assert coord!=page.locator('#selected-location').inner_text()
-            extent=page.locator('#selected-extent').inner_text();page.click('#map-zoom-out')
+            extent=page.locator('#selected-extent').inner_text();zoom=page.evaluate('uiTest.map.zoom');page.click('#map-zoom-out')
+            assert page.evaluate('uiTest.map.zoom')==zoom-.5
             assert extent!=page.locator('#selected-extent').inner_text() and len(dem)==count
+            zoom=page.evaluate('uiTest.map.zoom');map_box=page.locator('#location-map').bounding_box();page.mouse.move(map_box['x']+map_box['width']/2,map_box['y']+map_box['height']/2);page.mouse.wheel(0,-20)
+            assert page.evaluate('uiTest.map.zoom')>zoom and page.evaluate('uiTest.map.zoom')<zoom+0.5
+            assert len(dem)==count
+            if touch:
+                box=page.locator('#location-map').bounding_box();cx=box['x']+box['width']/2;cy=box['y']+box['height']/2
+                pinch_start=page.evaluate('uiTest.map.zoom')
+                cdp=page.context.new_cdp_session(page)
+                cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':cx-30,'y':cy,'id':0},{'x':cx+30,'y':cy,'id':1}]})
+                cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':cx-45,'y':cy,'id':0},{'x':cx+45,'y':cy,'id':1}]})
+                cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
+                pinch_end=page.evaluate('uiTest.map.zoom')
+                assert pinch_start<pinch_end<pinch_start+1,'Map pinch zoom must be continuous, not rounded to a whole level'
+                assert len(dem)==count
         assert not errors,errors
         results.append({'viewport':f'{width}x{height}','touch_emulation':touch,'passed':True})
         print('PASS',width,height,'sharing, contours, observation aids, rotation, stereo, UI and existing controls',flush=True)
