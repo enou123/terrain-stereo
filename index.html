@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#14251e">
   <title>terrain-stereo — 日本の地形を探索</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.13.0">
-  <script type="module" src="js/app.js?v=0.13.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.14.0">
+  <script type="module" src="js/app.js?v=0.14.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
@@ -28,7 +28,7 @@
     <section id="workspace" class="workspace" aria-label="3D地形ビューア">
       <nav class="viewer-toolbar" aria-label="地形ビューの操作">
         <a id="back-to-map" href="#place-picker">地図へ ↑</a>
-        <div class="viewer-actions"><button id="toggle-settings" type="button" aria-controls="view-settings" aria-expanded="true">設定を閉じる</button><button id="expand-view" type="button" aria-pressed="false">大きく表示</button></div>
+        <div class="viewer-actions"><button id="save-image" type="button" aria-label="表示中の地形をPNG画像で保存" title="立体視モードでは左右の画像をそのまま保存します">PNG</button><button id="toggle-settings" type="button" aria-controls="view-settings" aria-expanded="true">設定を閉じる</button><button id="expand-view" type="button" aria-pressed="false">大きく表示</button></div>
       <div id="profile-prompt" class="profile-prompt" hidden><span id="profile-instruction"></span><button id="profile-cancel" type="button">中止</button></div></nav>
       <div class="viewer" id="viewer">
         <div class="viewer-top"><span class="mode" id="mode-label">● 通常3D</span><span class="live-label"><span id="terrain-location">石鎚山周辺</span></span></div>

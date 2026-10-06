@@ -1,9 +1,9 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.13.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.13.0';
-import { LocationMap } from './map.js?v=0.13.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.13.0';
-import { createMesh } from './mesh.js?v=0.13.0';
-import { TerrainRenderer } from './renderer.js?v=0.13.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.14.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.14.0';
+import { LocationMap } from './map.js?v=0.14.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.14.0';
+import { createMesh } from './mesh.js?v=0.14.0';
+import { TerrainRenderer } from './renderer.js?v=0.14.0';
 const viewerUI=setupViewerUI();
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
@@ -66,6 +66,7 @@ const guides={
 };
 let profile, renderer, data, loading=false, selectedLocation={...LOCATION}, requestedLocation={...LOCATION};
 const showTerrain=document.querySelector('#show-terrain');
+const saveImage=document.querySelector('#save-image');
 const places={ishizuchi:{latitude:33.767,longitude:133.115},fuji:{latitude:35.3606,longitude:138.7274},aso:{latitude:32.884,longitude:131.104},daisetsu:{latitude:43.6636,longitude:142.8541},yakushima:{latitude:30.3361,longitude:130.5044}};
 const coordinates=location=>`${location.latitude.toFixed(4)}° N / ${location.longitude.toFixed(4)}° E`;
 const locationName=location=>{
@@ -113,6 +114,25 @@ function showError(error, canRetry=true) {
   status.textContent=`${error.message} ${canRetry ? '通信環境を確認して、もう一度お試しください。' : 'WebGL 対応ブラウザでページを再読み込みしてください。'}`;
   retry.hidden=!canRetry; state.textContent='表示できません';
 }
+saveImage.addEventListener('click',async()=>{
+  if(!renderer || !data || renderer.lost || !renderer.count)return;
+  saveImage.disabled=true;
+  try {
+    // Render synchronously so WebGL's non-preserved drawing buffer is captured immediately.
+    renderer.draw();
+    const capture=document.createElement('canvas');capture.width=renderer.canvas.width;capture.height=renderer.canvas.height;
+    const context=capture.getContext('2d');context.fillStyle='#14251e';context.fillRect(0,0,capture.width,capture.height);context.drawImage(renderer.canvas,0,0);
+    const image=await new Promise((resolve,reject)=>capture.toBlob(blob=>blob?resolve(blob):reject(new Error('PNG画像を作成できませんでした。')),'image/png'));
+    const now=new Date(),stamp=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0'),'-',String(now.getHours()).padStart(2,'0'),String(now.getMinutes()).padStart(2,'0')].join('');
+    const file=new File([image],`terrain-stereo-${stamp}.png`,{type:'image/png'});
+    if(navigator.canShare?.({files:[file]}) && navigator.share) await navigator.share({files:[file],title:'terrain-stereo 地形画像'});
+    else {
+      const url=URL.createObjectURL(image),link=document.createElement('a');link.href=url;link.download=file.name;link.hidden=true;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+    }
+  } catch(error) {
+    if(error.name!=='AbortError') {saveImage.textContent='失敗';saveImage.title=`画像を保存できませんでした。${error.message||''}`;setTimeout(()=>{saveImage.textContent='PNG';saveImage.title='立体視モードでは左右の画像をそのまま保存します'},3000);}
+  } finally {saveImage.disabled=false;}
+});
 qualitySelect.addEventListener('change',()=>{
   if (loading) return;
   requestedQuality=qualitySelect.value;
@@ -173,7 +193,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.13.0');
+      const {SectionTool}=await import('./profile-ui.js?v=0.14.0');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();
