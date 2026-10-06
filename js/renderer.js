@@ -1,6 +1,8 @@
-import { fitMeshPositions } from './mesh.js?v=0.6.0';
-import { stereoCamera } from './stereo.js?v=0.6.0';
-import { OrbitControls } from './controls.js?v=0.6.0';
+import { lookAt } from './math.js?v=0.7.0';
+import { ObservationOverlay } from './observation.js?v=0.7.0';
+import { fitMeshPositions } from './mesh.js?v=0.7.0';
+import { stereoCamera } from './stereo.js?v=0.7.0';
+import { OrbitControls } from './controls.js?v=0.7.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -28,6 +30,7 @@ void main() {
 export class TerrainRenderer {
   constructor(canvas, onError) {
     this.canvas = canvas;
+    this.observation = new ObservationOverlay(document.querySelector('#observation-overlay'));
     const gl = canvas.getContext('webgl', { antialias: true, alpha: true });
     if (!gl) throw new Error('この端末では WebGL を利用できません。WebGL 対応ブラウザで開いてください。');
     this.gl = gl;
@@ -93,6 +96,7 @@ export class TerrainRenderer {
     const width=Math.max(1,Math.round(canvas.clientWidth*ratio));
     const height=Math.max(1,Math.round(canvas.clientHeight*ratio));
     if (canvas.width!==width || canvas.height!==height) {canvas.width=width; canvas.height=height;}
+    this.observation.update(lookAt(this.controls.eye,this.controls.target),this.mode,width);
     const paired = this.mode === 'parallel' || this.mode === 'cross';
     const anaglyph = this.mode === 'anaglyph';
     gl.colorMask(true,true,true,true);

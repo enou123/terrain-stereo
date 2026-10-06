@@ -527,3 +527,21 @@ body.view-focused { overflow:hidden; }
   background:#fbfcf8; border-left:1px solid #d3dbce; border-top:0; box-shadow:-8px 0 24px #14251e30;
 }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+
+/* Observation aids share the renderer's eye viewports and never intercept input. */
+.observation-overlay,.observation-pane { position:absolute; inset:0; pointer-events:none; }
+.compass { position:absolute; right:10px; bottom:38px; width:64px; height:64px; }
+.compass-disc { fill:#14251eb3; stroke:#aec69650; stroke-width:1; }
+.compass line { stroke-width:1; }
+.compass .cardinal { stroke:#b6c2ad; fill:#d4dfcc; }
+.compass text { font:9px ui-sans-serif,system-ui,sans-serif; stroke:none !important; }
+.compass .north { stroke:#c5df99; fill:#c5df99; }
+.compass-arrow { stroke:none !important; }
+.alignment-mark { position:absolute; top:88px; left:50%; width:8px; height:8px; transform:translate(-50%,-50%); filter:drop-shadow(0 0 2px #14251e); }
+.alignment-mark::before,.alignment-mark::after { content:''; position:absolute; background:#d4dfccc9; }
+.alignment-mark::before { left:0; top:3px; width:8px; height:2px; }
+.alignment-mark::after { left:3px; top:0; width:2px; height:8px; }
+@media(max-width:640px),(orientation:landscape) and (max-height:600px) and (max-width:1100px) {
+ .compass { width:56px; height:56px; right:8px; bottom:34px; }
+ .alignment-mark { top:82px; }
+}

@@ -11,7 +11,7 @@ import hashlib, math, os, urllib.request, json
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 CACHE=Path('/tmp/terrain-ui-gsi-cache');CACHE.mkdir(exist_ok=True)
-ARTIFACTS=ROOT.parent/'terrain-stereo-preview'/'ui-phase-1';ARTIFACTS.mkdir(parents=True,exist_ok=True)
+ARTIFACTS=ROOT.parent/'terrain-stereo-preview'/'observation-phase-1';ARTIFACTS.mkdir(parents=True,exist_ok=True)
 def real(url):
     name=hashlib.sha256(url.encode()).hexdigest()
     for cache in [CACHE,Path('/tmp/japan-map-tiles')]:
@@ -66,8 +66,34 @@ with sync_playwright() as p:
         page.wait_for_function("window.uiTest && !document.querySelector('#quality').disabled",timeout=120000)
         assert page.locator('#message').is_hidden(),page.locator('#status').inner_text()
         def state():return page.evaluate('({target:uiTest.renderer.controls.target.slice(),yaw:uiTest.renderer.controls.yaw,pitch:uiTest.renderer.controls.pitch,distance:uiTest.renderer.controls.distance,location:uiTest.data.location,quality:uiTest.data.quality,mode:uiTest.renderer.mode,strength:uiTest.renderer.strength,height:document.querySelector("#exaggeration").value})')
+        def observation():
+            page.wait_for_function("uiTest.renderer.frame===null")
+            mode=state()['mode'];paired=mode in ['parallel','cross']
+            assert page.locator('.compass:visible').count()==(2 if paired else 1)
+            assert page.locator('.alignment-mark:visible').count()==(2 if paired else 0)
+            yaw=state()['yaw'];pitch=state()['pitch']
+            expected=[(math.sin(yaw),-math.sin(pitch)*math.cos(yaw)),
+                      (math.cos(yaw),math.sin(pitch)*math.sin(yaw))]
+            tips=page.locator('.observation-pane').first.locator('line').evaluate_all("nodes=>nodes.map(n=>[Number(n.getAttribute('x2')),Number(n.getAttribute('y2'))])")
+            for i,(x,y) in enumerate(expected):
+                assert abs(tips[i][0]-(32+18*x))<.00001
+                assert abs(tips[i][1]-(32+18*y))<.00001
+                assert abs(tips[i][0]+tips[i+2][0]-64)<.00001
+                assert abs(tips[i][1]+tips[i+2][1]-64)<.00001
+            if paired:
+                panes=page.locator('.observation-pane')
+                assert panes.nth(0).locator('.compass').inner_html()==panes.nth(1).locator('.compass').inner_html()
+                a=panes.nth(0).bounding_box();b=panes.nth(1).bounding_box()
+                m=page.locator('.alignment-mark').nth(0).bounding_box();n=page.locator('.alignment-mark').nth(1).bounding_box()
+                assert abs(m['x']+m['width']/2-a['x']-a['width']/2)<.05
+                assert abs(n['x']+n['width']/2-b['x']-b['width']/2)<.05
+                assert abs(m['y']-n['y'])<.01
+            for box in page.locator('.compass:visible').all():
+                size=box.bounding_box()
+                assert size['width']<=64 and size['height']<=64
         def stable():
             page.wait_for_function("(()=>{const c=document.querySelector('#terrain'),r=Math.min(devicePixelRatio,2);return c.width===Math.round(c.clientWidth*r)&&c.height===Math.round(c.clientHeight*r)})()")
+            observation()
             assert page.evaluate("uiTest.renderer.gl.getError()") == 0
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         landscape=width>height and height<=600 and width<=1100
@@ -120,9 +146,22 @@ with sync_playwright() as p:
         assert state()==moved and len(dem)==count
         page.set_viewport_size({'width':width,'height':height});stable()
         page.click('#toggle-settings');assert page.locator('#view-settings').is_visible()
-        for mode in ['mono','parallel','cross','anaglyph']:
-            page.select_option('#view-mode',mode);page.wait_for_timeout(100);stable()
+        for mode in ['mono','parallel','cross','anaglyph','mono']:
+            page.select_option('#view-mode',mode);stable()
+            page.click('#toggle-settings');stable()
+            page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-{mode}.png'))
+            page.click('#toggle-settings')
         page.select_option('#view-mode','mono')
+        page.click('#toggle-settings')
+        page.locator('#terrain').focus()
+        saved_yaw=state()['yaw']
+        for keys in [('ArrowLeft',20),('ArrowRight',40),('ArrowUp',10),('ArrowDown',18)]:
+            page.keyboard.press(keys[0])
+            for _ in range(keys[1]-1):page.keyboard.press(keys[0])
+            stable()
+        assert state()['yaw']!=saved_yaw
+        page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-rotated.png'))
+        page.click('#toggle-settings')
         # Panel scroll and reset button remain usable, including short landscape screens.
         page.click('#reset');assert state()['distance']==19
         page.click('#toggle-settings')
@@ -159,7 +198,7 @@ with sync_playwright() as p:
             assert extent!=page.locator('#selected-extent').inner_text() and len(dem)==count
         assert not errors,errors
         results.append({'viewport':f'{width}x{height}','touch_emulation':touch,'passed':True})
-        print('PASS',width,height,'layout, settings, focus, resizing, stereo and existing controls',flush=True)
+        print('PASS',width,height,'observation aids, rotation, stereo, UI and existing controls',flush=True)
         page.close()
     browser.close()
 server.shutdown()

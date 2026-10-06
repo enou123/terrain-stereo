@@ -130,9 +130,15 @@ node --test tests/*.test.js
 
 今回の対象と後続フェーズの設計方針は [UI/UXフェーズ1設計](docs/UI-UX-PHASE-1.md) に記録しています。
 
-ブラウザ回帰テストはPythonのPlaywrightとChromiumがある環境で実行します。TLS検証付きで実際の地図・DEMタイルを事前取得し、ローカルサーバーとテスト用ルーティングで検証します。スクリーンショットと結果はリポジトリ外の `terrain-stereo-preview/ui-phase-1/` に保存します。iPhone Safari実機確認の代わりにはなりません。
+ブラウザ回帰テストはPythonのPlaywrightとChromiumがある環境で実行します。TLS検証付きで実際の地図・DEMタイルを事前取得し、ローカルサーバーとテスト用ルーティングで検証します。スクリーンショットと結果はリポジトリ外の `terrain-stereo-preview/observation-phase-1/` に保存します。iPhone Safari実機確認の代わりにはなりません。
 
 ```sh
 python tests/ui.browser.py
 # Chromiumの場所が異なる場合は CHROMIUM_PATH を指定
 ```
+
+## 観察補助（0.7.0）
+
+ビュー下隅のコンパスは地形の回転・傾きに追従します。Nは北、Eは東、Sは南、Wは西です。平行法・交差法では左右それぞれの中央上部に小さな＋を表示します。＋を重ねることを目印にして左右画像を合わせてください。通常3D・赤シアンでは＋を表示しません。設定項目は増やさず自動で切り替えます。
+
+設計は [観察補助・第1段階](docs/OBSERVATION-PHASE-1.md)、確認内容と未確認事項は [検証記録](VERIFICATION.md) を参照してください。
