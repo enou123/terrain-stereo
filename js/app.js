@@ -1,12 +1,12 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.21.2';
-import { setupViewerUI } from './viewer-ui.js?v=0.21.2';
-import { LocationMap } from './map.js?v=0.21.2';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.21.2';
-import { createMesh } from './mesh.js?v=0.21.2';
-import { TerrainRenderer } from './renderer.js?v=0.21.2';
-import { createShareUrl, readSharedView } from './share.js?v=0.21.2';
-import { flightTourPose } from './controls.js?v=0.21.2';
-import { fetchGeologyLegend } from './geology-legend.js?v=0.21.2';
+import { loadMapTexture, textureKey } from './texture.js?v=0.22.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.22.0';
+import { LocationMap } from './map.js?v=0.22.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.22.0';
+import { createMesh } from './mesh.js?v=0.22.0';
+import { TerrainRenderer } from './renderer.js?v=0.22.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.22.0';
+import { flightTourPose } from './controls.js?v=0.22.0';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.22.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -70,34 +70,89 @@ textureRetry.addEventListener('click',updateTexture);
 
 const geologyLegendButton=document.querySelector('#geology-legend-open'), geologyLegendPanel=document.querySelector('#geology-legend-panel');
 let geologyLegendKey='', geologyLegendController;
-geologyLegendButton.addEventListener('click',async()=>{
-  const opening=geologyLegendPanel.hidden;
-  geologyLegendPanel.hidden=!opening;
-  geologyLegendButton.setAttribute('aria-expanded',String(opening));
-  geologyLegendButton.querySelector('span').textContent=opening?'−':'＋';
-  if(opening) geologyLegendPanel.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'});
-  if(!opening || !data) return;
-  const location=data.location, extent=terrainExtent(location.latitude,location.zoom);
+let geologyLegendPending, geologySelectionRequest=0, geologyPointController;
+function setGeologyLegendOpen(open){
+  geologyLegendPanel.hidden=!open;
+  geologyLegendButton.setAttribute('aria-expanded',String(open));
+  geologyLegendButton.querySelector('span').textContent=open?'−':'＋';
+}
+function geologyLegendRow(entry){
+  const item=document.createElement('article');item.className='geology-legend-item';
+  item.dataset.symbol=entry.symbol||'';item.dataset.value=entry.value;item.dataset.title=entry.title;
+  const swatch=document.createElement('span');swatch.className='geology-swatch';swatch.style.backgroundColor=`#${entry.value}`;swatch.setAttribute('aria-hidden','true');
+  const body=document.createElement('div'),title=document.createElement('strong'),age=document.createElement('span'),rock=document.createElement('small');
+  title.textContent=entry.lithology_ja||entry.title;age.textContent=entry.formationAge_ja||'';rock.textContent=entry.group_ja?`大区分 · ${entry.group_ja}`:entry.title;
+  body.append(title,age,rock);item.append(swatch,body);return item;
+}
+async function loadGeologyLegend(){
+  if(!data)return;
+  const location=data.location,extent=terrainExtent(location.latitude,location.zoom);
   const key=`${location.latitude}/${location.longitude}/${extent}`;
-  if(geologyLegendKey===key && geologyLegendPanel.dataset.loaded==='true') return;
-  geologyLegendController?.abort(); geologyLegendController=new AbortController();
+  if(geologyLegendKey===key){
+    if(geologyLegendPanel.dataset.loaded==='true')return;
+    if(geologyLegendPending)return geologyLegendPending;
+  }
+  geologyLegendController?.abort();
+  const controller=new AbortController();geologyLegendController=controller;geologyLegendKey=key;
+  const timeout=setTimeout(()=>controller.abort(),15000);
   const status=document.querySelector('#geology-legend-status'),list=document.querySelector('#geology-legend-list');
   status.hidden=false;status.textContent='表示範囲の凡例を読み込んでいます…';list.replaceChildren();geologyLegendPanel.dataset.loaded='false';
-  try {
-    const entries=await fetchGeologyLegend(location,extent,geologyLegendController.signal);
-    if(geologyLegendPanel.hidden) return;
-    geologyLegendKey=key;geologyLegendPanel.dataset.loaded='true';
-    if(!entries.length){status.textContent='この範囲の凡例情報は見つかりませんでした。';return;}
-    status.textContent=`表示範囲で使われている地質区分 · ${entries.length}種類`;
-    for(const entry of entries){
-      const item=document.createElement('article');item.className='geology-legend-item';
-      const swatch=document.createElement('span');swatch.className='geology-swatch';swatch.style.backgroundColor=`#${entry.value}`;swatch.setAttribute('aria-hidden','true');
-      const body=document.createElement('div'),title=document.createElement('strong'),age=document.createElement('span'),rock=document.createElement('small');
-      title.textContent=entry.lithology_ja||entry.title;age.textContent=entry.formationAge_ja||'';rock.textContent=entry.group_ja?`大区分 · ${entry.group_ja}`:entry.title;
-      body.append(title,age,rock);item.append(swatch,body);list.append(item);
-    }
-  } catch(error){if(error.name!=='AbortError') status.textContent='凡例を読み込めませんでした。通信を確認して、もう一度お試しください。';}
+  const pending=(async()=>{
+    try{
+      const entries=await fetchGeologyLegend(location,extent,controller.signal);
+      if(controller.signal.aborted)return;
+      geologyLegendPanel.dataset.loaded='true';
+      status.textContent=entries.length?`表示範囲で使われている地質区分 · ${entries.length}種類`:'この範囲の凡例情報は見つかりませんでした。';
+      list.replaceChildren(...entries.map(geologyLegendRow));
+    }catch(error){if(geologyLegendController===controller)status.textContent='凡例を読み込めませんでした。もう一度お試しください。';}
+    finally{clearTimeout(timeout);}
+  })();
+  geologyLegendPending=pending;
+  await pending;
+  if(geologyLegendPending===pending)geologyLegendPending=null;
+}
+geologyLegendButton.addEventListener('click',()=>{
+  const opening=geologyLegendPanel.hidden;setGeologyLegendOpen(opening);
+  if(opening)loadGeologyLegend();
 });
+function clearGeologyHighlight(){
+  for(const row of document.querySelectorAll('.geology-legend-item')){
+    row.removeAttribute('aria-current');row.querySelector('.geology-selected-label')?.remove();
+  }
+}
+function clearGeologySelection(){
+  geologySelectionRequest++;geologyPointController?.abort();clearGeologyHighlight();
+}
+async function selectGeology(clientX,clientY){
+  if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
+  const request=++geologySelectionRequest,selectedData=data;
+  geologyPointController?.abort();
+  const {pickSurface}=await import('./profile.js?v=0.22.0');
+  if(request!==geologySelectionRequest)return;
+  const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
+  const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
+  const hit=camera&&pickSurface(x,y,camera,renderer.mesh);
+  if(!hit)return;
+  clearGeologyHighlight();
+  const controller=new AbortController();geologyPointController=controller;
+  const timeout=setTimeout(()=>controller.abort(),15000);
+  viewerUI.setSettingsOpen(true);setGeologyLegendOpen(true);
+  const status=document.querySelector('#geology-legend-status');
+  try{
+    const [entry]=await Promise.all([fetchGeologyPoint(selectedData.location,hit,controller.signal),loadGeologyLegend()]);
+    if(request!==geologySelectionRequest || data!==selectedData || surfaceSelect.value!=='geology')return;
+    clearGeologySelection();
+    if(!entry){status.textContent='この地点の地質情報は見つかりませんでした。';return;}
+    const list=document.querySelector('#geology-legend-list');
+    let row=[...list.children].find(item=>entry.symbol?item.dataset.symbol===entry.symbol:item.dataset.value===entry.value&&item.dataset.title===entry.title);
+    if(!row){row=geologyLegendRow(entry);list.append(row);}
+    row.setAttribute('aria-current','true');
+    const label=document.createElement('small');label.className='geology-selected-label';label.textContent='選択した地点';row.querySelector('div').prepend(label);
+    status.textContent=`表示範囲で使われている地質区分 · ${list.children.length}種類。選択した地点の凡例を強調しています。`;
+    row.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest'});
+  }catch(error){if(request===geologySelectionRequest)status.textContent='選択した地点の地質情報を取得できませんでした。もう一度タップしてください。';}
+  finally{clearTimeout(timeout);}
+}
 
 contoursToggle.addEventListener('change',()=>renderer?.setContours(contoursToggle.checked));
 const qualityNames={standard:'標準',high:'高精細',ultra:'最高精細'};
@@ -145,8 +200,9 @@ function updateSurface() {
   document.querySelector('#surface-guide').textContent=(photo ? '国土地理院の航空写真を地形に重ねます。撮影時期は地域で異なり、最新の状況とは限りません。' : mapped ? '国土地理院の地図を地形に重ねます。画像は選択時に取得し、地形の画質とは別の細かさです。' : geology ? '産総研・地質調査総合センターのシームレス地質図を重ねます。地質境界は概略で、地形の画質とは別に読み込みます。' : shaded ? '標高の色を使わず、斜面の向きによる明暗で尾根や谷を眺めます。' : '色は標高、陰影は斜面の向きを表します。')+(anaglyph ? '赤シアン表示では白黒の明るさで表します。' : '');
   document.querySelector('#elevation-legend').hidden=true;
   document.querySelector('#geology-legend').hidden=!geology;
+  document.querySelector('#terrain').classList.toggle('geology-picking',geology);
 }
-surfaceSelect.addEventListener('change',()=>{updateSurface();updateTexture();});
+surfaceSelect.addEventListener('change',()=>{clearGeologySelection();updateSurface();updateTexture();});
 function updateStereo() {
   const mode=modeSelect.value, strength=Number(strengthSlider.value);
   renderer?.setStereo(mode,strength);
@@ -227,6 +283,7 @@ qualitySelect.addEventListener('change',()=>{
 });
 async function load() {
   if (loading) return;
+  clearGeologySelection();geologyLegendController?.abort();geologyLegendKey='';geologyLegendPanel.dataset.loaded='false';setGeologyLegendOpen(false);
   stopFlightTour();
   loading=true; showTerrain.disabled=true; showTerrain.textContent='地形を読み込み中…'; retry.hidden=true; message.hidden=false; message.classList.remove('error');
   state.textContent='読み込み中'; status.textContent='標高データを取得しています…'; slider.disabled=true; qualitySelect.disabled=true;
@@ -314,6 +371,20 @@ tourToggle.addEventListener('click',()=>tourFrame!==null?stopFlightTour():startF
 flightPad.querySelectorAll('[data-flight]').forEach(button=>button.addEventListener('click',()=>{stopFlightTour();renderer?.controls.fly(button.dataset.flight);}));
 const terrainCanvas=document.querySelector('#terrain');
 terrainCanvas.addEventListener('pointerdown',stopFlightTour);
+const geologyPointers=new Set();let geologyTap;
+terrainCanvas.addEventListener('pointerdown',event=>{
+  if(event.pointerType==='mouse'&&event.button!==0)return;
+  geologyPointers.add(event.pointerId);
+  geologyTap=geologyPointers.size===1&&!event.shiftKey&&!event.ctrlKey&&!event.altKey&&!event.metaKey?{id:event.pointerId,x:event.clientX,y:event.clientY}:null;
+});
+terrainCanvas.addEventListener('pointermove',event=>{if(geologyTap&&Math.hypot(event.clientX-geologyTap.x,event.clientY-geologyTap.y)>6)geologyTap=null;});
+terrainCanvas.addEventListener('pointerup',event=>{
+  const tap=geologyTap?.id===event.pointerId&&geologyPointers.size===1?geologyTap:null;
+  geologyTap=null;geologyPointers.delete(event.pointerId);
+  if(tap)selectGeology(event.clientX,event.clientY);
+});
+for(const type of ['pointercancel','lostpointercapture'])terrainCanvas.addEventListener(type,event=>{geologyTap=null;geologyPointers.delete(event.pointerId);});
+
 terrainCanvas.addEventListener('wheel',stopFlightTour,{passive:true});
 terrainCanvas.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','w','W','a','A','s','S','d','D','q','Q','e','E','r','R'].includes(event.key))stopFlightTour();});
 retry.addEventListener('click',load);
@@ -325,7 +396,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.21.2');
+      const {SectionTool}=await import('./profile-ui.js?v=0.22.0');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();

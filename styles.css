@@ -603,3 +603,7 @@ body.view-focused { overflow:hidden; }
 .geology-legend-item strong{font-size:12px;color:#2e4034}
 .geology-legend-item span,.geology-legend-item small{font-size:11px;line-height:1.5;color:#768174}
 .geology-legend-panel>a{color:#536b40;font-size:12px}
+
+#terrain.geology-picking:not(.section-selecting),#terrain.geology-picking:not(.section-selecting):active{cursor:default}
+.geology-legend-item[aria-current="true"]{border-color:#648347;background:#eef4e5;box-shadow:inset 3px 0 #648347}
+.geology-legend-item .geology-selected-label{color:#3e5e29;font-weight:700}
