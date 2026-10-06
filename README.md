@@ -176,4 +176,13 @@ python tests/ui.browser.py
 
 画像は地形の縮尺に合わせたズーム（上限14）から取得し、1024×1024の画像1枚にまとめます。地形の画質とは別の細かさで、文字を拡大しても精細さは増えません。最大16タイル・並列4取得・25秒タイムアウト。現在の範囲の画像1枚だけをメモリで再利用し、地点を変えると置き換えます。失敗時も標高色の地形は操作でき、設定から地図画像だけを再試行できます。
 
-新規回帰：`node --test tests/texture.test.js`、`python tests/texture.browser.py`、`python tests/texture.gpu.browser.py`。実地図の8画面テストと画像は `terrain-stereo-preview/map-texture-phase-1/`、既知配色によるGPU結果は `map-texture-shader/` に保存します。
+新規回帰：`node --test tests/texture.test.js`、`python tests/texture.browser.py`、`python tests/texture.gpu.browser.py`。実地図の8画面テストと画像は `terrain-stereo-preview/map-texture-phase-1/`、既知配色によるGPU結果は `texture-shader/` に保存します。
+
+
+## 航空写真（0.11.0）
+
+「地形表面」から「航空写真」を選ぶと、国土地理院のシームレス写真を3D地形に重ねます。撮影時期は地域で異なり、最新の状況とは限りません。地図と同じ画像の細かさ・取得上限で、選択したときだけ読み込みます。全立体視モード・等高線に対応し、赤シアンでは写真を白黒の明るさに変換します。
+
+取得できない範囲や通信失敗では標高色の地形を維持し、「航空写真を再読み込み」で画像だけを再試行できます。地図と写真はそれぞれの種類を確認して描画し、切替中に別種類の古い画像を使いません。画像のメモリキャッシュは合計1枚で、地図と写真を往復すると再取得します。
+
+写真の8画面検証は `TEXTURE_SURFACE=photo python tests/texture.browser.py`、地図の回帰は `python tests/texture.browser.py`。404時・遅れて届く画像・地図と写真の往復は `python tests/layer.browser.py`、向き・欠損・GPU解放は `python tests/texture.gpu.browser.py` で確認できます。Safari実機の検証とは異なります。

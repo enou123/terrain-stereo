@@ -6,7 +6,7 @@ from functools import partial
 import os,json
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
-OUT=ROOT.parent/'terrain-stereo-preview'/'map-texture-shader';OUT.mkdir(parents=True,exist_ok=True)
+OUT=ROOT.parent/'terrain-stereo-preview'/'texture-shader';OUT.mkdir(parents=True,exist_ok=True)
 class Handler(SimpleHTTPRequestHandler):
     def log_message(self,*args):pass
 server=ThreadingHTTPServer(('127.0.0.1',0),partial(Handler,directory=str(ROOT)))
@@ -18,7 +18,9 @@ const r=new TerrainRenderer(document.querySelector('canvas'),e=>{throw e});r.con
 const data={heights:new Float32Array(9).fill(100),size:3,spacing:6.1};r.setMesh(createMesh(data,1));
 const texture=document.createElement('canvas');texture.width=texture.height=1024;const ctx=texture.getContext('2d');
 for(const [x,y,color] of [[0,0,'red'],[512,0,'lime'],[0,512,'blue'],[512,512,'yellow']]){ctx.fillStyle=color;ctx.fillRect(x,y,512,512);}
-r.setTexture(texture);r.setSurface('map');
+r.setTexture(texture);r.setSurface('photo');if(r.surface!=='elevation')throw Error('Map mistaken for photo');
+r.setTexture(texture,'photo');r.setSurface('map');if(r.surface!=='elevation')throw Error('Photo mistaken for map');
+r.setSurface('photo');if(r.surface!=='photo')throw Error('Photo not enabled');
 window.run=()=>{
  const target=r.controls.target,eye=r.controls.eye.map((v,i)=>target[i]+(v-target[i])*1.15),c=stereoCamera(eye,target,1,0);
  const mul=(m,p)=>[0,1,2,3].map(i=>m[i]*p[0]+m[i+4]*p[1]+m[i+8]*p[2]+m[i+12]*p[3]);

@@ -1,9 +1,9 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.10.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.10.0';
-import { LocationMap } from './map.js?v=0.10.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.10.0';
-import { createMesh } from './mesh.js?v=0.10.0';
-import { TerrainRenderer } from './renderer.js?v=0.10.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.11.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.11.0';
+import { LocationMap } from './map.js?v=0.11.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.11.0';
+import { createMesh } from './mesh.js?v=0.11.0';
+import { TerrainRenderer } from './renderer.js?v=0.11.0';
 setupViewerUI();
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
@@ -18,23 +18,25 @@ async function updateTexture() {
   const request=++textureRequest;
   textureController?.abort();textureController=null;
   textureRetry.hidden=true;textureStatus.hidden=true;
-  if(surfaceSelect.value!=='map' || !data || renderer?.lost) return;
-  const key=textureKey(data.location);
+  const surface=surfaceSelect.value, label=surface==='photo' ? '航空写真' : '地図画像';
+  if(!['map','photo'].includes(surface) || !data || renderer?.lost) return;
+  const key=textureKey(data.location,surface);
+  textureRetry.textContent=`${label}を再読み込み`;
   if(textureCache?.key===key) {
-    if(activeTextureKey!==key) {renderer.setTexture(textureCache.canvas);activeTextureKey=key;}
+    if(activeTextureKey!==key) {renderer.setTexture(textureCache.canvas,surface);activeTextureKey=key;}
     updateSurface();return;
   }
   const controller=new AbortController();textureController=controller;
   const timeout=setTimeout(()=>controller.abort(),25000);
-  textureStatus.hidden=false;textureStatus.textContent='地図画像を読み込み中…';
+  textureStatus.hidden=false;textureStatus.textContent=`${label}を読み込み中…`;
   try {
-    const canvas=await loadMapTexture(data.location,controller.signal);
+    const canvas=await loadMapTexture(data.location,controller.signal,surface);
     if(request!==textureRequest) return;
-    textureCache={key,canvas};renderer.setTexture(canvas);activeTextureKey=key;
+    textureCache={key,canvas};renderer.setTexture(canvas,surface);activeTextureKey=key;
     textureStatus.hidden=true;updateSurface();
   } catch(error) {
     if(request!==textureRequest) return;
-    textureStatus.hidden=false;textureStatus.textContent=(controller.signal.aborted ? '地図画像の通信がタイムアウトしました。' : error.message)+' 地形は標高の色で表示しています。';
+    textureStatus.hidden=false;textureStatus.textContent=(controller.signal.aborted ? `${label}の通信がタイムアウトしました。` : error.message)+' 地形は標高の色で表示しています。';
     textureRetry.hidden=false;
   } finally {clearTimeout(timeout);if(request===textureRequest)textureController=null;}
 }
@@ -72,10 +74,10 @@ showTerrain.addEventListener('click',()=>{
   document.querySelector('#workspace').scrollIntoView({behavior:'auto',block:'start'});
 });
 function updateSurface() {
-  const mapped=surfaceSelect.value==='map', shaded=surfaceSelect.value==='shading', anaglyph=modeSelect.value==='anaglyph';
+  const photo=surfaceSelect.value==='photo', mapped=surfaceSelect.value==='map', shaded=surfaceSelect.value==='shading', anaglyph=modeSelect.value==='anaglyph';
   renderer?.setSurface(surfaceSelect.value);
-  document.querySelector('#surface-guide').textContent=(mapped ? '国土地理院の地図を地形に重ねます。画像は選択時に取得し、地形の画質とは別の細かさです。' : shaded ? '標高の色を使わず、斜面の向きによる明暗で尾根や谷を眺めます。' : '色は標高、陰影は斜面の向きを表します。')+(anaglyph ? '赤シアン表示では白黒の明るさで表します。' : '');
-  document.querySelector('#elevation-legend').hidden=mapped || shaded || anaglyph;
+  document.querySelector('#surface-guide').textContent=(photo ? '国土地理院の航空写真を地形に重ねます。撮影時期は地域で異なり、最新の状況とは限りません。' : mapped ? '国土地理院の地図を地形に重ねます。画像は選択時に取得し、地形の画質とは別の細かさです。' : shaded ? '標高の色を使わず、斜面の向きによる明暗で尾根や谷を眺めます。' : '色は標高、陰影は斜面の向きを表します。')+(anaglyph ? '赤シアン表示では白黒の明るさで表します。' : '');
+  document.querySelector('#elevation-legend').hidden=photo || mapped || shaded || anaglyph;
 }
 surfaceSelect.addEventListener('change',()=>{updateSurface();updateTexture();});
 function updateStereo() {
@@ -122,7 +124,7 @@ async function load() {
     updateStereo();
     const nextData=await loadElevation((done,total)=>status.textContent=`標高データを取得しています… ${done} / ${total}`,requestedLocation,requestedQuality);
     renderer.setMesh(createMesh(nextData,Number(slider.value)));
-    const newKey=textureKey(nextData.location);
+    const newKey=textureKey(nextData.location,renderer.textureSurface || 'map');
     if(activeTextureKey!==newKey) {renderer.setTexture(null);activeTextureKey=null;}
     data=nextData;
     updateSurface();updateTexture();

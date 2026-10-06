@@ -1,8 +1,8 @@
-import { lookAt } from './math.js?v=0.10.0';
-import { ObservationOverlay } from './observation.js?v=0.10.0';
-import { fitMeshPositions } from './mesh.js?v=0.10.0';
-import { stereoCamera } from './stereo.js?v=0.10.0';
-import { OrbitControls } from './controls.js?v=0.10.0';
+import { lookAt } from './math.js?v=0.11.0';
+import { ObservationOverlay } from './observation.js?v=0.11.0';
+import { fitMeshPositions } from './mesh.js?v=0.11.0';
+import { stereoCamera } from './stereo.js?v=0.11.0';
+import { OrbitControls } from './controls.js?v=0.11.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -132,13 +132,13 @@ export class TerrainRenderer {
     this.requestDraw();
   }
   setSurface(surface) {
-    this.surface = surface === 'map' && this.texture ? 'map' : surface === 'shading' ? 'shading' : 'elevation';
+    this.surface = (surface === 'map' || surface === 'photo') && this.texture && this.textureSurface === surface ? surface : surface === 'shading' ? 'shading' : 'elevation';
     this.requestDraw();
   }
-  setTexture(canvas) {
+  setTexture(canvas, surface='map') {
     const gl=this.gl;
     if(this.texture) gl.deleteTexture(this.texture);
-    this.texture=null;
+    this.texture=null;this.textureSurface=canvas ? surface : null;
     if(canvas) {
       this.texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,this.texture);
       gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
@@ -182,7 +182,7 @@ export class TerrainRenderer {
     gl.vertexAttribPointer(this.uvLocation,2,gl.FLOAT,false,0,0);
     gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,this.texture || this.emptyTexture);
     gl.uniform1i(this.textureLocation,0);
-    gl.uniform1f(this.textureEnabledLocation,this.surface==='map' && this.texture ? 1 : 0);
+    gl.uniform1f(this.textureEnabledLocation,(this.surface==='map'||this.surface==='photo') && this.texture ? 1 : 0);
     gl.uniform1f(this.monochromeLocation,anaglyph ? 1 : 0);
     gl.uniform1f(this.shadingLocation,this.surface === 'shading' ? 1 : 0);
     gl.uniform1f(this.contoursLocation,this.contours ? 1 : 0);

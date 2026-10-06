@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { texturePlan, textureKey } from '../js/texture.js';
 import { worldPixel, qualitySampling } from '../js/elevation.js';
-test('map atlas bounds match every DEM quality across Japan with at most sixteen tiles',()=>{
+test('map and aerial atlas bounds match every DEM quality across Japan with at most sixteen tiles',()=>{
   for(const location of [{latitude:33.767,longitude:133.115,zoom:12},{latitude:33.2035,longitude:132.1812,zoom:9},{latitude:43.6636,longitude:142.8541,zoom:6},{latitude:35.3606,longitude:138.7274,zoom:14}]) {
-    const p=texturePlan(location),[x,y]=worldPixel(location.latitude,location.longitude,location.zoom);
+    for(const surface of ['map','photo']) {
+    const p=texturePlan(location,surface),[x,y]=worldPixel(location.latitude,location.longitude,location.zoom);
     assert.ok(p.tiles.length<=16);assert.ok(p.zoom<=14);
     for(const quality of ['standard','high','ultra']) {
       const s=qualitySampling(location.zoom,quality), ratio=2**(p.zoom-s.sourceZoom);
@@ -12,9 +13,10 @@ test('map atlas bounds match every DEM quality across Japan with at most sixteen
       assert.equal((Math.floor(y)*s.scale-192*s.scale)*ratio,p.top);
       assert.equal((s.size-1)*s.step*ratio,p.span);
     }
-    assert.equal(textureKey(location),textureKey({...location}));
+    assert.equal(textureKey(location,surface),textureKey({...location},surface));
     const covered=new Set(p.tiles.map(t=>`${t.x}/${t.y}`));
     for(const u of [0,.2,.5,.9,.999999])for(const v of [0,.2,.5,.9,.999999])assert.ok(covered.has(`${Math.floor((p.left+u*p.span)/256)}/${Math.floor((p.top+v*p.span)/256)}`));
+    }
   }
 });
 
@@ -37,4 +39,14 @@ test('atlas acquisition bounds concurrency, composes tiles and closes decoded im
     const controller=new AbortController();controller.abort();
     await assert.rejects(loadMapTexture(location,controller.signal),{name:'AbortError'});
   } finally {Object.assign(globalThis,old);}
+});
+
+test('aerial photo uses JPEG provider over identical bounds with a distinct cache key',()=>{
+  const location={latitude:33.767,longitude:133.115,zoom:12};
+  const map=texturePlan(location),photo=texturePlan(location,'photo');
+  assert.deepEqual({...map,tiles:[]},{...photo,tiles:[]});
+  assert.equal(map.tiles.length,photo.tiles.length);
+  assert.ok(photo.tiles.every(t=>t.url.includes('/seamlessphoto/')&&t.url.endsWith('.jpg')));
+  assert.notEqual(textureKey(location),textureKey(location,'photo'));
+  assert.throws(()=>texturePlan(location,'unknown'));
 });
