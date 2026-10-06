@@ -1,10 +1,12 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.14.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.14.0';
-import { LocationMap } from './map.js?v=0.14.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.14.0';
-import { createMesh } from './mesh.js?v=0.14.0';
-import { TerrainRenderer } from './renderer.js?v=0.14.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.15.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.15.0';
+import { LocationMap } from './map.js?v=0.15.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.15.0';
+import { createMesh } from './mesh.js?v=0.15.0';
+import { TerrainRenderer } from './renderer.js?v=0.15.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.15.0';
 const viewerUI=setupViewerUI();
+const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
 const slider=document.querySelector('#exaggeration'), factor=document.querySelector('#factor');
@@ -15,8 +17,8 @@ const sunSettings=document.querySelector('#sun-settings'), sunAzimuth=document.q
 const surfaceSelect=document.querySelector('#surface');
 const sunAzimuthValue=document.querySelector('#sun-azimuth-value'), sunAltitudeValue=document.querySelector('#sun-altitude-value');
 const savedSun=(()=>{try{return JSON.parse(localStorage.getItem('terrain-stereo-sun')||'{}')}catch{return {}}})();
-sunAzimuth.value=String(Number.isFinite(savedSun.azimuth)?Math.max(0,Math.min(359,savedSun.azimuth)):315);
-sunAltitude.value=String(Number.isFinite(savedSun.altitude)?Math.max(5,Math.min(85,savedSun.altitude)):35);
+sunAzimuth.value=String(sharedView?.sunAzimuth ?? (Number.isFinite(savedSun.azimuth)?Math.max(0,Math.min(359,savedSun.azimuth)):315));
+sunAltitude.value=String(sharedView?.sunAltitude ?? (Number.isFinite(savedSun.altitude)?Math.max(5,Math.min(85,savedSun.altitude)):35));
 function updateSun(){
   const azimuth=Number(sunAzimuth.value), altitude=Number(sunAltitude.value);
   const directions=['北','北東','東','南東','南','南西','西','北西'];
@@ -56,7 +58,7 @@ async function updateTexture() {
 textureRetry.addEventListener('click',updateTexture);
 contoursToggle.addEventListener('change',()=>renderer?.setContours(contoursToggle.checked));
 const qualityNames={standard:'標準',high:'高精細',ultra:'最高精細'};
-let requestedQuality='standard', resetView=true;
+let requestedQuality=sharedView?.quality ?? 'standard', resetView=!sharedView, sharedQualityFallback=false;
 const modeNames={mono:'通常3D',parallel:'平行法',cross:'交差法',anaglyph:'赤シアン'};
 const guides={
   mono:'1つの地形を自由に回転して眺めます。',
@@ -64,7 +66,12 @@ const guides={
   cross:'視線を交差させ、右眼で左の画像、左眼で右の画像を見ると中央の地形が立体に見えます。',
   anaglyph:'赤シアン眼鏡が必要です。左眼に赤、右眼にシアンのレンズを合わせてください。'
 };
-let profile, renderer, data, loading=false, selectedLocation={...LOCATION}, requestedLocation={...LOCATION};
+let profile, renderer, data, loading=false, selectedLocation={...(sharedView?.location ?? LOCATION)}, requestedLocation={...(sharedView?.location ?? LOCATION)};
+if(sharedView){
+  qualitySelect.value=sharedView.quality; modeSelect.value=sharedView.mode; surfaceSelect.value=sharedView.surface;
+  slider.value=String(sharedView.exaggeration); factor.textContent=`${sharedView.exaggeration.toFixed(1)}×`;
+  strengthSlider.value=String(sharedView.strength); contoursToggle.checked=sharedView.contours;
+}
 const showTerrain=document.querySelector('#show-terrain');
 const saveImage=document.querySelector('#save-image');
 const places={ishizuchi:{latitude:33.767,longitude:133.115},fuji:{latitude:35.3606,longitude:138.7274},aso:{latitude:32.884,longitude:131.104},daisetsu:{latitude:43.6636,longitude:142.8541},yakushima:{latitude:30.3361,longitude:130.5044}};
@@ -73,7 +80,7 @@ const locationName=location=>{
   const name=Object.keys(places).find(key=>Math.abs(places[key].latitude-location.latitude)<.0001 && Math.abs(places[key].longitude-location.longitude)<.0001);
   return name ? document.querySelector(`#map-place option[value="${name}"]`).textContent+'周辺' : coordinates(location);
 };
-const map=new LocationMap(document.querySelector('#location-map'),LOCATION,location=>{
+const map=new LocationMap(document.querySelector('#location-map'),sharedView?.location ?? LOCATION,location=>{
   selectedLocation=location;
   document.querySelector('#selected-extent').textContent=`表示範囲：約${terrainExtent(location.latitude,location.zoom).toFixed(1)} km四方（地図の縮尺と連動）`;
   document.querySelector('#selected-location').textContent=coordinates(location);
@@ -133,6 +140,39 @@ saveImage.addEventListener('click',async()=>{
     if(error.name!=='AbortError') {saveImage.textContent='失敗';saveImage.title=`画像を保存できませんでした。${error.message||''}`;setTimeout(()=>{saveImage.textContent='PNG';saveImage.title='立体視モードでは左右の画像をそのまま保存します'},3000);}
   } finally {saveImage.disabled=false;}
 });
+const shareView=document.querySelector('#share-view');
+shareView.addEventListener('click',async()=>{
+  if(!renderer || !data || renderer.lost || shareView.disabled)return;
+  shareView.disabled=true;
+  const original=shareView.textContent;
+  try{
+    const controls=renderer.controls;
+    const url=createShareUrl(window.location.href,{
+      location:data.location, camera:{yaw:controls.yaw,pitch:controls.pitch,distance:controls.distance,target:controls.target},
+      exaggeration:Number(slider.value),mode:modeSelect.value,quality:data.quality,surface:surfaceSelect.value,
+      strength:Number(strengthSlider.value),contours:contoursToggle.checked,
+      sunAzimuth:Number(sunAzimuth.value),sunAltitude:Number(sunAltitude.value)
+    });
+    if(navigator.share) await navigator.share({title:'terrain-stereo — 地形の表示',url});
+    else {
+      let copied=false;
+      try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url);copied=true;}}catch{}
+      if(!copied){
+        const input=document.createElement('textarea');input.value=url;input.setAttribute('readonly','');
+        input.style.cssText='position:fixed;opacity:0;pointer-events:none';document.body.append(input);input.select();
+        copied=document.execCommand('copy');input.remove();
+      }
+      if(!copied) throw new Error('リンクをコピーできませんでした。');
+    }
+    shareView.textContent=navigator.share?'共有しました':'コピー済み';
+    setTimeout(()=>{shareView.textContent=original;},2400);
+  }catch(error){
+    if(error.name!=='AbortError'){
+      shareView.textContent='共有できません';shareView.title=error.message||'リンクの共有に失敗しました。';
+      setTimeout(()=>{shareView.textContent=original;shareView.title='地形の場所と表示設定を共有';},3000);
+    }
+  }finally{shareView.disabled=false;}
+});
 qualitySelect.addEventListener('change',()=>{
   if (loading) return;
   requestedQuality=qualitySelect.value;
@@ -145,9 +185,15 @@ async function load() {
   loading=true; showTerrain.disabled=true; showTerrain.textContent='地形を読み込み中…'; retry.hidden=true; message.hidden=false; message.classList.remove('error');
   state.textContent='読み込み中'; status.textContent='標高データを取得しています…'; slider.disabled=true; qualitySelect.disabled=true;
   try {
-    if (!renderer) renderer=new TerrainRenderer(document.querySelector('#terrain'),showError);
+    if (!renderer) {
+      renderer=new TerrainRenderer(document.querySelector('#terrain'),showError);
+      if(sharedView){Object.assign(renderer.controls,{yaw:sharedView.camera.yaw,pitch:sharedView.camera.pitch,distance:sharedView.camera.distance,target:[...sharedView.camera.target]});}
+    }
     if (!renderer.uintIndices) {
       for (const option of qualitySelect.options) option.disabled=option.value!=='standard';
+      if(sharedView && requestedQuality!=='standard'){
+        requestedQuality='standard';qualitySelect.value='standard';sharedQualityFallback=true;
+      }
     }
     if (!renderer.contoursSupported) {
       contoursToggle.checked=false;
@@ -165,7 +211,7 @@ async function load() {
     profile?.setData(data);
     updateSurface();updateTexture();
     if(resetView) renderer.reset();
-    document.querySelector('#quality-guide').textContent=`${qualityNames[data.quality]}：約${Math.round(data.spacing*1000)} m間隔で地形を表示。`+(data.sourceZoom===14 ? 'この縮尺では標高データの細かさの上限に達しています。' : '高い画質ほど通信量と描画の負荷が増えます。');
+    document.querySelector('#quality-guide').textContent=(sharedQualityFallback?'この端末では共有リンクの画質設定に対応していないため、標準画質で表示しています。 ':'')+`${qualityNames[data.quality]}：約${Math.round(data.spacing*1000)} m間隔で地形を表示。`+(data.sourceZoom===14 ? 'この縮尺では標高データの細かさの上限に達しています。' : '高い画質ほど通信量と描画の負荷が増えます。');
     if (data.fallbackTileCount) document.querySelector('#quality-guide').textContent += ' 一部の範囲は細かな標高データがないため、広域のデータで補完しています。補完部分の細かさは上記の間隔と異なります。';
     const name=locationName(data.location);
     document.querySelector('#loaded-location').textContent=name;
@@ -193,7 +239,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.14.0');
+      const {SectionTool}=await import('./profile-ui.js?v=0.15.0');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();

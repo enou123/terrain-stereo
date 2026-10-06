@@ -11,7 +11,7 @@ import hashlib, math, os, urllib.request, json
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 CACHE=Path('/tmp/terrain-ui-gsi-cache');CACHE.mkdir(exist_ok=True)
-ARTIFACTS=ROOT.parent/'terrain-stereo-preview'/'surface-phase-1';ARTIFACTS.mkdir(parents=True,exist_ok=True)
+ARTIFACTS=ROOT.parent/'terrain-stereo-preview'/'share-phase-1';ARTIFACTS.mkdir(parents=True,exist_ok=True)
 def real(url):
     name=hashlib.sha256(url.encode()).hexdigest()
     for cache in [CACHE,Path('/tmp/japan-map-tiles')]:
@@ -66,6 +66,45 @@ with sync_playwright() as p:
         page.wait_for_function("window.uiTest && !document.querySelector('#quality').disabled",timeout=120000)
         assert page.locator('#message').is_hidden(),page.locator('#status').inner_text()
         def state():return page.evaluate('({target:uiTest.renderer.controls.target.slice(),yaw:uiTest.renderer.controls.yaw,pitch:uiTest.renderer.controls.pitch,distance:uiTest.renderer.controls.distance,location:uiTest.data.location,quality:uiTest.data.quality,mode:uiTest.renderer.mode,strength:uiTest.renderer.strength,height:document.querySelector("#exaggeration").value,contours:uiTest.renderer.contours,surface:uiTest.renderer.surface})')
+        if (width,height)==(1440,900):
+            # Copy link, then navigate to it in a fresh tab and verify startup restoration.
+            context=page.context
+            context.grant_permissions(['clipboard-read','clipboard-write'],origin=url.rstrip('/'))
+            page.select_option('#map-place','fuji');page.click('#show-terrain')
+            page.wait_for_function("document.querySelector('#message').hidden && !document.querySelector('#quality').disabled",timeout=120000)
+            page.select_option('#view-mode','cross');page.select_option('#surface','shading');page.check('#contours')
+            page.locator('#exaggeration').fill('2.7');page.locator('#exaggeration').dispatch_event('input')
+            page.locator('#sun-azimuth').fill('110');page.locator('#sun-azimuth').dispatch_event('input')
+            page.locator('#sun-altitude').fill('52');page.locator('#sun-altitude').dispatch_event('input')
+            page.wait_for_function("uiTest.renderer.frame===null")
+            canvas=page.locator('#terrain').bounding_box();page.mouse.move(canvas['x']+canvas['width']/2,canvas['y']+canvas['height']/2);page.mouse.down();page.mouse.move(canvas['x']+canvas['width']/2+31,canvas['y']+canvas['height']/2-17);page.mouse.up()
+            expected=state()
+            page.evaluate("Object.defineProperty(navigator,'share',{configurable:true,value:undefined});Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw new Error('permission denied')}}});window.copiedText='';document.execCommand=command=>{if(command==='copy'){window.copiedText=document.querySelector('textarea').value;return true}return false}")
+            page.click('#share-view');page.wait_for_function("document.querySelector('#share-view').textContent==='コピー済み'")
+            shared_url=page.evaluate('window.copiedText')
+            assert 'lat=' in shared_url and 'mode=cross' in shared_url
+            shared=browser.new_page(viewport={'width':width,'height':height})
+            shared.context.grant_permissions(['clipboard-read','clipboard-write'],origin=url.rstrip('/'))
+            errors_shared=[];shared.on('pageerror',lambda error:errors_shared.append(str(error)))
+            shared.route('https://cyberjapandata.gsi.go.jp/**',route)
+            shared.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.uiTest={get renderer(){return renderer},get data(){return data},get map(){return map}};",content_type='text/javascript'))
+            from urllib.parse import urlparse
+            shared.goto(shared_url)
+            shared.wait_for_function("window.uiTest && !document.querySelector('#quality').disabled && document.querySelector('#message').hidden",timeout=120000)
+            restored=shared.evaluate("({location:uiTest.data.location,yaw:uiTest.renderer.controls.yaw,pitch:uiTest.renderer.controls.pitch,distance:uiTest.renderer.controls.distance,target:uiTest.renderer.controls.target,mode:uiTest.renderer.mode,surface:uiTest.renderer.surface,quality:uiTest.data.quality,height:document.querySelector('#exaggeration').value,contours:uiTest.renderer.contours,sun:[document.querySelector('#sun-azimuth').value,document.querySelector('#sun-altitude').value]})")
+            assert abs(restored['location']['latitude']-35.3606)<.00001 and abs(restored['location']['longitude']-138.7274)<.00001
+            assert restored['mode']=='cross' and restored['surface']=='shading' and restored['height']=='2.7' and restored['contours']
+            assert restored['sun']==['110','52'] and restored['quality']=='standard'
+            assert abs(restored['yaw']-expected['yaw'])<.00011 and abs(restored['pitch']-expected['pitch'])<.00011 and abs(restored['distance']-expected['distance'])<.001
+            assert all(abs(a-b)<.001 for a,b in zip(restored['target'],expected['target']))
+            assert not errors_shared,errors_shared
+            shared.screenshot(path=str(ARTIFACTS/'1440x900-restored.png'))
+            shared.close()
+            print('PASS shared URL restores Fuji, camera and settings in a fresh page',flush=True)
+            # Restore the default-session fixture before the generic UI regression sequence.
+            page.goto(url)
+            page.wait_for_function("window.uiTest && !document.querySelector('#quality').disabled",timeout=120000)
+            assert page.locator('#message').is_hidden(),page.locator('#status').inner_text()
         def observation():
             page.wait_for_function("uiTest.renderer.frame===null")
             mode=state()['mode'];paired=mode in ['parallel','cross']
@@ -242,7 +281,7 @@ with sync_playwright() as p:
             assert extent!=page.locator('#selected-extent').inner_text() and len(dem)==count
         assert not errors,errors
         results.append({'viewport':f'{width}x{height}','touch_emulation':touch,'passed':True})
-        print('PASS',width,height,'contours, observation aids, rotation, stereo, UI and existing controls',flush=True)
+        print('PASS',width,height,'sharing, contours, observation aids, rotation, stereo, UI and existing controls',flush=True)
         page.close()
     browser.close()
 server.shutdown()

@@ -1,4 +1,4 @@
-import { worldPixel, terrainZoom } from './elevation.js?v=0.14.0';
+import { worldPixel, terrainZoom } from './elevation.js?v=0.15.0';
 
 export function pixelLocation(x, y, zoom) {
   const scale = 256 * 2 ** zoom;
@@ -13,7 +13,7 @@ export function constrainLocation(location) {
 // Small slippy map using GSI standard tiles; terrain is fetched only on explicit selection.
 export class LocationMap {
   constructor(element, location, onChange) {
-    this.element = element; this.center = constrainLocation(location); this.zoom = 11;
+    this.element = element; this.center = constrainLocation(location); this.zoom = Number.isFinite(location.zoom) ? Math.max(4, Math.min(13, location.zoom - 1)) : 11;
     this.onChange = onChange; this.tiles = new Map(); this.pointers = new Map();
     this.layer = element.querySelector('.map-tiles'); this.notice = element.querySelector('.map-notice');
     element.addEventListener('pointerdown', event => {
