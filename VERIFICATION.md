@@ -272,3 +272,10 @@ README の起動方法でアプリを開き、開発者ツールの Network で9
 - `npm test`：37件成功。GSJ URLのAPI版・Y/X座標順・ズーム上限13を回帰検証。`node --check js/texture.js` と `git diff --check` 成功。
 - `python tests/ui.browser.py`：Chromiumで全8画面サイズ成功。地質レイヤーの合成タイル取得と地形描画を確認し、PC・縦画面・横画面の既存操作も回帰なし。スクリーンショットと結果は `/workspace/terrain-stereo-preview/share-phase-1/`。
 - **未確認**：この環境の通信プロキシが外部接続を拒否するため実タイル通信とiPhone Safari実機は未確認。実際のGitHub Pages配信更新後の表示も未確認。
+
+
+## 0.20.1 — 表示名の整理（2026-10-06）
+
+- 表面選択肢を「標高の色（従来の表示）」から「標高の色」に変更。「標高の色」モードの設定欄に出ていた同名の凡例ブロックも非表示化。
+- 地質図凡例は、公式データに対応する地質区分・年代の説明を誤りなく取得できる形を確認してから設計する。
+- `npm test`：37件成功。`python tests/ui.browser.py`：Chromiumの8画面サイズすべて成功。地質図テストタイルと設定切替を確認。JS構文検査・`git diff --check`成功。スクリーンショットと結果は `/workspace/terrain-stereo-preview/share-phase-1/`。

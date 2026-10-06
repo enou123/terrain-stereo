@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#14251e">
   <title>terrain-stereo — 日本の地形を探索</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.20.0">
-  <script type="module" src="js/app.js?v=0.20.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.20.1">
+  <script type="module" src="js/app.js?v=0.20.1"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
@@ -56,7 +56,7 @@
         <select id="quality" aria-describedby="quality-guide"><option value="standard">標準（軽い）</option><option value="high">高精細</option><option value="ultra">最高精細（重い）</option></select>
         <p id="quality-guide" class="hint" aria-live="polite">画質を変えると、表示中の範囲を読み直します。高い画質ほど通信量と描画の負荷が増えます。</p>
         <label class="setting-label" for="surface">地形表面</label>
-        <select id="surface" aria-describedby="surface-guide"><option value="elevation">標高の色（従来の表示）</option><option value="shading">陰影のみ</option><option value="map">地理院地図</option><option value="photo">航空写真</option><option value="geology">地質図</option></select>
+        <select id="surface" aria-describedby="surface-guide"><option value="elevation">標高の色</option><option value="shading">陰影のみ</option><option value="map">地理院地図</option><option value="photo">航空写真</option><option value="geology">地質図</option></select>
         <p id="surface-guide" class="hint">色は標高、陰影は斜面の向きを表します。</p>
         <div id="sun-settings" hidden>
           <div class="control-heading"><label for="sun-azimuth">太陽の方位</label><output id="sun-azimuth-value" for="sun-azimuth">北西</output></div>

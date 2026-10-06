@@ -222,7 +222,8 @@ with sync_playwright() as p:
         page.select_option('#surface','elevation');page.click('#toggle-settings');stable()
         assert pixels()==off
         page.click('#toggle-settings');assert state()==saved and len(dem)==requests
-        assert page.locator('#elevation-legend').is_visible()
+        assert page.locator('#elevation-legend').is_hidden()
+        assert page.locator('#surface option[value="elevation"]').inner_text()=='標高の色'
         page.select_option('#surface','shading');page.check('#contours');stable()
         page.select_option('#view-mode','parallel')
         page.locator('#exaggeration').fill('2');page.locator('#exaggeration').dispatch_event('input')
@@ -267,10 +268,10 @@ with sync_playwright() as p:
             page.select_option('#view-mode',mode);stable()
             assert state()['surface']=='shading' and state()['contours']
             assert page.locator('#elevation-legend').is_hidden()
-            # Both surface options must work with each stereo mode and its truthful legend.
+            # Surface selection remains available in each stereo mode; the redundant elevation legend stays hidden.
             requests=len(dem);shaded=state()
             page.select_option('#surface','elevation');stable()
-            assert page.locator('#elevation-legend').is_hidden() == (mode=='anaglyph')
+            assert page.locator('#elevation-legend').is_hidden()
             assert ('赤シアン' in page.locator('#surface-guide').inner_text()) == (mode=='anaglyph')
             page.select_option('#surface','shading');stable()
             assert state()==shaded and len(dem)==requests

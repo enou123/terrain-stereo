@@ -213,7 +213,7 @@ python tests/ui.browser.py
 
 断面計算は初回操作時に読み込み、追加のDEM・画像通信は行いません。新規回帰は `node --test tests/profile.test.js`、`python tests/profile.browser.py`、最高精細は `python tests/profile.ultra.browser.py`。設計と制約は `docs/SECTION-PHASE-1.md`、結果は `VERIFICATION.md`。
 
-## 地質図（0.20.0）
+## 地質図（0.20.1）
 
 「地形表面」で「地質図」を選ぶと、産総研・地質調査総合センターのシームレス地質図を標高地形に重ねます。地質タイルは選択したときだけ取得し、地形DEM、地理院地図、航空写真とは別の取得元・キャッシュとして扱います。通常3D、立体視、等高線と併用できます。地質図の縮尺・境界には限界があり、現地での判断や専門的な地質調査の代わりにはなりません。
 

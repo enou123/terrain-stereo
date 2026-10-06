@@ -1,11 +1,11 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.20.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.20.0';
-import { LocationMap } from './map.js?v=0.20.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.20.0';
-import { createMesh } from './mesh.js?v=0.20.0';
-import { TerrainRenderer } from './renderer.js?v=0.20.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.20.0';
-import { flightTourPose } from './controls.js?v=0.20.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.20.1';
+import { setupViewerUI } from './viewer-ui.js?v=0.20.1';
+import { LocationMap } from './map.js?v=0.20.1';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.20.1';
+import { createMesh } from './mesh.js?v=0.20.1';
+import { TerrainRenderer } from './renderer.js?v=0.20.1';
+import { createShareUrl, readSharedView } from './share.js?v=0.20.1';
+import { flightTourPose } from './controls.js?v=0.20.1';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -110,7 +110,7 @@ function updateSurface() {
   renderer?.setSurface(surfaceSelect.value);
   sunSettings.hidden=false;
   document.querySelector('#surface-guide').textContent=(photo ? '国土地理院の航空写真を地形に重ねます。撮影時期は地域で異なり、最新の状況とは限りません。' : mapped ? '国土地理院の地図を地形に重ねます。画像は選択時に取得し、地形の画質とは別の細かさです。' : geology ? '産総研・地質調査総合センターのシームレス地質図を重ねます。地質境界は概略で、地形の画質とは別に読み込みます。' : shaded ? '標高の色を使わず、斜面の向きによる明暗で尾根や谷を眺めます。' : '色は標高、陰影は斜面の向きを表します。')+(anaglyph ? '赤シアン表示では白黒の明るさで表します。' : '');
-  document.querySelector('#elevation-legend').hidden=photo || mapped || geology || shaded || anaglyph;
+  document.querySelector('#elevation-legend').hidden=true;
 }
 surfaceSelect.addEventListener('change',()=>{updateSurface();updateTexture();});
 function updateStereo() {
@@ -291,7 +291,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.20.0');
+      const {SectionTool}=await import('./profile-ui.js?v=0.20.1');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();
