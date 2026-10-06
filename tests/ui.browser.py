@@ -7,7 +7,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
-import hashlib, math, os, urllib.request, json
+import hashlib, math, os, urllib.request, json, struct, zlib
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 CACHE=Path('/tmp/terrain-ui-gsi-cache');CACHE.mkdir(exist_ok=True)
@@ -20,6 +20,13 @@ def real(url):
     with urllib.request.urlopen(url,timeout=25) as response:payload=response.read()
     (CACHE/name).write_bytes(payload)
     return payload
+def geology_fixture():
+    def chunk(tag,data):return struct.pack('!I',len(data))+tag+data+struct.pack('!I',zlib.crc32(tag+data)&0xffffffff)
+    rows=[]
+    for py in range(256):
+        row=b'\x00'+b''.join(bytes((40+(px//32)%180,90+(py//32)%140,120,255)) for px in range(256))
+        rows.append(row)
+    return b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('!2I5B',256,256,8,6,0,0,0))+chunk(b'IDAT',zlib.compress(b''.join(rows)))+chunk(b'IEND',b'')
 def preload(latitude,longitude,zoom=12,quality=0):
     # Production sampling is already covered by Node tests. These bounds preload fixtures.
     scale=2**quality;z=min(14,zoom+quality)
@@ -60,6 +67,7 @@ with sync_playwright() as p:
             try:request.fulfill(status=200,body=real(u),content_type='image/png' if u.endswith('.png') else 'text/plain',headers={'Access-Control-Allow-Origin':'*'})
             except Exception as error:request.fulfill(status=404,body=str(error))
         page.route('https://cyberjapandata.gsi.go.jp/**',route)
+        page.route('https://gbank.gsj.jp/**',lambda r:r.fulfill(status=200,body=geology_fixture(),content_type='image/png',headers={'Access-Control-Allow-Origin':'*'}))
         # Expose existing objects only inside this test to verify view/data preservation.
         page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.uiTest={get renderer(){return renderer},get data(){return data},get map(){return map}};",content_type='text/javascript'))
         page.goto(url)
@@ -112,6 +120,15 @@ with sync_playwright() as p:
             page.goto(url)
             page.wait_for_function("window.uiTest && !document.querySelector('#quality').disabled",timeout=120000)
             assert page.locator('#message').is_hidden(),page.locator('#status').inner_text()
+            page.select_option('#surface','geology')
+            page.wait_for_function("uiTest.renderer.surface==='geology'",timeout=30000)
+            assert page.locator('#elevation-legend').is_hidden()
+            assert '地質図' in page.locator('#surface-guide').inner_text()
+            assert page.evaluate('uiTest.renderer.gl.getError()')==0
+            page.locator('#workspace').scroll_into_view_if_needed()
+            page.screenshot(path=str(ARTIFACTS/'1440x900-geology-test-tiles.png'))
+            page.select_option('#surface','elevation')
+            print('PASS geology layer loads test tiles and preserves terrain rendering',flush=True)
         def observation():
             page.wait_for_function("uiTest.renderer.frame===null")
             mode=state()['mode'];paired=mode in ['parallel','cross']

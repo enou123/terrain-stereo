@@ -1,6 +1,10 @@
-import { worldPixel } from './elevation.js?v=0.18.0';
+import { worldPixel } from './elevation.js?v=0.19.0';
 
-const sources = {map:{id:'std',extension:'png',label:'地図画像'},photo:{id:'seamlessphoto',extension:'jpg',label:'航空写真'}};
+const sources = {
+  map:{url:'https://cyberjapandata.gsi.go.jp/xyz/std',extension:'png',label:'地図画像'},
+  photo:{url:'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto',extension:'jpg',label:'航空写真'},
+  geology:{url:'https://gbank.gsj.jp/seamless/v2/tiles',extension:'png',label:'地質図'}
+};
 function sourceFor(surface) {
   const source=sources[surface];
   if(!source) throw new Error('対応していない画像の種類です。');
@@ -16,7 +20,7 @@ export function texturePlan(location, surface = 'map') {
   const span = 384 * scale, tiles = [];
   for (let ty = Math.floor(top / 256); ty < Math.ceil((top + span) / 256); ty++) {
     for (let tx = Math.floor(left / 256); tx < Math.ceil((left + span) / 256); tx++) {
-      tiles.push({ x: tx, y: ty, url: `https://cyberjapandata.gsi.go.jp/xyz/${source.id}/${zoom}/${tx}/${ty}.${source.extension}` });
+      tiles.push({ x: tx, y: ty, url: `${source.url}/${zoom}/${tx}/${ty}.${source.extension}` });
     }
   }
   return { zoom, left, top, span, tiles };

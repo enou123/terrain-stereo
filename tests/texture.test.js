@@ -50,3 +50,13 @@ test('aerial photo uses JPEG provider over identical bounds with a distinct cach
   assert.notEqual(textureKey(location),textureKey(location,'photo'));
   assert.throws(()=>texturePlan(location,'unknown'));
 });
+
+test('geology uses GSJ seamless geology tiles over the same terrain footprint',()=>{
+  const location={latitude:33.767,longitude:133.115,zoom:12};
+  const geology=texturePlan(location,'geology'),map=texturePlan(location,'map');
+  assert.deepEqual({...geology,tiles:[]},{...map,tiles:[]});
+  assert.equal(geology.tiles.length,map.tiles.length);
+  assert.ok(geology.tiles.every(t=>t.url.startsWith('https://gbank.gsj.jp/seamless/v2/tiles/')&&t.url.endsWith('.png')));
+  assert.notEqual(textureKey(location,'geology'),textureKey(location,'map'));
+  assert.throws(()=>texturePlan(location,'unknown'));
+});

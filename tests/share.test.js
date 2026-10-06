@@ -30,3 +30,7 @@ test('shared view parameters are clamped and invalid choices use safe defaults',
   assert.equal(parsed.mode, 'mono'); assert.equal(parsed.quality, 'standard'); assert.equal(parsed.surface, 'elevation');
   assert.equal(parsed.strength, 2); assert.equal(parsed.contours, false); assert.equal(parsed.sunAzimuth, 0); assert.equal(parsed.sunAltitude, 85);
 });
+
+test('shared geology surface is restored as a valid surface', () => {
+  assert.equal(readSharedView('?surface=geology').surface, 'geology');
+});

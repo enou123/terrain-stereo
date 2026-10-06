@@ -1,6 +1,6 @@
 const MODES = new Set(['mono', 'parallel', 'cross', 'anaglyph']);
 const QUALITIES = new Set(['standard', 'high', 'ultra']);
-const SURFACES = new Set(['elevation', 'shading', 'map', 'photo']);
+const SURFACES = new Set(['elevation', 'shading', 'map', 'photo', 'geology']);
 
 function number(params, key, fallback, min, max) {
   const value = Number(params.get(key));
