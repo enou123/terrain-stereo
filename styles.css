@@ -170,6 +170,16 @@ canvas:active {
   font-size:18px;
   margin:0 0 30px;
 }
+.terrain-guide { margin:-14px 0 24px; padding:0 12px 10px; border:1px solid #dce3d5; border-radius:8px; background:#f7f8f2; }
+.terrain-guide summary { color:#385a39; font-size:12px; font-weight:650; cursor:pointer; }
+.terrain-guide>p { margin:4px 0 12px; color:#657263; font-size:11px; line-height:1.7; }
+.terrain-guide ol { margin:0; padding-left:20px; }
+.terrain-guide li { padding:0 0 12px 2px; color:#55614f; font-size:11px; }
+.terrain-guide li:last-child { padding-bottom:2px; }
+.terrain-guide li strong,.terrain-guide li span { display:block; }
+.terrain-guide li strong { color:#344a37; font-size:11px; }
+.terrain-guide li span { margin:3px 0 7px; line-height:1.65; }
+.terrain-guide li button { min-height:36px; padding:6px 10px; border:1px solid #cbd5c1; border-radius:6px; background:#edf1e6; color:#40583c; font:inherit; font-size:10px; cursor:pointer; }
 .panel h3 {
   font-size:12px;
   margin:0 0 14px;

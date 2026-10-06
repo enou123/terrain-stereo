@@ -67,6 +67,13 @@ with sync_playwright() as p:
         assert page.locator('#message').is_hidden(),page.locator('#status').inner_text()
         def state():return page.evaluate('({target:uiTest.renderer.controls.target.slice(),yaw:uiTest.renderer.controls.yaw,pitch:uiTest.renderer.controls.pitch,distance:uiTest.renderer.controls.distance,location:uiTest.data.location,quality:uiTest.data.quality,mode:uiTest.renderer.mode,strength:uiTest.renderer.strength,height:document.querySelector("#exaggeration").value,contours:uiTest.renderer.contours,surface:uiTest.renderer.surface})')
         if (width,height)==(1440,900):
+            # Learning guide actions should launch existing relief, contour and section controls.
+            page.locator('#terrain-guide summary').click()
+            page.click('#guide-shading');assert page.locator('#surface').input_value()=='shading'
+            page.click('#guide-contours');assert page.locator('#contours').is_checked()
+            page.click('#guide-section');page.wait_for_selector('#workspace.section-selecting')
+            page.click('#profile-cancel');assert page.locator('#workspace').get_attribute('class').find('section-selecting')<0
+            print('PASS observation guide launches shading, contours and section selection',flush=True)
             # Copy link, then navigate to it in a fresh tab and verify startup restoration.
             context=page.context
             context.grant_permissions(['clipboard-read','clipboard-write'],origin=url.rstrip('/'))

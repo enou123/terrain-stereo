@@ -1,10 +1,10 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.15.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.15.0';
-import { LocationMap } from './map.js?v=0.15.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.15.0';
-import { createMesh } from './mesh.js?v=0.15.0';
-import { TerrainRenderer } from './renderer.js?v=0.15.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.15.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.16.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.16.0';
+import { LocationMap } from './map.js?v=0.16.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.16.0';
+import { createMesh } from './mesh.js?v=0.16.0';
+import { TerrainRenderer } from './renderer.js?v=0.16.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.16.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -15,6 +15,15 @@ const qualitySelect=document.querySelector('#quality');
 const contoursToggle=document.querySelector('#contours');
 const sunSettings=document.querySelector('#sun-settings'), sunAzimuth=document.querySelector('#sun-azimuth'), sunAltitude=document.querySelector('#sun-altitude');
 const surfaceSelect=document.querySelector('#surface');
+document.querySelector('#guide-shading').addEventListener('click',()=>{
+  surfaceSelect.value='shading';surfaceSelect.dispatchEvent(new Event('change',{bubbles:true}));
+  document.querySelector('#guide-shading').textContent='陰影を表示中';
+});
+document.querySelector('#guide-contours').addEventListener('click',()=>{
+  contoursToggle.checked=true;contoursToggle.dispatchEvent(new Event('change',{bubbles:true}));
+  document.querySelector('#guide-contours').textContent='等高線を表示中';
+});
+document.querySelector('#guide-section').addEventListener('click',()=>document.querySelector('#profile-start').click());
 const sunAzimuthValue=document.querySelector('#sun-azimuth-value'), sunAltitudeValue=document.querySelector('#sun-altitude-value');
 const savedSun=(()=>{try{return JSON.parse(localStorage.getItem('terrain-stereo-sun')||'{}')}catch{return {}}})();
 sunAzimuth.value=String(sharedView?.sunAzimuth ?? (Number.isFinite(savedSun.azimuth)?Math.max(0,Math.min(359,savedSun.azimuth)):315));
@@ -239,7 +248,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.15.0');
+      const {SectionTool}=await import('./profile-ui.js?v=0.16.0');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();

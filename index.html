@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#14251e">
   <title>terrain-stereo — 日本の地形を探索</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.15.0">
-  <script type="module" src="js/app.js?v=0.15.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.16.0">
+  <script type="module" src="js/app.js?v=0.16.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
@@ -40,6 +40,11 @@
         <div class="viewer-bottom"><span>ドラッグで回転 <span class="desktop-hint"> / ホイールでズーム・中ボタンで移動</span><span class="touch-hint"> / 2本指で拡大縮小・移動</span></span><span class="axis">標高を立体表示</span></div>
       </div>
       <aside id="view-settings" class="panel" aria-label="地形の表示設定"><p class="eyebrow">VIEW SETTINGS</p><h2>地形の見え方</h2>
+        <details id="terrain-guide" class="terrain-guide"><summary>地形観察ガイド · 3つの見方</summary><p>表示中の場所で、尾根・斜面・谷の見え方を試します。いつでも通常の設定に戻せます。</p><ol>
+          <li><strong>陰影で尾根と谷を探す</strong><span>光の向きを変えると、斜面の向きや谷筋が見つけやすくなります。</span><button id="guide-shading" type="button">陰影表示にする</button></li>
+          <li><strong>等高線で斜面を比べる</strong><span>線の間隔が狭い場所は急斜面、広い場所は緩斜面です。</span><button id="guide-contours" type="button">等高線を表示する</button></li>
+          <li><strong>断面図で高さを比べる</strong><span>地形上の2点を選んで、間の標高と高低差を見ます。</span><button id="guide-section" type="button">断面図を始める</button></li>
+        </ol></details>
         <label class="setting-label" for="view-mode">表示モード</label>
         <select id="view-mode" aria-describedby="stereo-guide"><option value="mono">通常3D</option><option value="parallel">立体視 · 平行法</option><option value="cross">立体視 · 交差法</option><option value="anaglyph">立体視 · 赤シアン</option></select>
         <p id="stereo-guide" class="hint">1つの地形を自由に回転して眺めます。</p>
