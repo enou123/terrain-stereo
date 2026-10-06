@@ -1,10 +1,10 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.16.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.16.0';
-import { LocationMap } from './map.js?v=0.16.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.16.0';
-import { createMesh } from './mesh.js?v=0.16.0';
-import { TerrainRenderer } from './renderer.js?v=0.16.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.16.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.17.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.17.0';
+import { LocationMap } from './map.js?v=0.17.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.17.0';
+import { createMesh } from './mesh.js?v=0.17.0';
+import { TerrainRenderer } from './renderer.js?v=0.17.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.17.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -75,7 +75,7 @@ const guides={
   cross:'視線を交差させ、右眼で左の画像、左眼で右の画像を見ると中央の地形が立体に見えます。',
   anaglyph:'赤シアン眼鏡が必要です。左眼に赤、右眼にシアンのレンズを合わせてください。'
 };
-let profile, renderer, data, loading=false, selectedLocation={...(sharedView?.location ?? LOCATION)}, requestedLocation={...(sharedView?.location ?? LOCATION)};
+let profile, renderer, data, loading=false, flightMode=false, selectedLocation={...(sharedView?.location ?? LOCATION)}, requestedLocation={...(sharedView?.location ?? LOCATION)};
 if(sharedView){
   qualitySelect.value=sharedView.quality; modeSelect.value=sharedView.mode; surfaceSelect.value=sharedView.surface;
   slider.value=String(sharedView.exaggeration); factor.textContent=`${sharedView.exaggeration.toFixed(1)}×`;
@@ -196,6 +196,7 @@ async function load() {
   try {
     if (!renderer) {
       renderer=new TerrainRenderer(document.querySelector('#terrain'),showError);
+      renderer.controls.setFlightMode(flightMode);
       if(sharedView){Object.assign(renderer.controls,{yaw:sharedView.camera.yaw,pitch:sharedView.camera.pitch,distance:sharedView.camera.distance,target:[...sharedView.camera.target]});}
     }
     if (!renderer.uintIndices) {
@@ -239,6 +240,14 @@ slider.addEventListener('input',()=>{
   if (data && renderer && !renderer.lost) renderer.setMesh(createMesh(data,value));
 });
 document.querySelector('#reset').addEventListener('click',()=>renderer?.reset());
+const flightToggle=document.querySelector('#flight-toggle'), flightPad=document.querySelector('#flight-pad');
+flightToggle.addEventListener('click',()=>{
+  flightMode=!flightMode;flightToggle.setAttribute('aria-pressed',String(flightMode));
+  flightToggle.textContent=flightMode?'■':'飛行';flightToggle.setAttribute('aria-label',flightMode?'飛行モードを終了':'飛行モードを開始');flightToggle.title=flightMode?'飛行モードを終了':'飛行モードを開始';flightPad.hidden=!flightMode;
+  renderer?.controls.setFlightMode(flightMode);
+  if(flightMode)document.querySelector('#terrain').focus({preventScroll:true});
+});
+flightPad.querySelectorAll('[data-flight]').forEach(button=>button.addEventListener('click',()=>renderer?.controls.fly(button.dataset.flight)));
 retry.addEventListener('click',load);
 load();
 
@@ -248,7 +257,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.16.0');
+      const {SectionTool}=await import('./profile-ui.js?v=0.17.0');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();

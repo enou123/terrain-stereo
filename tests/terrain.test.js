@@ -65,6 +65,20 @@ test('Shift and middle-button drags move terrain in the same screen direction at
   }
 });
 
+test('flight controls move relative to heading, change altitude, and stay inside terrain bounds',()=>{
+  const controls=new OrbitControls({addEventListener(){}},()=>{});
+  controls.yaw=0;const start=controls.target.slice();
+  controls.fly('forward');assert.ok(controls.target[2]<start[2]);assert.equal(controls.target[0],start[0]);
+  controls.yaw=Math.PI/2;const before=controls.target.slice();
+  controls.fly('forward');assert.ok(controls.target[0]<before[0]);
+  const y=controls.target[1];controls.fly('up');assert.ok(controls.target[1]>y);controls.fly('down');assert.equal(controls.target[1],y);
+  controls.target=[11.9,7.9,0];controls.yaw=Math.PI/2;controls.fly('backward');
+  assert.equal(controls.target[0],12);assert.equal(controls.target[1],7.9);assert.ok(Math.abs(controls.target[2])<1e-12);
+  controls.fly('up');assert.equal(controls.target[1],8);
+  controls.fly('down');controls.fly('down');assert.ok(Math.abs(controls.target[1]-7.56)<1e-12);
+  const unchanged=controls.target.slice();controls.fly('unknown');assert.deepEqual(controls.target,unchanged);
+});
+
 
 test('wide and elevated terrain fit uniformly without changing relief ratios', () => {
   for (const spacing of [.015,1,100]) {

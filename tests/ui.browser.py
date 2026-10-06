@@ -156,6 +156,19 @@ with sync_playwright() as p:
         landscape=width>height and height<=600 and width<=1100
         assert page.locator('#toggle-settings').get_attribute('aria-expanded')==('false' if landscape else 'true')
         page.locator('#workspace').evaluate("element=>element.scrollIntoView({block:'start',behavior:'instant'})");stable()
+        if (width,height) in [(1440,900),(390,844)]:
+            start_flight=state();page.click('#flight-toggle')
+            assert page.locator('#flight-toggle').get_attribute('aria-pressed')=='true'
+            assert page.locator('#flight-pad').is_visible()
+            page.locator('[data-flight="forward"]').click()
+            after_forward=state();assert after_forward['target']!=start_flight['target']
+            assert after_forward['yaw']==start_flight['yaw'] and after_forward['pitch']==start_flight['pitch']
+            page.locator('[data-flight="up"]').click();assert state()['target'][1]>after_forward['target'][1]
+            page.locator('#terrain').focus();page.keyboard.press('w');assert state()['target']!=after_forward['target']
+            page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-flight.png'))
+            page.click('#flight-toggle');assert page.locator('#flight-toggle').get_attribute('aria-pressed')=='false'
+            assert page.locator('#flight-pad').is_hidden()
+            print(f'PASS flight movement and altitude controls at {width}x{height}',flush=True)
         page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-normal.png'))
         canvas=page.locator('#terrain').bounding_box()
         if landscape:

@@ -47,6 +47,12 @@ export class OrbitControls {
         case 'ArrowDown': this.pitch-=0.08; break;
         case '+': case '=': this.zoom(0.9); break;
         case '-': this.zoom(1.1); break;
+        case 'w': case 'W': if (!this.flightMode) return; this.fly('forward'); break;
+        case 's': case 'S': if (!this.flightMode) return; this.fly('backward'); break;
+        case 'a': case 'A': if (!this.flightMode) return; this.fly('left'); break;
+        case 'd': case 'D': if (!this.flightMode) return; this.fly('right'); break;
+        case 'q': case 'Q': if (!this.flightMode) return; this.fly('up'); break;
+        case 'e': case 'E': if (!this.flightMode) return; this.fly('down'); break;
         case 'r': case 'R': this.reset(); break;
         default: return;
       }
@@ -56,6 +62,23 @@ export class OrbitControls {
   reset() { this.yaw=0.38; this.pitch=0.75; this.distance=19; this.target=[0,1.1,0]; }
   clamp() { this.pitch=Math.max(0.12,Math.min(1.48,this.pitch)); this.distance=Math.max(4,Math.min(45,this.distance)); }
   zoom(factor) { this.distance*=factor; this.clamp(); }
+  setFlightMode(enabled) { this.flightMode=Boolean(enabled); }
+  fly(direction) {
+    const step=0.65, forward=[-Math.sin(this.yaw),-Math.cos(this.yaw)], right=[Math.cos(this.yaw),-Math.sin(this.yaw)];
+    if(direction==='forward'||direction==='backward') {
+      const sign=direction==='forward'?1:-1;
+      this.target[0]+=forward[0]*step*sign; this.target[2]+=forward[1]*step*sign;
+    } else if(direction==='left'||direction==='right') {
+      const sign=direction==='right'?1:-1;
+      this.target[0]+=right[0]*step*sign; this.target[2]+=right[1]*step*sign;
+    } else if(direction==='up') this.target[1]+=0.22;
+    else if(direction==='down') this.target[1]-=0.22;
+    else return;
+    this.target[0]=Math.max(-12,Math.min(12,this.target[0]));
+    this.target[1]=Math.max(0.1,Math.min(8,this.target[1]));
+    this.target[2]=Math.max(-12,Math.min(12,this.target[2]));
+    this.redraw();
+  }
   pan(dx,dy) {
     const scale=this.distance*0.0015;
     this.target[0]+=(-dx*Math.cos(this.yaw)-dy*Math.sin(this.yaw))*scale;
