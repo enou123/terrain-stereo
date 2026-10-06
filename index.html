@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#14251e">
   <title>terrain-stereo — 日本の地形を探索</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.23.1">
-  <script type="module" src="js/app.js?v=0.23.1"></script>
+  <link rel="stylesheet" href="styles.css?v=0.24.0">
+  <script type="module" src="js/app.js?v=0.24.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
@@ -89,8 +89,8 @@
     <dialog id="urban-dialog" class="urban-dialog" aria-labelledby="urban-title">
       <header class="urban-header"><div><p class="eyebrow">CITY MODEL</p><h2 id="urban-title">都市の建物を立体表示</h2></div><button id="urban-tokyo" type="button">東京で試す</button><button id="urban-close" type="button" aria-label="都市3Dを閉じる">閉じる</button></header>
       <p id="urban-status" class="urban-status" role="status" aria-live="polite">選択した場所の建物データを確認します。</p>
-      <div id="urban-map" class="urban-map" aria-label="PLATEAU建物モデル"></div>
-      <p class="urban-attribution">建物データ：<a href="https://www.mlit.go.jp/plateau/" target="_blank" rel="noopener noreferrer">Project PLATEAU（国土交通省）</a> · LOD1（建物形状）。地面の起伏・立体視は未対応。閉じると地形ビューに戻ります。</p>
+      <div id="urban-map" class="urban-map" aria-label="PLATEAUの地形・航空写真・建物モデル"><button id="urban-home" class="urban-home" type="button" hidden>選択地へ</button></div>
+      <p class="urban-attribution">建物・地形：<a href="https://www.mlit.go.jp/plateau/" target="_blank" rel="noopener noreferrer">Project PLATEAU（国土交通省）</a> · 地形・画像：PLATEAU | Mapterhorn | 国土地理院。建物データの範囲と詳細さは地域ごとに異なります。立体視は未対応。</p>
     </dialog>
 </body>
 </html>

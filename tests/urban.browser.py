@@ -5,12 +5,12 @@ from pathlib import Path
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
-import json, math, struct, mimetypes
+import json, math, struct, mimetypes, zlib
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 LIB=Path('/tmp/package/Build/Cesium')
 assert (LIB/'Cesium.js').exists(), 'Extract npm cesium@1.117.0 into /tmp/package'
-OUT=ROOT.parent/'terrain-stereo-preview'/'urban-phase-1';OUT.mkdir(parents=True,exist_ok=True)
+OUT=ROOT.parent/'terrain-stereo-preview'/'urban-phase-2';OUT.mkdir(parents=True,exist_ok=True)
 # A small synthetic town, in metres in the local east/north/up frame.
 vertices=[];indices=[]
 for x in [-160,-80,0,80,160]:
@@ -48,12 +48,14 @@ with sync_playwright() as p:
             cdn.append(r.request.url);path=LIB/r.request.url.split('/Build/Cesium/')[1]
             r.fulfill(status=200,body=path.read_bytes(),content_type=mimetypes.guess_type(str(path))[0] or 'application/octet-stream',headers={'Access-Control-Allow-Origin':'*'})
         page.route('https://cdn.jsdelivr.net/npm/cesium@1.117.0/Build/Cesium/**',library)
-        page.route('https://mreversegeocoder.gsi.go.jp/**',lambda r:r.fulfill(json={'results':{'muniCd':'13101'}},headers={'Access-Control-Allow-Origin':'*'}))
         def tiles(r):
             if missing['on']:r.fulfill(status=404,body='{}',headers={'Access-Control-Allow-Origin':'*'})
             elif r.request.url.endswith('.glb'):r.fulfill(body=glb,content_type='model/gltf-binary',headers={'Access-Control-Allow-Origin':'*'})
             else:r.fulfill(json=metadata,headers={'Access-Control-Allow-Origin':'*'})
         page.route('https://api.plateauview.mlit.go.jp/datacatalog/3dtiles/**',tiles)
+        page.route('https://tile.plateauview.mlit.go.jp/terrain/**',lambda r:r.fulfill(status=404,body='not available in fixture',headers={'Access-Control-Allow-Origin':'*'}))
+        pixel=bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c63606060f80f0001040100b51c0c020000000049454e44ae426082')
+        page.route('https://tile.plateauview.mlit.go.jp/tiles/plateau-ortho-2023/**',lambda r:r.fulfill(body=pixel,content_type='image/png',headers={'Access-Control-Allow-Origin':'*'}))
         page.route('https://cyberjapandata.gsi.go.jp/**',lambda r:r.fulfill(body=(','.join(['1200']*256)+'\n')*256,content_type='text/plain') if '/dem/' in r.request.url else r.abort())
         page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.urbanTest=urbanView;window.terrainTest={get data(){return data},get renderer(){return renderer}};",content_type='text/javascript'))
         page.goto(f'http://127.0.0.1:{server.server_port}/')
@@ -66,10 +68,13 @@ with sync_playwright() as p:
         assert not page.locator('#urban-dialog').evaluate('e=>e.inert')
         page.click('#urban-close');missing['on']=False
         page.click('#urban-open');page.click('#urban-tokyo')
-        page.wait_for_function("/PLATEAU LOD1|表示できません|時間がかかっています|読み込めませんでした/.test(document.querySelector('#urban-status').textContent)",timeout=90000)
-        assert 'PLATEAU LOD1' in page.locator('#urban-status').inner_text()
+        page.wait_for_function("/全国PLATEAU LOD1|表示できません|時間がかかっています|読み込めませんでした/.test(document.querySelector('#urban-status').textContent)",timeout=90000)
+        assert '全国PLATEAU LOD1' in page.locator('#urban-status').inner_text()
+        assert page.evaluate('urbanTest.viewer.imageryLayers.length')==1
+        assert page.evaluate('Boolean(urbanTest.viewer.terrainProvider)')
+        assert page.locator('#urban-home').is_visible()
         assert page.evaluate('urbanTest.viewer.scene.primitives.length')==1
-        assert page.evaluate('urbanTest.viewer.scene.primitives.get(0)._statistics.numberOfTrianglesSelected')==240
+        page.wait_for_function('urbanTest.viewer.scene.primitives.get(0)._statistics.numberOfTrianglesSelected===240',timeout=30000)
         assert page.locator('#urban-map canvas').is_visible()
         page.wait_for_timeout(500)
         box=page.locator('#urban-map').bounding_box();assert box['height']>height*.5 and box['width']>min(width if width<=700 else width-24,1180)-5
@@ -95,7 +100,7 @@ with sync_playwright() as p:
         page.click('#urban-close');assert page.evaluate('urbanTest.viewer') is None
         after=page.evaluate('({location:terrainTest.data.location,yaw:terrainTest.renderer.controls.yaw,mode:terrainTest.renderer.mode})');assert before==after
         assert not errors,errors
-        print('PASS',width,height,'genuine Cesium mesh rendering, unavailable coverage, lazy load, camera, close/state, rotation',flush=True)
+        print('PASS',width,height,'genuine Cesium mesh rendering, nationwide data, optional terrain fallback and ortho imagery, lazy load, camera, close/state, rotation',flush=True)
         page.close()
     browser.close()
 server.shutdown()

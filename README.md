@@ -225,12 +225,12 @@ python tests/ui.browser.py
 
 地質図の地形上をクリック／タップすると、その地点をGSJの地点凡例APIで照合し、対応する凡例までスクロールして強調します。設定・凡例が閉じていても自動で開きます。色が同じ区分も凡例記号で区別します。ドラッグ・2本指操作・断面の点選択中には地質選択を行いません。地質図の地形上は通常の矢印カーソルです。
 
-## 都市3D（0.23.0・第1段階）
+## 都市3D（0.24.0）
 
-地形ビューの「都市3D」で、表示中の場所の自治体に対応するPLATEAU LOD1建物モデルを専用画面で開きます。対象データがない場合は案内を表示し、「東京で試す」で東京駅周辺へ移動できます。閉じると地形の場所・視点・設定を保持して戻ります。
+地形ビューの「都市3D」で、選択地点を含む日本全国のPLATEAU LOD1建物タイルをCesiumJSで表示します。カメラをドラッグして移動すれば、全国の配信対象地域を続けて探索できます。「東京で試す」は東京駅へ移動し、「選択地へ」は元の選択地点へ戻ります。自治体ごとのデータ有無と詳細度は異なります。
 
-建物は公式の3D Tilesモデルを直接読み込み、高さを推測して生成しません。地面は単色の楕円体で、この段階では地面の起伏や平行法・交差法には対応していません。CesiumJS 1.117.0を必要時のみCDNから読み込み、建物タイルも視野に応じて読み込みます。都市ビューを閉じると描画リソースを破棄します。
+PLATEAU-Terrainの地形とPLATEAU-Orthoの航空写真を重ね、建物が周辺の地表から浮いて見える状態を改善しました。各データは公式配信を直接・必要時に読み込みます。地形や画像が取得できない場合は、他のレイヤーと建物の表示を継続します。CesiumJS 1.117.0は都市画面を開いたときだけCDNから取得します。閉じると描画資源を破棄します。都市ビューの立体視は未対応です。
 
-データ配信仕様： https://docs.plateauview.mlit.go.jp/quickstart/
+データ配信仕様：[PLATEAU Terrain](https://docs.plateauview.mlit.go.jp/datasets/terrain/)、[3D Tiles](https://docs.plateauview.mlit.go.jp/datasets/3d-tiles/)、[PLATEAU-Ortho](https://docs.plateauview.mlit.go.jp/datasets/ortho/)。これらのサービスは実験的配信で、建物カバレッジは全国一様ではありません。
 
-描画回帰テスト `python tests/urban.browser.py` は実際のCesiumを使い、合成した3D Tiles建物を読み込みます。テスト前に `npm pack cesium@1.117.0 --cache /tmp/npm-cache --pack-destination /tmp` を実行し、tarファイルを `/tmp` に展開してください。配信元の実データとSafari実機の確認とは区別します。
+描画回帰テスト `python tests/urban.browser.py` は実際のCesiumを使い、合成した3D Tiles建物とテスト用の地図画像を読み込みます。テスト前に `npm pack cesium@1.117.0 --cache /tmp/npm-cache --pack-destination /tmp` を実行し、tarファイルを `/tmp` に展開してください。合成データによる描画確認と配信元の実データ確認は別です。

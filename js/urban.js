@@ -1,5 +1,6 @@
-const GEO_CODE_URL = 'https://mreversegeocoder.gsi.go.jp/reverse-geocoder/LonLatToAddress';
-const PLATEAU_API = 'https://api.plateauview.mlit.go.jp/datacatalog/3dtiles';
+const BUILDING_TILES_URL = 'https://api.plateauview.mlit.go.jp/datacatalog/3dtiles/all-bldg-lod1-latest/tileset.json';
+const TERRAIN_URL = 'https://tile.plateauview.mlit.go.jp/terrain';
+const ORTHO_URL = 'https://tile.plateauview.mlit.go.jp/tiles/plateau-ortho-2023/{z}/{x}/{y}.png';
 const CESIUM_BASE = 'https://cdn.jsdelivr.net/npm/cesium@1.117.0/Build/Cesium/';
 let libraryPromise;
 
@@ -23,20 +24,13 @@ function loadCesium() {
   return libraryPromise;
 }
 
-export async function fetchBuildingTiles(location, signal, fetchImpl = fetch) {
-  const query = new URLSearchParams({ lat: String(location.latitude), lon: String(location.longitude) });
-  const areaResponse = await fetchImpl(`${GEO_CODE_URL}?${query}`, { signal, mode: 'cors' });
-  if (!areaResponse.ok) throw new Error(`場所を調べられませんでした（HTTP ${areaResponse.status}）。`);
-  const area = await areaResponse.json();
-  const cityCode = String(area?.results?.muniCd ?? '');
-  if (!/^\d{5}$/.test(cityCode)) throw new Error('選択した場所の自治体を特定できませんでした。');
-  const url = `${PLATEAU_API}/${cityCode}-bldg-lod1-latest/tileset.json`;
-  const response = await fetchImpl(url, { signal, mode: 'cors' });
-  if (response.status === 404) throw new Error('この自治体のLOD1建物モデルが見つかりません。地図で都市部を選んでお試しください。');
+export async function fetchBuildingTiles(_location, signal, fetchImpl = fetch) {
+  const response = await fetchImpl(BUILDING_TILES_URL, { signal, mode: 'cors' });
+  if (response.status === 404) throw new Error('全国のLOD1建物データが見つかりません。');
   if (!response.ok) throw new Error(`建物データを確認できませんでした（HTTP ${response.status}）。`);
   const tileset = await response.json();
   if (!tileset.asset?.version || !tileset.root?.boundingVolume) throw new Error('建物データの形式を確認できませんでした。');
-  return { cityCode, url };
+  return { url: BUILDING_TILES_URL };
 }
 
 export class UrbanView {
@@ -44,7 +38,9 @@ export class UrbanView {
     this.dialog = document.querySelector('#urban-dialog');
     this.status = document.querySelector('#urban-status');
     this.container = document.querySelector('#urban-map');
+    this.homeButton = document.querySelector('#urban-home');
     this.request = 0;
+    this.homeButton.addEventListener('click', () => this.flyHome());
     document.querySelector('#urban-tokyo').addEventListener('click', () => this.open({ latitude: 35.6812, longitude: 139.7671 }));
     document.querySelector('#urban-close').addEventListener('click', () => this.close());
     this.dialog.addEventListener('cancel', event => { event.preventDefault(); this.close(); });
@@ -52,25 +48,36 @@ export class UrbanView {
     this.resize.observe(this.container);
   }
 
+  flyHome() {
+    if (!this.viewer || !this.location) return;
+    const C = window.Cesium;
+    this.viewer.camera.flyTo({
+      destination: C.Cartesian3.fromDegrees(this.location.longitude, this.location.latitude, 5000),
+      orientation: { heading: 0, pitch: C.Math.toRadians(-70), roll: 0 }, duration: 1
+    });
+  }
+
   async open(location) {
     if (!location || !Number.isFinite(location.latitude) || !Number.isFinite(location.longitude)) return;
     this.close();
     const request = ++this.request;
+    this.location = { ...location };
     this.controller = new AbortController();
     this.dialog.showModal();
-    this.status.textContent = '選択した場所のPLATEAU建物データを確認しています…';
+    this.homeButton.hidden = false;
+    this.status.textContent = '日本全国の建物・地形・航空写真データを確認しています…';
     this.timer = setTimeout(() => {
       if (request !== this.request) return;
       this.controller.abort();
-      this.status.textContent = '読み込みに時間がかかっています。閉じてから再度お試しください。';
+      this.status.textContent = '建物データの読み込みに時間がかかっています。通信状態を確認して再度お試しください。';
       this.request++;
       this.viewer?.destroy(); this.viewer = null;
-    }, 60000);
+    }, 90000);
     try {
       const dataset = await fetchBuildingTiles(location, this.controller.signal);
       const C = await loadCesium();
       if (request !== this.request) return;
-      this.status.textContent = '建物の3Dモデルを読み込んでいます…';
+      this.status.textContent = '全国の建物と地形を読み込んでいます…';
       let tileFailed = false;
       const viewer = this.viewer = new C.Viewer(this.container, {
         baseLayer: false, terrainProvider: new C.EllipsoidTerrainProvider(),
@@ -80,30 +87,42 @@ export class UrbanView {
         requestRenderMode: true, maximumRenderTimeChange: Infinity
       });
       viewer.resolutionScale = Math.min(1, 1 / (window.devicePixelRatio || 1));
-      const center = C.Cartesian3.fromDegrees(location.longitude, location.latitude);
-      const lightDirection = C.Matrix4.multiplyByPointAsVector(C.Transforms.eastNorthUpToFixedFrame(center),
-        new C.Cartesian3(0.3, -0.4, -0.85), new C.Cartesian3());
-      viewer.scene.light = new C.DirectionalLight({ direction: lightDirection, intensity: 2 });
       viewer.scene.globe.baseColor = C.Color.fromCssColorString('#71836a');
+      viewer.scene.globe.showGroundAtmosphere = true;
+      viewer.scene.backgroundColor = C.Color.fromCssColorString('#172e24');
       viewer.scene.renderError.addEventListener(() => {
         if (request !== this.request) return;
-        clearTimeout(this.timer);
-        tileFailed = true;
         this.status.textContent = '都市3Dの描画に失敗しました。閉じてから再度お試しください。';
       });
-      viewer.scene.backgroundColor = C.Color.fromCssColorString('#172e24');
-      const tiles = await C.Cesium3DTileset.fromUrl(dataset.url, { maximumScreenSpaceError: 12, cacheBytes: 64 * 1024 * 1024 });
+
+      // Imagery and elevation are independent optional layers. Either may fail while buildings remain usable.
+      try {
+        const imagery = new C.UrlTemplateImageryProvider({ url: ORTHO_URL, minimumLevel: 10, maximumLevel: 19 });
+        viewer.imageryLayers.addImageryProvider(imagery);
+        imagery.errorEvent.addEventListener(() => {
+          if (request === this.request) this.status.textContent = '航空写真を取得できません。地形と建物の表示を続けます。';
+        });
+      } catch { /* Keep the terrain and buildings available if imagery setup fails. */ }
+      C.CesiumTerrainProvider.fromUrl(TERRAIN_URL, { requestVertexNormals: true }).then(terrain => {
+        if (request !== this.request) return;
+        viewer.terrainProvider = terrain;
+        viewer.scene.requestRender();
+      }).catch(() => {
+        if (request === this.request && !viewer.scene.primitives.length) this.status.textContent = '地形データを取得できません。建物と航空写真の表示を続けます。';
+      });
+      const tiles = await C.Cesium3DTileset.fromUrl(dataset.url, { maximumScreenSpaceError: 12, cacheBytes: 96 * 1024 * 1024 });
       if (request !== this.request) { tiles.destroy(); return; }
       viewer.scene.primitives.add(tiles);
+      clearTimeout(this.timer);
+      this.status.textContent = '全国PLATEAU LOD1 · ドラッグで移動、右ドラッグで回転、ホイールで拡大。選択地へ戻るには「選択地」ボタン。';
       tiles.tileFailed.addEventListener(() => {
         if (request !== this.request) return;
         tileFailed = true; clearTimeout(this.timer);
-        this.status.textContent = '一部の建物を読み込めませんでした。通信状態を確認し、閉じてから再度お試しください。';
+        this.status.textContent = '表示範囲内の一部の建物タイルを取得できません。別の場所へ移動してお試しください。';
       });
       tiles.tileVisible.addEventListener(() => {
         if (request !== this.request || tileFailed) return;
-        clearTimeout(this.timer);
-        this.status.textContent = 'PLATEAU LOD1 · ドラッグで移動、右ドラッグで回転、ホイールで拡大。タッチは2本指で拡大・回転。';
+        this.status.textContent = '全国PLATEAU LOD1 · ドラッグで移動、右ドラッグで回転、ホイールで拡大。選択地へ戻るには「選択地」ボタン。';
       });
       viewer.camera.lookAt(C.Cartesian3.fromDegrees(location.longitude, location.latitude),
         new C.HeadingPitchRange(0, C.Math.toRadians(-45), 1500));
@@ -122,7 +141,9 @@ export class UrbanView {
     clearTimeout(this.timer);
     this.controller?.abort(); this.controller = null;
     this.viewer?.destroy(); this.viewer = null;
+    this.location = null;
     if (this.dialog.open) this.dialog.close();
     this.container.replaceChildren();
+    this.container.append(this.homeButton);
   }
 }

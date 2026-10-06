@@ -323,3 +323,14 @@ README の起動方法でアプリを開き、開発者ツールの Network で9
 - スクリーンショット： `/workspace/terrain-stereo-preview/urban-phase-1/`（合成モデルであり実際の東京の建物ではない）。既存回帰結果： `/workspace/terrain-stereo-preview/share-phase-1/`。
 - **未確認**：PLATEAU実配信建物の取得・CORS・地域ごとの対象範囲、CDNへの実ブラウザ接続、iPhone Safari実機、公開URLの更新後表示。この実行環境から公式3D Tiles URLへのHTTPS接続はプロキシのCONNECT段階でHTTP403となり、配信元の応答まで到達していない。描画確認は実配信確認と同一視しない。
 - 配信仕様根拠： https://docs.plateauview.mlit.go.jp/quickstart/
+
+## 0.24.0 — 都市3Dを日本全国へ拡張（2026-10-06）
+
+- 自治体逆ジオコーダによる限定を外し、PLATEAU公式RESTの `all-bldg-lod1-latest` 全国合成LOD1 tilesetを読む。Cesiumの標準ナビゲーションで日本各地へ移動でき、選択地点へ戻るボタンを追加。
+- PLATEAU-Terrain（quantized-mesh）とPLATEAU-Orthoの全国シームレス画像を都市画面に遅延追加。建物・地形・画像を独立レイヤーとして扱い、地形または画像の失敗で都市画面全体を止めない。遅い地形初期化が建物ロードを塞がないよう非同期に分離。
+- 仕様： https://docs.plateauview.mlit.go.jp/datasets/3d-tiles/ 、https://docs.plateauview.mlit.go.jp/datasets/terrain/ 、https://docs.plateauview.mlit.go.jp/datasets/ortho/ 。公式注記どおり建物カバレッジは地域で異なり、配信は実験的。
+- `npm test`：42件成功。全国合成tileset URL、エラー応答、形式不正を確認。
+- `python tests/urban.browser.py`：実Cesium 1.117.0、合成3D Tilesとテスト画像で1440×900、390×844、844×390成功。全国URL利用、画像レイヤー追加、地形失敗時の楕円体フォールバック、建物描画、マウス・タッチ操作、回転、閉じた後の地形状態保持を確認。スクリーンショット：`/workspace/terrain-stereo-preview/urban-phase-2/`。実建物・実地形の配信描画とは異なる。
+- `python tests/ui.browser.py`：8画面幅・縦横比の既存UI回帰成功。
+- `git diff --check` とJS構文検査成功。
+- **未確認**：PLATEAU公式URLからの実データ/CORS/カバレッジ、公開更新後、iPhone Safari実機。今回の実行環境は外部配信の実接続を確認できない。全国タイルは移動可能範囲を広げるが、建物の有無・LOD・細密さはデータ整備地域に依存する。
