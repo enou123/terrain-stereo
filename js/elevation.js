@@ -40,6 +40,39 @@ export function qualitySampling(zoom, quality = 'standard') {
   const step = quality === 'standard' || sourceZoom === zoom + levels[quality] ? 2 : 1;
   return { sourceZoom, step, size: (GRID_SIZE - 1) * STEP * scale / step + 1, scale };
 }
+// A 404 means this tile is unavailable, often offshore. Reuse a coarser
+// parent at the same geographic coordinates; never turn missing sea into land.
+const pendingTiles = new Map();
+async function elevationTile(zoom, x, y) {
+  const url = `https://cyberjapandata.gsi.go.jp/xyz/dem/${zoom}/${x}/${y}.txt`;
+  if (tileCache.has(url)) {
+    const result = tileCache.get(url);
+    tileCache.delete(url); tileCache.set(url, result);
+    return result;
+  }
+  if (pendingTiles.has(url)) return pendingTiles.get(url);
+  const pending = (async () => {
+    const response = await fetch(url, { signal: AbortSignal.timeout(25000), mode: 'cors' });
+    let result;
+    if (response.ok) result = { values: parseTile(await response.text()), fallback: false };
+    else if (response.status === 404) {
+      const values = new Float32Array(TILE_SIZE * TILE_SIZE).fill(NaN);
+      if (zoom > MIN_TERRAIN_ZOOM) {
+        const parent = await elevationTile(zoom - 1, Math.floor(x / 2), Math.floor(y / 2));
+        const offsetX = (x % 2) * 128, offsetY = (y % 2) * 128;
+        for (let row = 0; row < TILE_SIZE; row++) for (let col = 0; col < TILE_SIZE; col++) {
+          values[row * TILE_SIZE + col] = parent.values[(offsetY + Math.floor(row / 2)) * TILE_SIZE + offsetX + Math.floor(col / 2)];
+        }
+      }
+      result = { values, fallback: true };
+    } else throw new Error(`標高タイルの取得に失敗しました（HTTP ${response.status}）。`);
+    tileCache.delete(url); tileCache.set(url, result);
+    if (tileCache.size > CACHE_LIMIT) tileCache.delete(tileCache.keys().next().value);
+    return result;
+  })();
+  pendingTiles.set(url, pending);
+  try { return await pending; } finally { pendingTiles.delete(url); }
+}
 export async function loadElevation(onProgress = () => {}, location = LOCATION, quality = 'standard') {
   const { latitude, longitude, zoom = 12 } = location;
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < 20 || latitude > 46 || longitude < 122 || longitude > 154 || !Number.isInteger(zoom) || zoom < MIN_TERRAIN_ZOOM || zoom > MAX_TERRAIN_ZOOM) {
@@ -55,22 +88,16 @@ export async function loadElevation(onProgress = () => {}, location = LOCATION, 
   for (let y = Math.floor(startY / TILE_SIZE); y <= Math.floor((startY + half * 2) / TILE_SIZE); y++) {
     for (let x = Math.floor(startX / TILE_SIZE); x <= Math.floor((startX + half * 2) / TILE_SIZE); x++) jobs.push({ x, y });
   }
-  let completed = 0, failed = false;
-  // At most 49 tiles and four simultaneous requests, including the highest quality.
+  let completed = 0, failed = false, fallbackTileCount = 0;
+  // At most 49 target tiles, with coarser parents fetched only for 404s.
+  // Four workers also bound simultaneous fallback requests.
   let nextJob = 0;
   async function worker() {
     while (!failed && nextJob < jobs.length) {
       const { x, y } = jobs[nextJob++];
-      const url = `https://cyberjapandata.gsi.go.jp/xyz/dem/${sourceZoom}/${x}/${y}.txt`;
-      let values = tileCache.get(url);
-      if (!values) {
-        const response = await fetch(url, { signal: AbortSignal.timeout(25000), mode: 'cors' });
-        if (!response.ok) throw new Error(`標高タイルの取得に失敗しました（HTTP ${response.status}）。`);
-        values = parseTile(await response.text());
-      }
-      tileCache.delete(url); tileCache.set(url, values);
-      if (tileCache.size > CACHE_LIMIT) tileCache.delete(tileCache.keys().next().value);
-      tiles.set(`${x}/${y}`, values);
+      const tile = await elevationTile(sourceZoom, x, y);
+      if (tile.fallback) fallbackTileCount++;
+      tiles.set(`${x}/${y}`, tile.values);
       if (!failed) onProgress(++completed, jobs.length);
     }
   }
@@ -94,5 +121,5 @@ export async function loadElevation(onProgress = () => {}, location = LOCATION, 
   }
   if (!validCount) throw new Error('この範囲には有効な標高データがありません。');
   const spacing = 40075016.6856 * Math.cos(latitude * Math.PI / 180) / (TILE_SIZE * 2 ** sourceZoom) * step / 1000;
-  return { heights, size, spacing, min, max, tileCount: jobs.length, validCount, quality, sourceZoom, location: { latitude, longitude, zoom } };
+  return { heights, size, spacing, min, max, tileCount: jobs.length, fallbackTileCount, validCount, quality, sourceZoom, location: { latitude, longitude, zoom } };
 }

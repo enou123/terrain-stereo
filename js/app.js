@@ -1,8 +1,8 @@
-import { setupViewerUI } from './viewer-ui.js?v=0.7.0';
-import { LocationMap } from './map.js?v=0.7.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.7.0';
-import { createMesh } from './mesh.js?v=0.7.0';
-import { TerrainRenderer } from './renderer.js?v=0.7.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.7.1';
+import { LocationMap } from './map.js?v=0.7.1';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.7.1';
+import { createMesh } from './mesh.js?v=0.7.1';
+import { TerrainRenderer } from './renderer.js?v=0.7.1';
 setupViewerUI();
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
@@ -80,6 +80,7 @@ async function load() {
     data=nextData;
     if(resetView) renderer.reset();
     document.querySelector('#quality-guide').textContent=`${qualityNames[data.quality]}：約${Math.round(data.spacing*1000)} m間隔で地形を表示。`+(data.sourceZoom===14 ? 'この縮尺では標高データの細かさの上限に達しています。' : '高い画質ほど通信量と描画の負荷が増えます。');
+    if (data.fallbackTileCount) document.querySelector('#quality-guide').textContent += ' 一部の範囲は細かな標高データがないため、広域のデータで補完しています。補完部分の細かさは上記の間隔と異なります。';
     const name=locationName(data.location);
     document.querySelector('#loaded-location').textContent=name;
     document.querySelector('#terrain-location').textContent=name;
