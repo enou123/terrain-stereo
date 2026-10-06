@@ -1,12 +1,12 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.21.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.21.0';
-import { LocationMap } from './map.js?v=0.21.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.21.0';
-import { createMesh } from './mesh.js?v=0.21.0';
-import { TerrainRenderer } from './renderer.js?v=0.21.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.21.0';
-import { flightTourPose } from './controls.js?v=0.21.0';
-import { fetchGeologyLegend } from './geology-legend.js?v=0.21.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.21.1';
+import { setupViewerUI } from './viewer-ui.js?v=0.21.1';
+import { LocationMap } from './map.js?v=0.21.1';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.21.1';
+import { createMesh } from './mesh.js?v=0.21.1';
+import { TerrainRenderer } from './renderer.js?v=0.21.1';
+import { createShareUrl, readSharedView } from './share.js?v=0.21.1';
+import { flightTourPose } from './controls.js?v=0.21.1';
+import { fetchGeologyLegend } from './geology-legend.js?v=0.21.1';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -325,7 +325,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.21.0');
+      const {SectionTool}=await import('./profile-ui.js?v=0.21.1');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();

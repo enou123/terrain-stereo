@@ -3,7 +3,7 @@ const cache=new Map();
 export async function fetchGeologyLegend(location,extentKm,signal){
   const halfKm=Math.max(0.1,extentKm/2),latDelta=halfKm/111.32,cos=Math.max(0.1,Math.cos(location.latitude*Math.PI/180)),lonDelta=halfKm/(111.32*cos);
   const box=[location.latitude-latDelta,location.longitude-lonDelta,location.latitude+latDelta,location.longitude+lonDelta].map(value=>value.toFixed(5)).join(',');
-  const url=`${API}?box=${encodeURIComponent(box)}&z=13&type=level2`;
+  const url=`${API}?box=${encodeURIComponent(box)}&z=13&type=level1`;
   if(cache.has(url)) return cache.get(url).map(item=>({...item}));
   const response=await fetch(url,{signal});
   if(!response.ok) throw new Error(`HTTP ${response.status}`);
