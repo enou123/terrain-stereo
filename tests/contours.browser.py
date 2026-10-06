@@ -6,7 +6,7 @@ from threading import Thread
 import os,json
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
-OUT=ROOT.parent/'terrain-stereo-preview'/'contours-shader';OUT.mkdir(parents=True,exist_ok=True)
+OUT=ROOT.parent/'terrain-stereo-preview'/'surface-shader';OUT.mkdir(parents=True,exist_ok=True)
 class Handler(SimpleHTTPRequestHandler):
     def log_message(self,*args):pass
 server=ThreadingHTTPServer(('127.0.0.1',0),partial(Handler,directory=str(ROOT)))
@@ -30,6 +30,7 @@ window.point=(x,z=0)=>{
  const p=mul(c.projection,mul(c.view,[x,0,z,1]));return [Math.round((p[0]/p[3]+1)*300),Math.round((p[1]/p[3]+1)*300)];
 };
 window.run=()=>{
+ mesh.elevations.set([-610,610,-610,610]);r.setMesh(mesh);
  const off=read(false),on=read(true),back=read(false);
  if(!off.every((v,i)=>v===back[i]))throw Error('OFF restore changed pixels');
  const diff=(x)=>{const [px,py]=point(x);let max=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
@@ -45,6 +46,29 @@ window.run=()=>{
  if(pixel[3]!==0)throw Error('Missing centre painted');
  if(r.gl.getError()!==0)throw Error('WebGL error');
  return {lines,between,flatUnchanged:true,missingAlpha:pixel[3]};
+};
+window.surfaceCheck=()=>{
+ mesh.elevations.set([-610,610,-610,610]);r.setMesh(mesh);r.setContours(false);
+ const equal=(a,b)=>a.every((v,i)=>v===b[i]);
+ const original=read(false);r.setSurface('shading');const gray=read(false);
+ if(equal(original,gray))throw Error('Surface switch did not change pixels');
+ let solid=0;
+ for(let i=0;i<gray.length;i+=4)if(gray[i+3]===255){solid++;if(gray[i]!==gray[i+1]||gray[i+1]!==gray[i+2])throw Error('Shading not neutral gray');}
+ if(solid<10000)throw Error('No visible test terrain');
+ mesh.colors.fill(.2);r.setMesh(mesh);
+ if(!equal(read(false),gray))throw Error('Shading changed with altitude colors');
+ mesh.normals.set([0,-1,0,0,-1,0,0,-1,0,0,-1,0]);r.setMesh(mesh);
+ if(equal(read(false),gray))throw Error('Shading ignores slope direction');
+ mesh.normals.set([0,1,0,0,1,0,0,1,0,0,1,0]);mesh.colors.fill(.6);r.setMesh(mesh);
+ r.setSurface('elevation');if(!equal(read(false),original))throw Error('Original surface failed to restore');
+ for(const mode of ['mono','parallel','cross','anaglyph','mono']){
+   r.setStereo(mode,1);r.setSurface('elevation');const a=read(true);
+   r.setSurface('shading');const b=read(true);
+   if(equal(a,b))throw Error('No surface switch in '+mode);
+   r.setSurface('elevation');if(!equal(a,read(true)))throw Error('Restore failed in '+mode);
+   if(r.gl.getError()!==0)throw Error('WebGL surface error');
+ }
+ r.setStereo('mono',1);return {neutralGray:true,colorIndependent:true,slopeResponsive:true,restoresPixels:true,allModes:true};
 };window.ready=true;
 </script>'''
 with sync_playwright() as p:
@@ -53,16 +77,17 @@ with sync_playwright() as p:
     page.route('**/contours-test.html',lambda r:r.fulfill(body=html,content_type='text/html'))
     url=f'http://127.0.0.1:{server.server_port}/contours-test.html'
     page.goto(url);page.wait_for_function('window.ready===true')
-    result=page.evaluate('run()');print('PASS GPU contour altitudes, flat plateau and missing centre',result,flush=True)
+    surface=page.evaluate('surfaceCheck()');print('PASS surface shader',surface,flush=True)
+    result=page.evaluate('({elevation:(r.setSurface("elevation"),run()),shading:(r.setSurface("shading"),run())})');print('PASS GPU contour altitudes, flat plateau and missing centre in both surfaces',result,flush=True)
     page.close()
     page=browser.new_page(viewport={'width':650,'height':650})
     page.add_init_script("const get=WebGLRenderingContext.prototype.getExtension;WebGLRenderingContext.prototype.getExtension=function(name){return name==='OES_standard_derivatives'?null:get.call(this,name)}")
     page.route('**/contours-test.html',lambda r:r.fulfill(body=html,content_type='text/html'))
     page.goto(url);page.wait_for_function('window.ready===true')
-    unsupported=page.evaluate("(()=>{r.setContours(true);r.draw();return {supported:r.contoursSupported,enabled:r.contours,error:r.gl.getError(),triangles:r.count}})()")
+    unsupported=page.evaluate("(()=>{r.setContours(true);r.setSurface('shading');r.draw();return {supported:r.contoursSupported,enabled:r.contours,error:r.gl.getError(),triangles:r.count}})()")
     assert unsupported=={'supported':False,'enabled':False,'error':0,'triangles':6},unsupported
     print('PASS missing derivative extension retains 3D',flush=True)
-    (OUT/'results.json').write_text(json.dumps({'gpu':result,'unsupported':unsupported},indent=2))
+    (OUT/'results.json').write_text(json.dumps({'surface':surface,'gpu':result,'unsupported':unsupported},indent=2))
     page.close()
     page=browser.new_page(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
     page.add_init_script("const get=WebGLRenderingContext.prototype.getExtension;WebGLRenderingContext.prototype.getExtension=function(name){return name==='OES_standard_derivatives'?null:get.call(this,name)}")
@@ -72,6 +97,8 @@ with sync_playwright() as p:
     page.wait_for_function("document.querySelector('#message').hidden")
     assert page.locator('#contours').is_disabled() and not page.locator('#contours').is_checked()
     assert 'この端末は等高線の描画に対応していません' in page.locator('#contours-guide').inner_text()
+    page.select_option('#surface','shading')
+    assert page.locator('#elevation-legend').is_hidden()
     page.locator('#terrain').focus();page.keyboard.press('ArrowLeft')
     assert page.locator('#message').is_hidden()
     print('PASS unsupported device shows disabled toggle and retains usable viewer',flush=True)

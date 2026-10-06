@@ -11,7 +11,7 @@ import hashlib, math, os, urllib.request, json
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 CACHE=Path('/tmp/terrain-ui-gsi-cache');CACHE.mkdir(exist_ok=True)
-ARTIFACTS=ROOT.parent/'terrain-stereo-preview'/'contours-phase-1';ARTIFACTS.mkdir(parents=True,exist_ok=True)
+ARTIFACTS=ROOT.parent/'terrain-stereo-preview'/'surface-phase-1';ARTIFACTS.mkdir(parents=True,exist_ok=True)
 def real(url):
     name=hashlib.sha256(url.encode()).hexdigest()
     for cache in [CACHE,Path('/tmp/japan-map-tiles')]:
@@ -65,7 +65,7 @@ with sync_playwright() as p:
         page.goto(url)
         page.wait_for_function("window.uiTest && !document.querySelector('#quality').disabled",timeout=120000)
         assert page.locator('#message').is_hidden(),page.locator('#status').inner_text()
-        def state():return page.evaluate('({target:uiTest.renderer.controls.target.slice(),yaw:uiTest.renderer.controls.yaw,pitch:uiTest.renderer.controls.pitch,distance:uiTest.renderer.controls.distance,location:uiTest.data.location,quality:uiTest.data.quality,mode:uiTest.renderer.mode,strength:uiTest.renderer.strength,height:document.querySelector("#exaggeration").value,contours:uiTest.renderer.contours})')
+        def state():return page.evaluate('({target:uiTest.renderer.controls.target.slice(),yaw:uiTest.renderer.controls.yaw,pitch:uiTest.renderer.controls.pitch,distance:uiTest.renderer.controls.distance,location:uiTest.data.location,quality:uiTest.data.quality,mode:uiTest.renderer.mode,strength:uiTest.renderer.strength,height:document.querySelector("#exaggeration").value,contours:uiTest.renderer.contours,surface:uiTest.renderer.surface})')
         def observation():
             page.wait_for_function("uiTest.renderer.frame===null")
             mode=state()['mode'];paired=mode in ['parallel','cross']
@@ -121,7 +121,16 @@ with sync_playwright() as p:
         page.click('#toggle-settings');stable()
         assert pixels()==off
         page.click('#toggle-settings');assert state()==saved and len(dem)==requests
-        page.check('#contours');stable()
+        assert page.locator('#surface').input_value()=='elevation' and state()['surface']=='elevation'
+        saved=state();requests=len(dem)
+        page.select_option('#surface','shading');page.click('#toggle-settings');stable()
+        shade=pixels();assert shade!=off
+        page.click('#toggle-settings');assert page.locator('#elevation-legend').is_hidden()
+        page.select_option('#surface','elevation');page.click('#toggle-settings');stable()
+        assert pixels()==off
+        page.click('#toggle-settings');assert state()==saved and len(dem)==requests
+        assert page.locator('#elevation-legend').is_visible()
+        page.select_option('#surface','shading');page.check('#contours');stable()
         page.select_option('#view-mode','parallel')
         page.locator('#exaggeration').fill('2');page.locator('#exaggeration').dispatch_event('input')
         before=state();count=len(dem)
@@ -163,6 +172,15 @@ with sync_playwright() as p:
         page.click('#toggle-settings');assert page.locator('#view-settings').is_visible()
         for mode in ['mono','parallel','cross','anaglyph','mono']:
             page.select_option('#view-mode',mode);stable()
+            assert state()['surface']=='shading' and state()['contours']
+            assert page.locator('#elevation-legend').is_hidden()
+            # Both surface options must work with each stereo mode and its truthful legend.
+            requests=len(dem);shaded=state()
+            page.select_option('#surface','elevation');stable()
+            assert page.locator('#elevation-legend').is_hidden() == (mode=='anaglyph')
+            assert ('赤シアン' in page.locator('#surface-guide').inner_text()) == (mode=='anaglyph')
+            page.select_option('#surface','shading');stable()
+            assert state()==shaded and len(dem)==requests
             page.click('#toggle-settings');stable()
             page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-{mode}.png'))
             page.click('#toggle-settings')
@@ -202,7 +220,7 @@ with sync_playwright() as p:
             assert state()['location']['latitude']==35.3606
             page.select_option('#map-place','ishizuchi');page.click('#show-terrain');page.wait_for_function("document.querySelector('#message').hidden")
             page.select_option('#quality','high');page.wait_for_function("!document.querySelector('#quality').disabled")
-            assert page.locator('#message').is_hidden() and state()['quality']=='high' and state()['contours']
+            assert page.locator('#message').is_hidden() and state()['quality']=='high' and state()['contours'] and state()['surface']=='shading'
             high=state();page.click('#expand-view');stable();assert state()==high
             page.click('#back-to-map')
             # Map pan/zoom is still functional and does not itself request DEM.

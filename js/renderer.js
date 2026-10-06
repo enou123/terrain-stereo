@@ -1,8 +1,8 @@
-import { lookAt } from './math.js?v=0.8.0';
-import { ObservationOverlay } from './observation.js?v=0.8.0';
-import { fitMeshPositions } from './mesh.js?v=0.8.0';
-import { stereoCamera } from './stereo.js?v=0.8.0';
-import { OrbitControls } from './controls.js?v=0.8.0';
+import { lookAt } from './math.js?v=0.9.0';
+import { ObservationOverlay } from './observation.js?v=0.9.0';
+import { fitMeshPositions } from './mesh.js?v=0.9.0';
+import { stereoCamera } from './stereo.js?v=0.9.0';
+import { OrbitControls } from './controls.js?v=0.9.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -26,6 +26,7 @@ precision highp float;
 precision mediump float;
 #endif
 uniform float uMonochrome;
+uniform float uShading;
 uniform float uContours;
 uniform float uPixelRatio;
 varying vec3 vColor;
@@ -33,7 +34,7 @@ varying vec3 vNormal;
 varying float vContourHeight;
 void main() {
   float light = max(dot(normalize(vNormal), normalize(vec3(-0.6, 1.0, -0.4))), 0.0);
-  vec3 color = vColor * (0.38 + 0.78 * light);
+  vec3 color = mix(vColor, vec3(0.68), uShading) * (0.38 + 0.78 * light);
   #ifdef CONTOUR_DERIVATIVES
   if (uContours > 0.5) {
     // One contour every 100 real metres; derivatives maintain a thin screen-space line.
@@ -80,6 +81,8 @@ export class TerrainRenderer {
     this.monochromeLocation = gl.getUniformLocation(this.program,'uMonochrome');
     this.contoursLocation = gl.getUniformLocation(this.program,'uContours');
     this.pixelRatioLocation = gl.getUniformLocation(this.program,'uPixelRatio');
+    this.shadingLocation = gl.getUniformLocation(this.program,'uShading');
+    this.surface = 'elevation';
     this.mode = 'mono';
     this.strength = 1;
     this.controls = new OrbitControls(canvas,()=>this.requestDraw());
@@ -108,6 +111,10 @@ export class TerrainRenderer {
   }
   setContours(enabled) {
     this.contours = this.contoursSupported && Boolean(enabled);
+    this.requestDraw();
+  }
+  setSurface(surface) {
+    this.surface = surface === 'shading' ? 'shading' : 'elevation';
     this.requestDraw();
   }
   reset() { this.controls.reset(); this.requestDraw(); }
@@ -139,6 +146,7 @@ export class TerrainRenderer {
       gl.vertexAttribPointer(location,size,gl.FLOAT,false,0,0);
     }
     gl.uniform1f(this.monochromeLocation,anaglyph ? 1 : 0);
+    gl.uniform1f(this.shadingLocation,this.surface === 'shading' ? 1 : 0);
     gl.uniform1f(this.contoursLocation,this.contours ? 1 : 0);
     gl.uniform1f(this.pixelRatioLocation,ratio);
     const leftWidth = Math.floor(width/2);

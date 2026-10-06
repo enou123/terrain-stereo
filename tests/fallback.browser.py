@@ -8,7 +8,7 @@ import urllib.request,urllib.error,hashlib,math,os
 from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 CACHE=Path('/tmp/terrain-ui-gsi-cache');CACHE.mkdir(exist_ok=True)
-OUT=ROOT.parent/'terrain-stereo-preview'/'contours-coastal';OUT.mkdir(parents=True,exist_ok=True)
+OUT=ROOT.parent/'terrain-stereo-preview'/'surface-coastal';OUT.mkdir(parents=True,exist_ok=True)
 fixtures={};lock=Lock()
 def get(url):
     with lock:
@@ -61,6 +61,7 @@ with sync_playwright() as p:
         page.goto(f'http://127.0.0.1:{server.server_port}/')
         page.wait_for_function('window.fallbackTest && fallbackTest.data && !document.querySelector("#quality").disabled',timeout=120000)
         if page.locator('#view-settings').is_hidden():page.click('#toggle-settings')
+        page.select_option('#surface','shading')
         page.check('#contours')
         view=page.evaluate('({yaw:fallbackTest.renderer.controls.yaw,pitch:fallbackTest.renderer.controls.pitch,location:fallbackTest.data.location})')
         extent=page.locator('#extent').inner_text()
@@ -79,7 +80,7 @@ with sync_playwright() as p:
                 page.select_option('#view-mode',mode)
                 page.wait_for_function('fallbackTest.renderer.frame===null')
                 assert page.evaluate('fallbackTest.renderer.gl.getError()')==0
-                assert page.evaluate('fallbackTest.renderer.contours')
+                assert page.evaluate('fallbackTest.renderer.contours && fallbackTest.renderer.surface==="shading"')
             page.locator('#workspace').evaluate('e=>e.scrollIntoView({block:"start"})')
             page.screenshot(path=str(OUT/f'{width}x{height}-{quality}.png'))
         assert not errors,errors
