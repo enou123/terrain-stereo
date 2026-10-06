@@ -1,9 +1,9 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.12.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.12.0';
-import { LocationMap } from './map.js?v=0.12.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.12.0';
-import { createMesh } from './mesh.js?v=0.12.0';
-import { TerrainRenderer } from './renderer.js?v=0.12.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.13.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.13.0';
+import { LocationMap } from './map.js?v=0.13.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.13.0';
+import { createMesh } from './mesh.js?v=0.13.0';
+import { TerrainRenderer } from './renderer.js?v=0.13.0';
 const viewerUI=setupViewerUI();
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
@@ -11,7 +11,20 @@ const slider=document.querySelector('#exaggeration'), factor=document.querySelec
 const modeSelect=document.querySelector('#view-mode'), strengthSlider=document.querySelector('#stereo-strength');
 const qualitySelect=document.querySelector('#quality');
 const contoursToggle=document.querySelector('#contours');
+const sunSettings=document.querySelector('#sun-settings'), sunAzimuth=document.querySelector('#sun-azimuth'), sunAltitude=document.querySelector('#sun-altitude');
 const surfaceSelect=document.querySelector('#surface');
+const sunAzimuthValue=document.querySelector('#sun-azimuth-value'), sunAltitudeValue=document.querySelector('#sun-altitude-value');
+const savedSun=(()=>{try{return JSON.parse(localStorage.getItem('terrain-stereo-sun')||'{}')}catch{return {}}})();
+sunAzimuth.value=String(Number.isFinite(savedSun.azimuth)?Math.max(0,Math.min(359,savedSun.azimuth)):315);
+sunAltitude.value=String(Number.isFinite(savedSun.altitude)?Math.max(5,Math.min(85,savedSun.altitude)):35);
+function updateSun(){
+  const azimuth=Number(sunAzimuth.value), altitude=Number(sunAltitude.value);
+  const directions=['北','北東','東','南東','南','南西','西','北西'];
+  sunAzimuthValue.textContent=directions[Math.round(azimuth/45)%8];sunAltitudeValue.textContent=`${altitude}°`;
+  renderer?.setSun(azimuth,altitude);
+  try{localStorage.setItem('terrain-stereo-sun',JSON.stringify({azimuth,altitude}))}catch{}
+}
+sunAzimuth.addEventListener('input',updateSun);sunAltitude.addEventListener('input',updateSun);
 const textureStatus=document.querySelector('#texture-status'), textureRetry=document.querySelector('#texture-retry');
 let textureCache=null, textureController=null, textureRequest=0, activeTextureKey=null;
 async function updateTexture() {
@@ -76,6 +89,7 @@ showTerrain.addEventListener('click',()=>{
 function updateSurface() {
   const photo=surfaceSelect.value==='photo', mapped=surfaceSelect.value==='map', shaded=surfaceSelect.value==='shading', anaglyph=modeSelect.value==='anaglyph';
   renderer?.setSurface(surfaceSelect.value);
+  sunSettings.hidden=false;
   document.querySelector('#surface-guide').textContent=(photo ? '国土地理院の航空写真を地形に重ねます。撮影時期は地域で異なり、最新の状況とは限りません。' : mapped ? '国土地理院の地図を地形に重ねます。画像は選択時に取得し、地形の画質とは別の細かさです。' : shaded ? '標高の色を使わず、斜面の向きによる明暗で尾根や谷を眺めます。' : '色は標高、陰影は斜面の向きを表します。')+(anaglyph ? '赤シアン表示では白黒の明るさで表します。' : '');
   document.querySelector('#elevation-legend').hidden=photo || mapped || shaded || anaglyph;
 }
@@ -121,6 +135,7 @@ async function load() {
       document.querySelector('#contours-guide').textContent='この端末は等高線の描画に対応していません。3D地形は引き続き操作できます。';
     }
     renderer.setContours(contoursToggle.checked);
+    updateSun();
     updateStereo();
     const nextData=await loadElevation((done,total)=>status.textContent=`標高データを取得しています… ${done} / ${total}`,requestedLocation,requestedQuality);
     renderer.setMesh(createMesh(nextData,Number(slider.value)));
@@ -158,7 +173,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.12.0');
+      const {SectionTool}=await import('./profile-ui.js?v=0.13.0');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();

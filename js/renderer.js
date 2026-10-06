@@ -1,8 +1,8 @@
-import { lookAt } from './math.js?v=0.12.0';
-import { ObservationOverlay } from './observation.js?v=0.12.0';
-import { fitMeshPositions } from './mesh.js?v=0.12.0';
-import { stereoCamera } from './stereo.js?v=0.12.0';
-import { OrbitControls } from './controls.js?v=0.12.0';
+import { lookAt } from './math.js?v=0.13.0';
+import { ObservationOverlay } from './observation.js?v=0.13.0';
+import { fitMeshPositions } from './mesh.js?v=0.13.0';
+import { stereoCamera } from './stereo.js?v=0.13.0';
+import { OrbitControls } from './controls.js?v=0.13.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -34,12 +34,13 @@ uniform float uTextureEnabled;
 uniform sampler2D uTexture;
 uniform float uContours;
 uniform float uPixelRatio;
+uniform vec3 uSunDirection;
 varying vec2 vUV;
 varying vec3 vColor;
 varying vec3 vNormal;
 varying float vContourHeight;
 void main() {
-  float light = max(dot(normalize(vNormal), normalize(vec3(-0.6, 1.0, -0.4))), 0.0);
+  float light = max(dot(normalize(vNormal), normalize(uSunDirection)), 0.0);
   vec3 color = mix(vColor, vec3(0.68), uShading) * (0.38 + 0.78 * light);
   if (uTextureEnabled > 0.5) color = texture2D(uTexture, vUV).rgb * (0.65 + 0.35 * light);
   #ifdef CONTOUR_DERIVATIVES
@@ -97,6 +98,8 @@ export class TerrainRenderer {
     this.contoursLocation = gl.getUniformLocation(this.program,'uContours');
     this.pixelRatioLocation = gl.getUniformLocation(this.program,'uPixelRatio');
     this.shadingLocation = gl.getUniformLocation(this.program,'uShading');
+    this.sunDirectionLocation = gl.getUniformLocation(this.program,'uSunDirection');
+    this.sunAzimuth = 315; this.sunAltitude = 35;
     this.surface = 'elevation';
     this.mode = 'mono';
     this.strength = 1;
@@ -130,6 +133,10 @@ export class TerrainRenderer {
   }
   setContours(enabled) {
     this.contours = this.contoursSupported && Boolean(enabled);
+    this.requestDraw();
+  }
+  setSun(azimuth, altitude) {
+    this.sunAzimuth = Number(azimuth); this.sunAltitude = Number(altitude);
     this.requestDraw();
   }
   setSurface(surface) {
@@ -196,6 +203,8 @@ export class TerrainRenderer {
     gl.uniform1f(this.textureEnabledLocation,(this.surface==='map'||this.surface==='photo') && this.texture ? 1 : 0);
     gl.uniform1f(this.monochromeLocation,anaglyph ? 1 : 0);
     gl.uniform1f(this.shadingLocation,this.surface === 'shading' ? 1 : 0);
+    const azimuth=this.sunAzimuth*Math.PI/180, altitude=this.sunAltitude*Math.PI/180;
+    gl.uniform3f(this.sunDirectionLocation,Math.sin(azimuth)*Math.cos(altitude),Math.sin(altitude),-Math.cos(azimuth)*Math.cos(altitude));
     gl.uniform1f(this.contoursLocation,this.contours ? 1 : 0);
     gl.uniform1f(this.pixelRatioLocation,ratio);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.indexBuffer);

@@ -549,6 +549,10 @@ body.view-focused { overflow:hidden; }
 .contour-toggle { display:flex; align-items:center; gap:10px; min-height:44px; font-size:12px; cursor:pointer; }
 .contour-toggle input { width:20px; height:20px; margin:0; accent-color:#536b40; flex:none; }
 
+#sun-settings { margin:12px 0 18px; }
+#sun-settings .control-heading { margin-top:16px; }
+#sun-settings[hidden] { display:none; }
+
 /* Section analysis stays in the existing panel, leaving landscape terrain large. */
 .profile-section { min-width:0; }
 .profile-actions { display:flex; gap:8px; }

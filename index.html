@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#14251e">
   <title>terrain-stereo — 日本の地形を探索</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.12.0">
-  <script type="module" src="js/app.js?v=0.12.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.13.0">
+  <script type="module" src="js/app.js?v=0.13.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
@@ -49,6 +49,15 @@
         <label class="setting-label" for="surface">地形表面</label>
         <select id="surface" aria-describedby="surface-guide"><option value="elevation">標高の色（従来の表示）</option><option value="shading">陰影のみ</option><option value="map">地理院地図</option><option value="photo">航空写真</option></select>
         <p id="surface-guide" class="hint">色は標高、陰影は斜面の向きを表します。</p>
+        <div id="sun-settings" hidden>
+          <div class="control-heading"><label for="sun-azimuth">太陽の方位</label><output id="sun-azimuth-value" for="sun-azimuth">北西</output></div>
+          <input id="sun-azimuth" type="range" min="0" max="359" step="1" value="315" aria-label="太陽の方位">
+          <div class="range-labels"><span>北</span><span>東</span><span>南</span><span>西</span></div>
+          <div class="control-heading"><label for="sun-altitude">太陽の高さ</label><output id="sun-altitude-value" for="sun-altitude">35°</output></div>
+          <input id="sun-altitude" type="range" min="5" max="85" step="1" value="35" aria-label="太陽の高さ">
+          <div class="range-labels"><span>低い</span><span>高い</span></div>
+          <p class="hint">陰影の光の向きを変えます。画像表面にも反映します。</p>
+        </div>
         <p id="texture-status" class="hint" role="status" hidden></p>
         <button id="texture-retry" type="button" hidden>地図画像を再読み込み</button>
         <label class="contour-toggle"><input id="contours" type="checkbox" aria-describedby="contours-guide">等高線を表示</label>
