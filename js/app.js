@@ -1,13 +1,13 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.23.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.23.0';
-import { LocationMap } from './map.js?v=0.23.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.23.0';
-import { createMesh } from './mesh.js?v=0.23.0';
-import { TerrainRenderer } from './renderer.js?v=0.23.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.23.0';
-import { flightTourPose } from './controls.js?v=0.23.0';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.23.0';
-import { UrbanView } from './urban.js?v=0.23.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.23.1';
+import { setupViewerUI } from './viewer-ui.js?v=0.23.1';
+import { LocationMap } from './map.js?v=0.23.1';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.23.1';
+import { createMesh } from './mesh.js?v=0.23.1';
+import { TerrainRenderer } from './renderer.js?v=0.23.1';
+import { createShareUrl, readSharedView } from './share.js?v=0.23.1';
+import { flightTourPose } from './controls.js?v=0.23.1';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.23.1';
+import { UrbanView } from './urban.js?v=0.23.1';
 const viewerUI=setupViewerUI();
 const urbanView=new UrbanView();
 const sharedView=readSharedView(window.location.search);
@@ -129,7 +129,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.23.0');
+  const {pickSurface}=await import('./profile.js?v=0.23.1');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -341,8 +341,10 @@ const flightToggle=document.querySelector('#flight-toggle'), flightPad=document.
 const tourToggle=document.querySelector('#tour-toggle');
 let tourFrame=null,tourStarted=0,tourBase=null;
 function stopFlightTour() {
+  const wasTouring=tourFrame!==null;
   if(tourFrame!==null)cancelAnimationFrame(tourFrame);
   tourFrame=null;tourBase=null;tourToggle.setAttribute('aria-pressed','false');
+  if(wasTouring&&flightMode)flightPad.hidden=false;
   tourToggle.setAttribute('aria-label','遊覧飛行を開始（約32秒）');tourToggle.textContent='遊覧飛行 · 約32秒';
 }
 function animateFlightTour(now) {
@@ -360,6 +362,7 @@ function startFlightTour() {
   tourBase={yaw:controls.yaw,pitch:controls.pitch,distance:controls.distance,target:controls.target.slice()};
   tourStarted=performance.now();tourToggle.setAttribute('aria-pressed','true');
   tourToggle.setAttribute('aria-label','遊覧飛行を停止');tourToggle.textContent='遊覧飛行中 · 停止';
+  flightPad.hidden=true;
   document.querySelector('#terrain').focus({preventScroll:true});
   tourFrame=requestAnimationFrame(animateFlightTour);
 }
@@ -399,7 +402,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.23.0');
+      const {SectionTool}=await import('./profile-ui.js?v=0.23.1');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();

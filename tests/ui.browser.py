@@ -186,10 +186,15 @@ with sync_playwright() as p:
             assert page.locator('#flight-toggle').get_attribute('aria-pressed')=='true'
             assert page.locator('#flight-pad').is_visible()
             page.click('#tour-toggle');assert page.locator('#tour-toggle').get_attribute('aria-pressed')=='true'
+            assert page.locator('#flight-pad').is_hidden()
             page.wait_for_timeout(3500);tour_pose=state()
             assert tour_pose['target']!=start_flight['target'] and tour_pose['yaw']!=start_flight['yaw']
             page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-tour.png'))
-            page.click('#tour-toggle');assert page.locator('#tour-toggle').get_attribute('aria-pressed')=='false'
+            terrain_box=page.locator('#terrain').bounding_box()
+            stop_x=terrain_box['x']+80;stop_y=terrain_box['y']+80
+            (page.touchscreen.tap if touch else page.mouse.click)(stop_x,stop_y)
+            assert page.locator('#tour-toggle').get_attribute('aria-pressed')=='false'
+            assert page.locator('#flight-pad').is_visible()
             manual_before=state()
             page.locator('[data-flight="forward"]').click()
             after_forward=state();assert after_forward['target']!=manual_before['target']
