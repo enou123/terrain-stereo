@@ -548,3 +548,16 @@ body.view-focused { overflow:hidden; }
 /* One observation setting with a full-height touch target. */
 .contour-toggle { display:flex; align-items:center; gap:10px; min-height:44px; font-size:12px; cursor:pointer; }
 .contour-toggle input { width:20px; height:20px; margin:0; accent-color:#536b40; flex:none; }
+
+/* Section analysis stays in the existing panel, leaving landscape terrain large. */
+.profile-section { min-width:0; }
+.profile-actions { display:flex; gap:8px; }
+.profile-actions button,.profile-prompt button { border:1px solid #b8c3aa; border-radius:8px; background:#f5f6ee; color:#293e2d; padding:10px 12px; min-height:44px; cursor:pointer; }
+#profile-chart { width:100%; height:auto; display:block; background:#f6f8f0; border-radius:10px; }
+#profile-chart text { font:14px sans-serif; fill:#4a5947; }
+.profile-overlay { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.profile-prompt { width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px; color:#293e2d; font-size:12px; }
+.profile-prompt button { min-height:44px; flex-shrink:0; padding:6px 10px; }
+.workspace.section-selecting .viewer-toolbar > a,.workspace.section-selecting .viewer-actions { display:none; }
+.section-selecting { cursor:crosshair; }
+.profile-overlay[hidden],.profile-prompt[hidden],#profile-chart[hidden] { display:none; }

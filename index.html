@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#14251e">
   <title>terrain-stereo — 日本の地形を探索</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.11.1">
-  <script type="module" src="js/app.js?v=0.11.1"></script>
+  <link rel="stylesheet" href="styles.css?v=0.12.0">
+  <script type="module" src="js/app.js?v=0.12.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
@@ -29,11 +29,12 @@
       <nav class="viewer-toolbar" aria-label="地形ビューの操作">
         <a id="back-to-map" href="#place-picker">地図へ ↑</a>
         <div class="viewer-actions"><button id="toggle-settings" type="button" aria-controls="view-settings" aria-expanded="true">設定を閉じる</button><button id="expand-view" type="button" aria-pressed="false">大きく表示</button></div>
-      </nav>
+      <div id="profile-prompt" class="profile-prompt" hidden><span id="profile-instruction"></span><button id="profile-cancel" type="button">中止</button></div></nav>
       <div class="viewer" id="viewer">
         <div class="viewer-top"><span class="mode" id="mode-label">● 通常3D</span><span class="live-label"><span id="terrain-location">石鎚山周辺</span></span></div>
         <canvas id="terrain" tabindex="0" aria-label="選択した場所の3D地形。矢印キーで回転、プラス・マイナスキーでズーム。">WebGL 対応ブラウザでご覧ください。</canvas>
         <div id="eye-labels" class="eye-labels" hidden aria-hidden="true"><span id="left-eye">左眼用</span><span id="right-eye">右眼用</span></div>
+        <svg id="profile-overlay" class="profile-overlay" aria-hidden="true" hidden></svg>
         <div id="observation-overlay" class="observation-overlay" aria-hidden="true" hidden></div>
         <div class="message" id="message" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><p id="status">標高データを取得しています…</p><button id="retry" hidden>もう一度読み込む</button></div>
         <div class="viewer-bottom"><span>ドラッグで回転 <span class="desktop-hint"> / ホイールでズーム・中ボタンで移動</span><span class="touch-hint"> / 2本指で拡大縮小・移動</span></span><span class="axis">標高を立体表示</span></div>
@@ -52,7 +53,7 @@
         <button id="texture-retry" type="button" hidden>地図画像を再読み込み</button>
         <label class="contour-toggle"><input id="contours" type="checkbox" aria-describedby="contours-guide">等高線を表示</label>
         <p id="contours-guide" class="hint">実際の標高の100 m間隔。高さ強調を変えても同じ標高に表示します。線の細かさは地形の画質に依存します。</p>
-        <div id="stereo-settings" hidden><div class="control-heading"><label for="stereo-strength">立体感</label><output id="stereo-factor" for="stereo-strength">1.0</output></div><input id="stereo-strength" type="range" min="0" max="2" step="0.1" value="1"><div class="range-labels"><span>弱い</span><span>強い</span></div><p class="hint">見づらいときは立体感を下げてください。</p></div><hr><div class="control-heading"><label for="exaggeration">高さ強調</label><output id="factor" for="exaggeration">1.5×</output></div><input id="exaggeration" type="range" min="0.5" max="4" step="0.1" value="1.5"><div class="range-labels"><span>0.5×</span><span>実際の比率は 1.0×</span><span>4.0×</span></div><p class="hint">高さを強調すると、小さな尾根や谷も見つけやすくなります。</p><button id="reset" class="reset">↺ 初期の視点に戻す</button><div id="elevation-legend"><hr><h3>標高の色</h3><div class="legend" aria-hidden="true"></div><div class="range-labels"><span>低い</span><span>高い</span></div></div><hr><dl><div><dt>表示範囲</dt><dd id="extent">約12 km四方</dd></div><div><dt>標高タイル</dt><dd id="dem-scale">DEM · ズーム12</dd></div><div><dt>取得状況</dt><dd id="data-state">読み込み中</dd></div></dl><details><summary>操作ガイド</summary><p>マウス：ドラッグで回転、ホイールでズーム、Shift＋ドラッグ、または中ボタン（ホイール押し込み）ドラッグで移動。</p><p>タッチ：1本指で回転、2本指で拡大縮小・移動。</p><p>方位：Nは北、Eは東、Sは南、Wは西。コンパスは地形の回転・傾きに追従します。平行法・交差法では各画像の左下の小さな＋を重ねて左右画像を合わせます。</p><p>キーボード：地形にフォーカスして矢印で回転、＋/−でズーム、Rで視点リセット。</p></details></aside>
+        <div id="stereo-settings" hidden><div class="control-heading"><label for="stereo-strength">立体感</label><output id="stereo-factor" for="stereo-strength">1.0</output></div><input id="stereo-strength" type="range" min="0" max="2" step="0.1" value="1"><div class="range-labels"><span>弱い</span><span>強い</span></div><p class="hint">見づらいときは立体感を下げてください。</p></div><hr><div class="control-heading"><label for="exaggeration">高さ強調</label><output id="factor" for="exaggeration">1.5×</output></div><input id="exaggeration" type="range" min="0.5" max="4" step="0.1" value="1.5"><div class="range-labels"><span>0.5×</span><span>実際の比率は 1.0×</span><span>4.0×</span></div><p class="hint">高さを強調すると、小さな尾根や谷も見つけやすくなります。</p><button id="reset" class="reset">↺ 初期の視点に戻す</button><section id="profile-section" class="profile-section"><hr><h3>地形断面図</h3><p class="hint">地形の2点をタップして、その間の実標高を見ます。ドラッグで視点を調整できます。</p><div class="profile-actions"><button id="profile-start" type="button">2点を選ぶ</button><button id="profile-clear" type="button" hidden>消す</button></div><p id="profile-status" class="hint" role="status"></p><svg id="profile-chart" viewBox="0 0 320 190" role="img" aria-label="AからBまでの地形断面図" hidden></svg><p id="profile-note" class="hint" hidden>高さ強調前の実標高です。取得した地形から補間しています。データのない区間は空白になります。</p></section><div id="elevation-legend"><hr><h3>標高の色</h3><div class="legend" aria-hidden="true"></div><div class="range-labels"><span>低い</span><span>高い</span></div></div><hr><dl><div><dt>表示範囲</dt><dd id="extent">約12 km四方</dd></div><div><dt>標高タイル</dt><dd id="dem-scale">DEM · ズーム12</dd></div><div><dt>取得状況</dt><dd id="data-state">読み込み中</dd></div></dl><details><summary>操作ガイド</summary><p>マウス：ドラッグで回転、ホイールでズーム、Shift＋ドラッグ、または中ボタン（ホイール押し込み）ドラッグで移動。</p><p>タッチ：1本指で回転、2本指で拡大縮小・移動。</p><p>方位：Nは北、Eは東、Sは南、Wは西。コンパスは地形の回転・傾きに追従します。平行法・交差法では各画像の左下の小さな＋を重ねて左右画像を合わせます。</p><p>キーボード：地形にフォーカスして矢印で回転、＋/−でズーム、Rで視点リセット。</p></details></aside>
     </section>
     <footer><span>出典：<a href="https://maps.gsi.go.jp/development/ichiran.html#dem" target="_blank" rel="noopener noreferrer">国土地理院・地理院タイル（標高・標準地図・航空写真）</a>を加工して作成</span><span>まずは、山を自由に眺める。</span></footer>
   </main>

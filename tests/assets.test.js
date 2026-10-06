@@ -16,11 +16,11 @@ test('stylesheet and complete browser module graph share the release version', a
     visited.add(url.href);
     const source = await readFile(url, 'utf8');
     if (url.pathname.endsWith('.js')) {
-      for (const match of source.matchAll(/\bfrom\s+['"](\.[^'"]+)['"]/g)) {
+      for (const match of source.matchAll(/(?:\bfrom\s+|\bimport\s*\(\s*)['"](\.[^'"]+)['"]/g)) {
         await check(match[1], url);
       }
     }
   }
   for (const reference of references) await check(reference, root);
-  assert.equal(visited.size, 12, 'All eleven browser modules and the stylesheet must be checked');
+  assert.equal(visited.size, 14, 'All thirteen browser modules, including lazy section modules, and the stylesheet must be checked');
 });

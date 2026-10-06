@@ -1,10 +1,10 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.11.1';
-import { setupViewerUI } from './viewer-ui.js?v=0.11.1';
-import { LocationMap } from './map.js?v=0.11.1';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.11.1';
-import { createMesh } from './mesh.js?v=0.11.1';
-import { TerrainRenderer } from './renderer.js?v=0.11.1';
-setupViewerUI();
+import { loadMapTexture, textureKey } from './texture.js?v=0.12.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.12.0';
+import { LocationMap } from './map.js?v=0.12.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.12.0';
+import { createMesh } from './mesh.js?v=0.12.0';
+import { TerrainRenderer } from './renderer.js?v=0.12.0';
+const viewerUI=setupViewerUI();
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
 const slider=document.querySelector('#exaggeration'), factor=document.querySelector('#factor');
@@ -51,7 +51,7 @@ const guides={
   cross:'視線を交差させ、右眼で左の画像、左眼で右の画像を見ると中央の地形が立体に見えます。',
   anaglyph:'赤シアン眼鏡が必要です。左眼に赤、右眼にシアンのレンズを合わせてください。'
 };
-let renderer, data, loading=false, selectedLocation={...LOCATION}, requestedLocation={...LOCATION};
+let profile, renderer, data, loading=false, selectedLocation={...LOCATION}, requestedLocation={...LOCATION};
 const showTerrain=document.querySelector('#show-terrain');
 const places={ishizuchi:{latitude:33.767,longitude:133.115},fuji:{latitude:35.3606,longitude:138.7274},aso:{latitude:32.884,longitude:131.104},daisetsu:{latitude:43.6636,longitude:142.8541},yakushima:{latitude:30.3361,longitude:130.5044}};
 const coordinates=location=>`${location.latitude.toFixed(4)}° N / ${location.longitude.toFixed(4)}° E`;
@@ -127,6 +127,7 @@ async function load() {
     const newKey=textureKey(nextData.location,renderer.textureSurface || 'map');
     if(activeTextureKey!==newKey) {renderer.setTexture(null);activeTextureKey=null;}
     data=nextData;
+    profile?.setData(data);
     updateSurface();updateTexture();
     if(resetView) renderer.reset();
     document.querySelector('#quality-guide').textContent=`${qualityNames[data.quality]}：約${Math.round(data.spacing*1000)} m間隔で地形を表示。`+(data.sourceZoom===14 ? 'この縮尺では標高データの細かさの上限に達しています。' : '高い画質ほど通信量と描画の負荷が増えます。');
@@ -150,3 +151,17 @@ slider.addEventListener('input',()=>{
 document.querySelector('#reset').addEventListener('click',()=>renderer?.reset());
 retry.addEventListener('click',load);
 load();
+
+// Load section calculations/UI only when explicitly requested.
+document.querySelector('#profile-start').addEventListener('click',async()=>{
+  if(!data || loading || renderer?.lost)return;
+  const button=document.querySelector('#profile-start');button.disabled=true;
+  try {
+    if(!profile) {
+      const {SectionTool}=await import('./profile-ui.js?v=0.12.0');
+      profile=new SectionTool(renderer,viewerUI);profile.setData(data);
+    }
+    profile.start();
+  } catch {document.querySelector('#profile-status').textContent='断面図の準備に失敗しました。ページを再読み込みしてください。';}
+  finally {button.disabled=false;}
+});

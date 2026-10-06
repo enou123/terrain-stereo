@@ -75,4 +75,5 @@ export function setupViewerUI() {
     else if(!event.shiftKey && document.activeElement===last) {event.preventDefault(); first.focus();}
   });
   render();
+  return {setSettingsOpen(open) {settingsOpen=Boolean(open);if(!focused)normalSettings=settingsOpen;render();}};
 }

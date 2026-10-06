@@ -1,8 +1,8 @@
-import { lookAt } from './math.js?v=0.11.1';
-import { ObservationOverlay } from './observation.js?v=0.11.1';
-import { fitMeshPositions } from './mesh.js?v=0.11.1';
-import { stereoCamera } from './stereo.js?v=0.11.1';
-import { OrbitControls } from './controls.js?v=0.11.1';
+import { lookAt } from './math.js?v=0.12.0';
+import { ObservationOverlay } from './observation.js?v=0.12.0';
+import { fitMeshPositions } from './mesh.js?v=0.12.0';
+import { stereoCamera } from './stereo.js?v=0.12.0';
+import { OrbitControls } from './controls.js?v=0.12.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -124,6 +124,7 @@ export class TerrainRenderer {
     }
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,mesh.indices,gl.STATIC_DRAW);
+    this.mesh={positions:fittedPositions,indices:mesh.indices,size:side};
     this.count=mesh.indices.length;
     this.requestDraw();
   }
@@ -160,6 +161,16 @@ export class TerrainRenderer {
     if (this.frame || this.lost) return;
     this.frame=requestAnimationFrame(()=>{this.frame=null; this.draw();});
   }
+  cameras(width=this.canvas.width,height=this.canvas.height, centerAnaglyph=false) {
+    const paired=this.mode==='parallel'||this.mode==='cross', half=Math.floor(width/2);
+    const target=this.controls.target,fit=Math.max(1,1.15/((paired?half:width)/height));
+    const eye=this.controls.eye.map((v,i)=>target[i]+(v-target[i])*fit);
+    const separation=Math.hypot(...eye.map((v,i)=>v-target[i]))*.025*this.strength;
+    const camera=(offset,x,w)=>({...stereoCamera(eye,target,w/height,offset),x,width:w,height});
+    if(paired) {const order=this.mode==='cross'?1:-1;return [camera(order*separation/2,0,half),camera(-order*separation/2,width-half,half)];}
+    if(this.mode==='anaglyph'&&!centerAnaglyph)return [camera(-separation/2,0,width),camera(separation/2,0,width)];
+    return [camera(0,0,width)];
+  }
   draw() {
     if (!this.count || this.lost) return;
     const gl=this.gl, canvas=this.canvas, ratio=Math.min(window.devicePixelRatio || 1,2);
@@ -187,33 +198,24 @@ export class TerrainRenderer {
     gl.uniform1f(this.shadingLocation,this.surface === 'shading' ? 1 : 0);
     gl.uniform1f(this.contoursLocation,this.contours ? 1 : 0);
     gl.uniform1f(this.pixelRatioLocation,ratio);
-    const leftWidth = Math.floor(width/2);
-    const aspect = (paired ? leftWidth : width)/height;
-    // Keep the full terrain in view on portrait screens without changing orbit state.
-    const target=this.controls.target, fit=Math.max(1,1.15/aspect);
-    const eye=this.controls.eye.map((value,i)=>target[i]+(value-target[i])*fit);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.indexBuffer);
-    const separation = Math.hypot(...eye.map((value,i)=>value-target[i])) * 0.025 * this.strength;
-    const renderEye = (offset, x, viewportWidth) => {
-      const camera = stereoCamera(eye,target,viewportWidth/height,offset);
-      gl.viewport(x,0,viewportWidth,height);
+    const cameras=this.cameras(width,height);
+    const renderEye = camera => {
+      gl.viewport(camera.x,0,camera.width,height);
       gl.uniformMatrix4fv(this.projectionLocation,false,camera.projection);
       gl.uniformMatrix4fv(this.viewLocation,false,camera.view);
       gl.drawElements(gl.TRIANGLES,this.count,this.indexType,0);
     };
     if (paired) {
-      const order = this.mode === 'cross' ? 1 : -1;
-      renderEye(order*separation/2,0,leftWidth);
-      renderEye(-order*separation/2,width-leftWidth,leftWidth);
+      cameras.forEach(renderEye);
     } else if (anaglyph) {
       gl.colorMask(true,false,false,true);
-      renderEye(-separation/2,0,width);
+      renderEye(cameras[0]);
       gl.clear(gl.DEPTH_BUFFER_BIT);
       gl.colorMask(false,true,true,true);
-      renderEye(separation/2,0,width);
+      renderEye(cameras[1]);
       gl.colorMask(true,true,true,true);
-    } else {
-      renderEye(0,0,width);
-    }
+    } else renderEye(cameras[0]);
+    this.onDraw?.();
   }
 }
