@@ -2,11 +2,14 @@
 export function createMesh(data, exaggeration) {
   const { heights, size, spacing } = data;
   const positions = new Float32Array(size * size * 3);
+  const elevations = new Float32Array(size * size);
   const normals = new Float32Array(positions.length);
   const colors = new Float32Array(positions.length);
   const stops = [[0.20,0.30,0.23],[0.39,0.53,0.35],[0.65,0.68,0.47],[0.88,0.84,0.68]];
   for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
     const i = r * size + c, p = i * 3;
+    // Unscaled metres: independent of exaggeration and display fitting.
+    elevations[i] = Number.isFinite(heights[i]) ? heights[i] : 0;
     positions.set([(c - (size - 1) / 2) * spacing, Number.isFinite(heights[i]) ? heights[i] / 1000 * exaggeration : 0, (r - (size - 1) / 2) * spacing], p);
     const t = Math.min(2.999, Math.max(0, heights[i] / 2100 * 3));
     const a = Math.floor(t), f = t - a;
@@ -28,7 +31,7 @@ export function createMesh(data, exaggeration) {
     const length=Math.hypot(normals[i],normals[i+1],normals[i+2]) || 1;
     for(let k=0;k<3;k++) normals[i+k]/=length;
   }
-  return { positions, normals, colors, indices: new (size * size > 65536 ? Uint32Array : Uint16Array)(indices) };
+  return { positions, normals, colors, elevations, indices: new (size * size > 65536 ? Uint32Array : Uint16Array)(indices) };
 }
 
 // Keep height/distance ratios while fitting wide regions and elevated mountain patches.

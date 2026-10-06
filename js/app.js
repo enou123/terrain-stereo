@@ -1,14 +1,16 @@
-import { setupViewerUI } from './viewer-ui.js?v=0.7.1';
-import { LocationMap } from './map.js?v=0.7.1';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.7.1';
-import { createMesh } from './mesh.js?v=0.7.1';
-import { TerrainRenderer } from './renderer.js?v=0.7.1';
+import { setupViewerUI } from './viewer-ui.js?v=0.8.0';
+import { LocationMap } from './map.js?v=0.8.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.8.0';
+import { createMesh } from './mesh.js?v=0.8.0';
+import { TerrainRenderer } from './renderer.js?v=0.8.0';
 setupViewerUI();
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
 const slider=document.querySelector('#exaggeration'), factor=document.querySelector('#factor');
 const modeSelect=document.querySelector('#view-mode'), strengthSlider=document.querySelector('#stereo-strength');
 const qualitySelect=document.querySelector('#quality');
+const contoursToggle=document.querySelector('#contours');
+contoursToggle.addEventListener('change',()=>renderer?.setContours(contoursToggle.checked));
 const qualityNames={standard:'標準',high:'高精細',ultra:'最高精細'};
 let requestedQuality='standard', resetView=true;
 const modeNames={mono:'通常3D',parallel:'平行法',cross:'交差法',anaglyph:'赤シアン'};
@@ -74,6 +76,12 @@ async function load() {
     if (!renderer.uintIndices) {
       for (const option of qualitySelect.options) option.disabled=option.value!=='standard';
     }
+    if (!renderer.contoursSupported) {
+      contoursToggle.checked=false;
+      contoursToggle.disabled=true;
+      document.querySelector('#contours-guide').textContent='この端末は等高線の描画に対応していません。3D地形は引き続き操作できます。';
+    }
+    renderer.setContours(contoursToggle.checked);
     updateStereo();
     const nextData=await loadElevation((done,total)=>status.textContent=`標高データを取得しています… ${done} / ${total}`,requestedLocation,requestedQuality);
     renderer.setMesh(createMesh(nextData,Number(slider.value)));

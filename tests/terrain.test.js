@@ -86,3 +86,22 @@ test('high quality meshes preserve indices above the 16-bit limit', () => {
   assert.equal(mesh.indices.at(-1),size*size-1);
   assert.ok(mesh.normals.every((value,i)=>i%3===1 ? value===1 : value===0));
 });
+
+
+test('contour elevations retain real metres through exaggeration, fitting and missing data',()=>{
+  const heights=new Float32Array([-120,0,100,NaN,225,300,400,550,900]);
+  const data={heights,size:3,spacing:1};
+  const low=createMesh(data,.5), high=createMesh(data,4);
+  assert.deepEqual(low.elevations,high.elevations);
+  for(const index of low.indices) {
+    assert.ok(Number.isFinite(heights[index]));
+    assert.equal(low.elevations[index],heights[index]);
+  }
+  assert.ok(![...low.indices].includes(3));
+  const original=low.elevations.slice();
+  fitMeshPositions(low);
+  assert.deepEqual(low.elevations,original);
+  assert.deepEqual(low.indices,high.indices);
+  assert.notDeepEqual(low.positions,high.positions);
+  assert.ok(low.elevations.every(Number.isFinite));
+});

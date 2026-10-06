@@ -545,3 +545,7 @@ body.view-focused { overflow:hidden; }
  .compass { width:56px; height:56px; right:8px; bottom:34px; }
  .alignment-mark { top:82px; }
 }
+
+/* One observation setting with a full-height touch target. */
+.contour-toggle { display:flex; align-items:center; gap:10px; min-height:44px; font-size:12px; cursor:pointer; }
+.contour-toggle input { width:20px; height:20px; margin:0; accent-color:#536b40; flex:none; }
