@@ -160,9 +160,15 @@ with sync_playwright() as p:
             start_flight=state();page.click('#flight-toggle')
             assert page.locator('#flight-toggle').get_attribute('aria-pressed')=='true'
             assert page.locator('#flight-pad').is_visible()
+            page.click('#tour-toggle');assert page.locator('#tour-toggle').get_attribute('aria-pressed')=='true'
+            page.wait_for_timeout(3500);tour_pose=state()
+            assert tour_pose['target']!=start_flight['target'] and tour_pose['yaw']!=start_flight['yaw']
+            page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-tour.png'))
+            page.click('#tour-toggle');assert page.locator('#tour-toggle').get_attribute('aria-pressed')=='false'
+            manual_before=state()
             page.locator('[data-flight="forward"]').click()
-            after_forward=state();assert after_forward['target']!=start_flight['target']
-            assert after_forward['yaw']==start_flight['yaw'] and after_forward['pitch']==start_flight['pitch']
+            after_forward=state();assert after_forward['target']!=manual_before['target']
+            assert after_forward['yaw']==manual_before['yaw'] and after_forward['pitch']==manual_before['pitch']
             page.locator('[data-flight="up"]').click();assert state()['target'][1]>after_forward['target'][1]
             page.locator('#terrain').focus();page.keyboard.press('w');assert state()['target']!=after_forward['target']
             page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-flight.png'))

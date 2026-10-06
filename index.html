@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#14251e">
   <title>terrain-stereo — 日本の地形を探索</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.17.0">
-  <script type="module" src="js/app.js?v=0.17.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.18.0">
+  <script type="module" src="js/app.js?v=0.18.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
@@ -28,7 +28,7 @@
     <section id="workspace" class="workspace" aria-label="3D地形ビューア">
       <nav class="viewer-toolbar" aria-label="地形ビューの操作">
         <a id="back-to-map" href="#place-picker">地図へ ↑</a>
-        <div class="viewer-actions"><button id="save-image" type="button" aria-label="表示中の地形をPNG画像で保存" title="立体視モードでは左右の画像をそのまま保存します">PNG</button><button id="share-view" type="button" aria-label="地形の場所と表示設定を共有">共有</button><button id="flight-toggle" type="button" aria-pressed="false" aria-controls="flight-pad">飛行</button><button id="toggle-settings" type="button" aria-controls="view-settings" aria-expanded="true">設定を閉じる</button><button id="expand-view" type="button" aria-pressed="false">大きく表示</button></div>
+        <div class="viewer-actions"><button id="save-image" type="button" aria-label="表示中の地形をPNG画像で保存" title="立体視モードでは左右の画像をそのまま保存します">PNG</button><button id="share-view" type="button" aria-label="地形の場所と表示設定を共有">共有</button><button id="flight-toggle" type="button" aria-pressed="false" aria-controls="flight-pad" aria-label="移動パッドを開く">移動</button><button id="toggle-settings" type="button" aria-controls="view-settings" aria-expanded="true">設定を閉じる</button><button id="expand-view" type="button" aria-pressed="false">大きく表示</button></div>
       <div id="profile-prompt" class="profile-prompt" hidden><span id="profile-instruction"></span><button id="profile-cancel" type="button">中止</button></div></nav>
       <div class="viewer" id="viewer">
         <div class="viewer-top"><span class="mode" id="mode-label">● 通常3D</span><span class="live-label"><span id="terrain-location">石鎚山周辺</span></span></div>
@@ -36,9 +36,9 @@
         <div id="eye-labels" class="eye-labels" hidden aria-hidden="true"><span id="left-eye">左眼用</span><span id="right-eye">右眼用</span></div>
         <svg id="profile-overlay" class="profile-overlay" aria-hidden="true" hidden></svg>
         <div id="observation-overlay" class="observation-overlay" aria-hidden="true" hidden></div>
-        <div id="flight-pad" class="flight-pad" aria-label="飛行移動" hidden>
+        <div id="flight-pad" class="flight-pad" aria-label="地形上の移動と遊覧飛行" hidden>
           <button type="button" data-flight="forward" aria-label="前へ移動">↑</button><button type="button" data-flight="left" aria-label="左へ移動">←</button><button type="button" data-flight="backward" aria-label="後ろへ移動">↓</button><button type="button" data-flight="right" aria-label="右へ移動">→</button><button type="button" data-flight="up" aria-label="高度を上げる">＋</button><button type="button" data-flight="down" aria-label="高度を下げる">−</button>
-          <span>移動 · 高度（WASD / Q・E）</span>
+          <span>手動移動 · 高度</span><button id="tour-toggle" type="button" aria-pressed="false">遊覧飛行 · 約32秒</button>
         </div>
         <div class="message" id="message" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><p id="status">標高データを取得しています…</p><button id="retry" hidden>もう一度読み込む</button></div>
         <div class="viewer-bottom"><span>ドラッグで回転 <span class="desktop-hint"> / ホイールでズーム・中ボタンで移動</span><span class="touch-hint"> / 2本指で拡大縮小・移動</span></span><span class="axis">標高を立体表示</span></div>

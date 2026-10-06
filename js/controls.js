@@ -1,3 +1,19 @@
+export function flightTourPose(base, progress) {
+  const angle=Math.PI*2*Math.max(0,Math.min(1,progress)),radius=2.4;
+  const forward=[-Math.sin(base.yaw),-Math.cos(base.yaw)],right=[Math.cos(base.yaw),-Math.sin(base.yaw)];
+  const lateral=radius*(1-Math.cos(angle)),advance=radius*Math.sin(angle);
+  return {
+    yaw:base.yaw-angle,
+    pitch:base.pitch+0.045*Math.sin(angle*2),
+    distance:base.distance*(1-0.08*(1-Math.cos(angle*2))/2),
+    target:[
+      base.target[0]+right[0]*lateral+forward[0]*advance,
+      base.target[1]+0.24*Math.sin(angle*2),
+      base.target[2]+right[1]*lateral+forward[1]*advance
+    ]
+  };
+}
+
 export class OrbitControls {
   constructor(canvas, redraw) {
     this.canvas = canvas;

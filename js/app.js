@@ -1,10 +1,11 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.17.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.17.0';
-import { LocationMap } from './map.js?v=0.17.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.17.0';
-import { createMesh } from './mesh.js?v=0.17.0';
-import { TerrainRenderer } from './renderer.js?v=0.17.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.17.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.18.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.18.0';
+import { LocationMap } from './map.js?v=0.18.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.18.0';
+import { createMesh } from './mesh.js?v=0.18.0';
+import { TerrainRenderer } from './renderer.js?v=0.18.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.18.0';
+import { flightTourPose } from './controls.js?v=0.18.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -100,6 +101,7 @@ document.querySelector('#map-zoom-out').addEventListener('click',()=>map.setZoom
 document.querySelector('#map-place').addEventListener('change',event=>{if(places[event.target.value]) map.setCenter(places[event.target.value]);});
 showTerrain.addEventListener('click',()=>{
   if(loading) return;
+  stopFlightTour();
   requestedLocation={...selectedLocation}; requestedQuality=qualitySelect.value; resetView=true; load();
   document.querySelector('#workspace').scrollIntoView({behavior:'auto',block:'start'});
 });
@@ -191,6 +193,7 @@ qualitySelect.addEventListener('change',()=>{
 });
 async function load() {
   if (loading) return;
+  stopFlightTour();
   loading=true; showTerrain.disabled=true; showTerrain.textContent='地形を読み込み中…'; retry.hidden=true; message.hidden=false; message.classList.remove('error');
   state.textContent='読み込み中'; status.textContent='標高データを取得しています…'; slider.disabled=true; qualitySelect.disabled=true;
   try {
@@ -239,15 +242,46 @@ slider.addEventListener('input',()=>{
   factor.textContent=`${value.toFixed(1)}×`;
   if (data && renderer && !renderer.lost) renderer.setMesh(createMesh(data,value));
 });
-document.querySelector('#reset').addEventListener('click',()=>renderer?.reset());
+document.querySelector('#reset').addEventListener('click',()=>{stopFlightTour();renderer?.reset();});
 const flightToggle=document.querySelector('#flight-toggle'), flightPad=document.querySelector('#flight-pad');
+const tourToggle=document.querySelector('#tour-toggle');
+let tourFrame=null,tourStarted=0,tourBase=null;
+function stopFlightTour() {
+  if(tourFrame!==null)cancelAnimationFrame(tourFrame);
+  tourFrame=null;tourBase=null;tourToggle.setAttribute('aria-pressed','false');
+  tourToggle.setAttribute('aria-label','遊覧飛行を開始（約32秒）');tourToggle.textContent='遊覧飛行 · 約32秒';
+}
+function animateFlightTour(now) {
+  if(!renderer||!tourBase)return;
+  const progress=Math.min(1,(now-tourStarted)/32000),pose=flightTourPose(tourBase,progress);
+  Object.assign(renderer.controls,{yaw:pose.yaw,pitch:pose.pitch,distance:pose.distance,target:pose.target});
+  renderer.requestDraw();
+  if(progress>=1){stopFlightTour();return;}
+  tourFrame=requestAnimationFrame(animateFlightTour);
+}
+function startFlightTour() {
+  if(!renderer||!data||loading||renderer.lost)return;
+  if(!flightMode){flightMode=true;flightToggle.setAttribute('aria-pressed','true');flightToggle.textContent='■';flightToggle.setAttribute('aria-label','移動パッドを閉じる');flightPad.hidden=false;renderer.controls.setFlightMode(true);}
+  const controls=renderer.controls;
+  tourBase={yaw:controls.yaw,pitch:controls.pitch,distance:controls.distance,target:controls.target.slice()};
+  tourStarted=performance.now();tourToggle.setAttribute('aria-pressed','true');
+  tourToggle.setAttribute('aria-label','遊覧飛行を停止');tourToggle.textContent='遊覧飛行中 · 停止';
+  document.querySelector('#terrain').focus({preventScroll:true});
+  tourFrame=requestAnimationFrame(animateFlightTour);
+}
 flightToggle.addEventListener('click',()=>{
   flightMode=!flightMode;flightToggle.setAttribute('aria-pressed',String(flightMode));
-  flightToggle.textContent=flightMode?'■':'飛行';flightToggle.setAttribute('aria-label',flightMode?'飛行モードを終了':'飛行モードを開始');flightToggle.title=flightMode?'飛行モードを終了':'飛行モードを開始';flightPad.hidden=!flightMode;
+  flightToggle.textContent=flightMode?'■':'移動';flightToggle.setAttribute('aria-label',flightMode?'移動パッドを閉じる':'移動パッドを開く');flightToggle.title=flightMode?'移動パッドを閉じる':'移動パッドを開く';flightPad.hidden=!flightMode;
   renderer?.controls.setFlightMode(flightMode);
+  if(!flightMode)stopFlightTour();
   if(flightMode)document.querySelector('#terrain').focus({preventScroll:true});
 });
-flightPad.querySelectorAll('[data-flight]').forEach(button=>button.addEventListener('click',()=>renderer?.controls.fly(button.dataset.flight)));
+tourToggle.addEventListener('click',()=>tourFrame!==null?stopFlightTour():startFlightTour());
+flightPad.querySelectorAll('[data-flight]').forEach(button=>button.addEventListener('click',()=>{stopFlightTour();renderer?.controls.fly(button.dataset.flight);}));
+const terrainCanvas=document.querySelector('#terrain');
+terrainCanvas.addEventListener('pointerdown',stopFlightTour);
+terrainCanvas.addEventListener('wheel',stopFlightTour,{passive:true});
+terrainCanvas.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','w','W','a','A','s','S','d','D','q','Q','e','E','r','R'].includes(event.key))stopFlightTour();});
 retry.addEventListener('click',load);
 load();
 
@@ -257,7 +291,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.17.0');
+      const {SectionTool}=await import('./profile-ui.js?v=0.18.0');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();

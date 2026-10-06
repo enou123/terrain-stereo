@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { parseTile, worldPixel } from '../js/elevation.js';
 import { createMesh, fitMeshPositions } from '../js/mesh.js';
 import { perspective, lookAt } from '../js/math.js';
-import { OrbitControls } from '../js/controls.js';
+import { OrbitControls, flightTourPose } from '../js/controls.js';
 
 test('GSI text parser preserves positive, negative, zero and missing elevations',()=>{
   const rows=Array.from({length:256},()=>Array(256).fill('100'));
@@ -77,6 +77,21 @@ test('flight controls move relative to heading, change altitude, and stay inside
   controls.fly('up');assert.equal(controls.target[1],8);
   controls.fly('down');controls.fly('down');assert.ok(Math.abs(controls.target[1]-7.56)<1e-12);
   const unchanged=controls.target.slice();controls.fly('unknown');assert.deepEqual(controls.target,unchanged);
+});
+
+test('scenic flight follows a closed smooth route with changing view and elevation',()=>{
+  const base={yaw:.38,pitch:.72,distance:19,target:[.4,1.2,-.3]};
+  const start=flightTourPose(base,0),quarter=flightTourPose(base,.25),middle=flightTourPose(base,.5),end=flightTourPose(base,1);
+  assert.deepEqual(start,{...base,target:base.target.slice()});
+  assert.ok(Math.hypot(quarter.target[0]-base.target[0],quarter.target[2]-base.target[2])>3);
+  assert.ok(quarter.distance<base.distance);
+  assert.ok(Math.abs(middle.target[1]-base.target[1])<1e-12);
+  assert.ok(Math.abs(middle.target[0]-base.target[0])>4);
+  assert.ok(Math.abs(end.yaw-base.yaw+Math.PI*2)<1e-12);
+  end.target.forEach((value,i)=>assert.ok(Math.abs(value-base.target[i])<1e-12));
+  assert.ok(Math.abs(end.pitch-base.pitch)<1e-12&&Math.abs(end.distance-base.distance)<1e-12);
+  assert.deepEqual(flightTourPose(base,-1),start);
+  assert.deepEqual(flightTourPose(base,2),end);
 });
 
 

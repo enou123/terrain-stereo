@@ -106,7 +106,7 @@ h1 span {
   background:radial-gradient(ellipse at 50% 40%,#2d4336,#14251e 80%);
   overflow:hidden;
 }
-.flight-pad { position:absolute; z-index:4; left:14px; bottom:54px; display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,42px) 18px; gap:4px; padding:8px; border:1px solid #ffffff35; border-radius:12px; background:#10251dcc; color:#eef3e6; }
+.flight-pad { position:absolute; z-index:4; left:14px; bottom:54px; display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,42px) 18px 38px; gap:4px; padding:8px; border:1px solid #ffffff35; border-radius:12px; background:#10251dcc; color:#eef3e6; }
 .flight-pad[hidden] { display:none; }
 .flight-pad button { min-width:44px; min-height:42px; border:1px solid #ffffff42; border-radius:8px; background:#294438; color:inherit; font:inherit; font-size:18px; touch-action:manipulation; }
 .flight-pad button:active { background:#67814e; }
@@ -117,6 +117,8 @@ h1 span {
 .flight-pad button[data-flight="up"] { grid-area:3 / 1; }
 .flight-pad button[data-flight="down"] { grid-area:3 / 3; }
 .flight-pad span { grid-area:4 / 1 / 5 / 4; align-self:center; text-align:center; color:#d1dbc7; font-size:10px; letter-spacing:.04em; }
+.flight-pad #tour-toggle { grid-area:5 / 1 / 6 / 4; font-size:11px; white-space:nowrap; background:#536c43; }
+.flight-pad #tour-toggle[aria-pressed="true"] { background:#704c3b; }
 canvas {
   position:absolute;
   inset:0;
