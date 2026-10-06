@@ -1,9 +1,9 @@
-import { worldPixel } from './elevation.js?v=0.19.0';
+import { worldPixel } from './elevation.js?v=0.20.0';
 
 const sources = {
   map:{url:'https://cyberjapandata.gsi.go.jp/xyz/std',extension:'png',label:'地図画像'},
   photo:{url:'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto',extension:'jpg',label:'航空写真'},
-  geology:{url:'https://gbank.gsj.jp/seamless/v2/tiles',extension:'png',label:'地質図'}
+  geology:{url:'https://gbank.gsj.jp/seamless/v2/api/1.3.1/tiles',extension:'png',label:'地質図',yBeforeX:true,maxZoom:13}
 };
 function sourceFor(surface) {
   const source=sources[surface];
@@ -14,13 +14,14 @@ function sourceFor(surface) {
 // Same rounded origin and 384-pixel footprint as DEM, independent of its quality.
 export function texturePlan(location, surface = 'map') {
   const source=sourceFor(surface);
-  const zoom = Math.min(14, location.zoom + 1), scale = 2 ** (zoom - location.zoom);
+  const zoom = Math.min(source.maxZoom ?? 14, location.zoom + 1), scale = 2 ** (zoom - location.zoom);
   const [x, y] = worldPixel(location.latitude, location.longitude, location.zoom);
   const left = (Math.floor(x) - 192) * scale, top = (Math.floor(y) - 192) * scale;
   const span = 384 * scale, tiles = [];
   for (let ty = Math.floor(top / 256); ty < Math.ceil((top + span) / 256); ty++) {
     for (let tx = Math.floor(left / 256); tx < Math.ceil((left + span) / 256); tx++) {
-      tiles.push({ x: tx, y: ty, url: `${source.url}/${zoom}/${tx}/${ty}.${source.extension}` });
+      const coordinates=source.yBeforeX ? `${zoom}/${ty}/${tx}` : `${zoom}/${tx}/${ty}`;
+      tiles.push({ x: tx, y: ty, url: `${source.url}/${coordinates}.${source.extension}` });
     }
   }
   return { zoom, left, top, span, tiles };

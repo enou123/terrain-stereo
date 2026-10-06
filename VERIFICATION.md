@@ -264,3 +264,11 @@ README の起動方法でアプリを開き、開発者ツールの Network で9
 - `npm test`：37件成功。GSJタイルURL、地理位置範囲の一致、キャッシュキー分離、共有URLの地質図復元を検証。JS構文検査と`git diff --check`成功。
 - `python tests/ui.browser.py`：Chromiumの8画面サイズ（PC、縦横のタッチ画面）で既存UI回帰成功。PCでは合成テストタイルを重ね、地形表示・地質図説明・凡例切替・WebGLエラーなしを確認。スクリーンショットは`/workspace/terrain-stereo-preview/share-phase-1/1440x900-geology-test-tiles.png`。
 - **未確認**：この実行環境は配信元へのHTTPS接続を403で拒否するため、実地質タイルの取得、配信元の利用条件の詳細、iPhone Safari実機での表示は未確認。Chromiumは合成テストタイルで確認。
+
+
+## 0.20.0 — 地質図タイルURL修正（2026-10-06）
+
+- iPhoneで地質図が標高色へフォールバックする原因を修正。GSJ公式仕様の `/api/1.3.1/tiles/{z}/{y}/{x}.png` に変更し、Y/X順と最大ズーム13を適用。公式仕様: https://gbank.gsj.jp/seamless/v2/api/1.3.1/
+- `npm test`：37件成功。GSJ URLのAPI版・Y/X座標順・ズーム上限13を回帰検証。`node --check js/texture.js` と `git diff --check` 成功。
+- `python tests/ui.browser.py`：Chromiumで全8画面サイズ成功。地質レイヤーの合成タイル取得と地形描画を確認し、PC・縦画面・横画面の既存操作も回帰なし。スクリーンショットと結果は `/workspace/terrain-stereo-preview/share-phase-1/`。
+- **未確認**：この環境の通信プロキシが外部接続を拒否するため実タイル通信とiPhone Safari実機は未確認。実際のGitHub Pages配信更新後の表示も未確認。
