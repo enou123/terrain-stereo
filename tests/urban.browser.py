@@ -1,4 +1,5 @@
-"""Actual Cesium rendering with synthetic 3D Tiles; not live PLATEAU/Safari validation.
+"""Actual Cesium rendering with synthetic 3D Tiles and mocked imagery/terrain failures.
+This is not live PLATEAU/Safari validation.
 Download cesium@1.117.0 npm package and extract to /tmp/package before running.
 """
 from pathlib import Path
@@ -53,30 +54,57 @@ with sync_playwright() as p:
             elif r.request.url.endswith('.glb'):r.fulfill(body=glb,content_type='model/gltf-binary',headers={'Access-Control-Allow-Origin':'*'})
             else:r.fulfill(json=metadata,headers={'Access-Control-Allow-Origin':'*'})
         page.route('https://api.plateauview.mlit.go.jp/datacatalog/3dtiles/**',tiles)
-        page.route('https://tile.plateauview.mlit.go.jp/terrain/**',lambda r:r.fulfill(status=404,body='not available in fixture',headers={'Access-Control-Allow-Origin':'*'}))
-        pixel=bytes.fromhex('89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d49444154789c63606060f80f0001040100b51c0c020000000049454e44ae426082')
-        page.route('https://tile.plateauview.mlit.go.jp/tiles/plateau-ortho-2023/**',lambda r:r.fulfill(body=pixel,content_type='image/png',headers={'Access-Control-Allow-Origin':'*'}))
-        page.route('https://cyberjapandata.gsi.go.jp/**',lambda r:r.fulfill(body=(','.join(['1200']*256)+'\n')*256,content_type='text/plain') if '/dem/' in r.request.url else r.abort())
+        terrain_requests=[]
+        def terrain(r):
+            terrain_requests.append(r.request.url)
+            r.fulfill(status=404,body='not available in fixture',headers={'Access-Control-Allow-Origin':'*'})
+        page.route('https://tile.plateauview.mlit.go.jp/terrain**',terrain)
+        def png_chunk(kind,data):
+            return struct.pack('>I',len(data))+kind+data+struct.pack('>I',zlib.crc32(kind+data)&0xffffffff)
+        raw=b''.join(b'\0'+bytes([112,155,112])*256 for _ in range(256))
+        pixel=b'\x89PNG\r\n\x1a\n'+png_chunk(b'IHDR',struct.pack('>IIBBBBB',256,256,8,2,0,0,0))+png_chunk(b'IDAT',zlib.compress(raw))+png_chunk(b'IEND',b'')
+        ortho_requests=[];gsi_imagery_requests=[];urban_open={'on':False}
+        def ortho(r):
+            ortho_requests.append(r.request.url);r.fulfill(body=pixel,content_type='image/png',headers={'Access-Control-Allow-Origin':'*'})
+        def gsi(r):
+            if '/dem/' in r.request.url:r.fulfill(body=(','.join(['1200']*256)+'\n')*256,content_type='text/plain')
+            elif '/xyz/std/' in r.request.url:
+                if urban_open['on']:gsi_imagery_requests.append(r.request.url)
+                r.fulfill(body=pixel,content_type='image/png',headers={'Access-Control-Allow-Origin':'*'})
+            else:r.abort()
+        page.route('https://tile.plateauview.mlit.go.jp/tiles/plateau-ortho-2023/**',ortho)
+        page.route('https://cyberjapandata.gsi.go.jp/**',gsi)
         page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.urbanTest=urbanView;window.terrainTest={get data(){return data},get renderer(){return renderer}};",content_type='text/javascript'))
         page.goto(f'http://127.0.0.1:{server.server_port}/')
         page.wait_for_function("window.terrainTest && !document.querySelector('#quality').disabled")
         assert not cdn, 'Library must remain lazy'
         before=page.evaluate('({location:terrainTest.data.location,yaw:terrainTest.renderer.controls.yaw,mode:terrainTest.renderer.mode})')
-        page.click('#expand-view');page.click('#urban-open')
-        page.wait_for_function("document.querySelector('#urban-status').textContent.includes('見つかりません')")
-        assert not cdn,'No library download for unavailable data'
+        page.click('#expand-view');urban_open['on']=True;page.click('#urban-open')
+        page.wait_for_function("document.querySelector('#urban-status').textContent.includes('地形タイルを取得できません')",timeout=30000)
+        assert cdn,'Cesium should initialize even when the building service is unavailable'
         assert not page.locator('#urban-dialog').evaluate('e=>e.inert')
-        page.click('#urban-close');missing['on']=False
-        page.click('#urban-open');page.click('#urban-tokyo')
-        page.wait_for_function("/全国PLATEAU LOD1|表示できません|時間がかかっています|読み込めませんでした/.test(document.querySelector('#urban-status').textContent)",timeout=90000)
-        assert '全国PLATEAU LOD1' in page.locator('#urban-status').inner_text()
-        assert page.evaluate('urbanTest.viewer.imageryLayers.length')==1
+        assert page.evaluate('urbanTest.viewer.imageryLayers.length')==2
+        assert page.locator('#urban-map canvas').is_visible()
+        assert not page.evaluate('urbanTest.viewer.scene.requestRenderMode'), 'City view must continuously select terrain and imagery tiles'
+        assert page.evaluate('Boolean(urbanTest.viewer.camera.pickEllipsoid(new Cesium.Cartesian2(urbanTest.viewer.scene.canvas.clientWidth/2,urbanTest.viewer.scene.canvas.clientHeight/2)))'), 'Initial camera should point at the selected place on the globe'
+        assert terrain_requests, 'Terrain endpoint should be intercepted by the local fixture'
+        page.wait_for_timeout(6000)
+        assert page.evaluate('urbanTest.viewer.terrainProvider instanceof Cesium.EllipsoidTerrainProvider && urbanTest.viewer.scene.globe._surface._levelZeroTiles.some(t=>t.renderable)'), 'Failed terrain tiles should leave a visible ellipsoid globe'
+        assert gsi_imagery_requests, 'Failed terrain tiles should fall back to GSI imagery on an ellipsoid globe'
+        assert page.evaluate('''(()=>urbanTest.viewer.scene.globe._surface._levelZeroTiles.some(t=>t.renderable && t.data?.imagery?.some(i=>i.readyImagery)))()'''), 'Fallback should render imagery on visible globe tiles'
+        page.wait_for_timeout(1200)
+        page.screenshot(path=str(OUT/f'{width}x{height}-fallback-ground.png'))
+        page.click('#urban-close');urban_open['on']=False;missing['on']=False
+        urban_open['on']=True;page.click('#urban-open');page.click('#urban-tokyo')
+        page.wait_for_function("document.querySelector('#urban-status').textContent.includes('PLATEAU LOD1')",timeout=90000)
+        assert 'PLATEAU LOD1' in page.locator('#urban-status').inner_text()
+        assert page.evaluate('urbanTest.viewer.imageryLayers.length')==2
         assert page.evaluate('Boolean(urbanTest.viewer.terrainProvider)')
         assert page.locator('#urban-home').is_visible()
         assert page.evaluate('urbanTest.viewer.scene.primitives.length')==1
         page.wait_for_function('urbanTest.viewer.scene.primitives.get(0)._statistics.numberOfTrianglesSelected===240',timeout=30000)
         assert page.locator('#urban-map canvas').is_visible()
-        page.wait_for_timeout(500)
+        page.wait_for_timeout(1500)
         box=page.locator('#urban-map').bounding_box();assert box['height']>height*.5 and box['width']>min(width if width<=700 else width-24,1180)-5
         assert page.locator('#urban-close').bounding_box()['y']<height
         page.screenshot(path=str(OUT/f'{width}x{height}-buildings.png'))
@@ -100,7 +128,7 @@ with sync_playwright() as p:
         page.click('#urban-close');assert page.evaluate('urbanTest.viewer') is None
         after=page.evaluate('({location:terrainTest.data.location,yaw:terrainTest.renderer.controls.yaw,mode:terrainTest.renderer.mode})');assert before==after
         assert not errors,errors
-        print('PASS',width,height,'genuine Cesium mesh rendering, nationwide data, optional terrain fallback and ortho imagery, lazy load, camera, close/state, rotation',flush=True)
+        print('PASS',width,height,'Cesium visible ellipsoid/GSI fallback after mocked terrain-tile failure, synthetic buildings, camera, close/state, rotation',flush=True)
         page.close()
     browser.close()
 server.shutdown()

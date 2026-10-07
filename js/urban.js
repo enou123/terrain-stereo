@@ -1,6 +1,7 @@
-const BUILDING_TILES_URL = 'https://api.plateauview.mlit.go.jp/datacatalog/3dtiles/all-bldg-lod1-latest/tileset.json';
+export const BUILDING_TILES_URL = 'https://api.plateauview.mlit.go.jp/datacatalog/3dtiles/all-bldg-lod1-latest/tileset.json';
 const TERRAIN_URL = 'https://tile.plateauview.mlit.go.jp/terrain';
 const ORTHO_URL = 'https://tile.plateauview.mlit.go.jp/tiles/plateau-ortho-2023/{z}/{x}/{y}.png';
+const GSI_IMAGERY_URL = 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png';
 const CESIUM_BASE = 'https://cdn.jsdelivr.net/npm/cesium@1.117.0/Build/Cesium/';
 let libraryPromise;
 
@@ -24,15 +25,6 @@ function loadCesium() {
   return libraryPromise;
 }
 
-export async function fetchBuildingTiles(_location, signal, fetchImpl = fetch) {
-  const response = await fetchImpl(BUILDING_TILES_URL, { signal, mode: 'cors' });
-  if (response.status === 404) throw new Error('全国のLOD1建物データが見つかりません。');
-  if (!response.ok) throw new Error(`建物データを確認できませんでした（HTTP ${response.status}）。`);
-  const tileset = await response.json();
-  if (!tileset.asset?.version || !tileset.root?.boundingVolume) throw new Error('建物データの形式を確認できませんでした。');
-  return { url: BUILDING_TILES_URL };
-}
-
 export class UrbanView {
   constructor() {
     this.dialog = document.querySelector('#urban-dialog');
@@ -52,8 +44,8 @@ export class UrbanView {
     if (!this.viewer || !this.location) return;
     const C = window.Cesium;
     this.viewer.camera.flyTo({
-      destination: C.Cartesian3.fromDegrees(this.location.longitude, this.location.latitude, 5000),
-      orientation: { heading: 0, pitch: C.Math.toRadians(-70), roll: 0 }, duration: 1
+      destination: C.Cartesian3.fromDegrees(this.location.longitude, this.location.latitude, this.initialHeight),
+      orientation: { heading: 0, pitch: C.Math.toRadians(-80), roll: 0 }, duration: 1
     });
   }
 
@@ -65,68 +57,111 @@ export class UrbanView {
     this.controller = new AbortController();
     this.dialog.showModal();
     this.homeButton.hidden = false;
-    this.status.textContent = '日本全国の建物・地形・航空写真データを確認しています…';
-    this.timer = setTimeout(() => {
-      if (request !== this.request) return;
-      this.controller.abort();
-      this.status.textContent = '建物データの読み込みに時間がかかっています。通信状態を確認して再度お試しください。';
-      this.request++;
-      this.viewer?.destroy(); this.viewer = null;
-    }, 90000);
+    this.status.textContent = '地形・航空写真・建物モデルを読み込んでいます…';
     try {
-      const dataset = await fetchBuildingTiles(location, this.controller.signal);
       const C = await loadCesium();
       if (request !== this.request) return;
       this.status.textContent = '全国の建物と地形を読み込んでいます…';
       let tileFailed = false;
+      let buildingVisible = false;
+      const baseImagery = new C.UrlTemplateImageryProvider({
+        url: GSI_IMAGERY_URL, maximumLevel: 18, tilingScheme: new C.WebMercatorTilingScheme()
+      });
+      const mobile = matchMedia('(max-width: 700px)').matches || (window.deviceMemory && window.deviceMemory <= 4);
       const viewer = this.viewer = new C.Viewer(this.container, {
         baseLayer: false, terrainProvider: new C.EllipsoidTerrainProvider(),
         animation: false, timeline: false, baseLayerPicker: false, geocoder: false,
         homeButton: false, sceneModePicker: false, navigationHelpButton: false,
-        fullscreenButton: false, selectionIndicator: false, infoBox: false,
-        requestRenderMode: true, maximumRenderTimeChange: Infinity
+        fullscreenButton: false, selectionIndicator: false, infoBox: false
+        // Cesium's demand-render mode can leave the globe quadtree idle while terrain and
+        // imagery providers settle (especially inside a newly opened mobile dialog).
+        // Keep the modal rendering so terrain/imagery tiles are selected and requested.
       });
       viewer.resolutionScale = Math.min(1, 1 / (window.devicePixelRatio || 1));
       viewer.scene.globe.baseColor = C.Color.fromCssColorString('#71836a');
       viewer.scene.globe.showGroundAtmosphere = true;
+      viewer.scene.globe.maximumScreenSpaceError = mobile ? 5 : 4;
       viewer.scene.backgroundColor = C.Color.fromCssColorString('#172e24');
+      viewer.imageryLayers.addImageryProvider(baseImagery);
+      let baseImageryFailed = false;
+      baseImagery.errorEvent.addEventListener(() => {
+        if (request !== this.request || baseImageryFailed) return;
+        baseImageryFailed = true;
+        this.status.textContent = '地表地図タイルを取得できません。建物表示は続けますが、地面が暗く見えることがあります。';
+      });
       viewer.scene.renderError.addEventListener(() => {
         if (request !== this.request) return;
         this.status.textContent = '都市3Dの描画に失敗しました。閉じてから再度お試しください。';
       });
 
       // Imagery and elevation are independent optional layers. Either may fail while buildings remain usable.
+      // Keep the lightweight GSI basemap underneath; PLATEAU Ortho can be unavailable.
       try {
-        const imagery = new C.UrlTemplateImageryProvider({ url: ORTHO_URL, minimumLevel: 10, maximumLevel: 19 });
-        viewer.imageryLayers.addImageryProvider(imagery);
+        const imagery = new C.UrlTemplateImageryProvider({
+          url: ORTHO_URL, maximumLevel: 19, tilingScheme: new C.WebMercatorTilingScheme()
+        });
+        const imageryLayer = viewer.imageryLayers.addImageryProvider(imagery);
+        let imageryFailed = false;
         imagery.errorEvent.addEventListener(() => {
-          if (request === this.request) this.status.textContent = '航空写真を取得できません。地形と建物の表示を続けます。';
+          if (request !== this.request || imageryFailed) return;
+          imageryFailed = true;
+          // Stop requesting thousands of failed aerial-photo tiles; GSI remains underneath.
+          viewer.imageryLayers.remove(imageryLayer, false);
+          if (!buildingVisible) this.status.textContent = '航空写真を取得できません。地理院地図と地形・建物の表示を続けます。';
         });
       } catch { /* Keep the terrain and buildings available if imagery setup fails. */ }
       C.CesiumTerrainProvider.fromUrl(TERRAIN_URL, { requestVertexNormals: true }).then(terrain => {
         if (request !== this.request) return;
+        let terrainFailed = false;
+        terrain.errorEvent.addEventListener(() => {
+          if (request !== this.request || terrainFailed) return;
+          terrainFailed = true;
+          // A provider can load layer.json successfully while its terrain tiles fail.
+          // Keep the globe renderable so the GSI imagery layer can serve as the base map.
+          viewer.terrainProvider = new C.EllipsoidTerrainProvider();
+          viewer.scene.requestRender();
+          if (!buildingVisible) this.status.textContent = '地形タイルを取得できません。地理院地図と建物の表示を続けます。';
+        });
         viewer.terrainProvider = terrain;
         viewer.scene.requestRender();
+        if (!buildingVisible) this.status.textContent = '地形を表示中です。建物モデルを読み込んでいます…';
       }).catch(() => {
-        if (request === this.request && !viewer.scene.primitives.length) this.status.textContent = '地形データを取得できません。建物と航空写真の表示を続けます。';
+        if (request === this.request && !buildingVisible) this.status.textContent = '地形データを取得できません。地理院地図と建物の表示を続けます。';
       });
-      const tiles = await C.Cesium3DTileset.fromUrl(dataset.url, { maximumScreenSpaceError: 12, cacheBytes: 96 * 1024 * 1024 });
-      if (request !== this.request) { tiles.destroy(); return; }
-      viewer.scene.primitives.add(tiles);
-      clearTimeout(this.timer);
-      this.status.textContent = '全国PLATEAU LOD1 · ドラッグで移動、右ドラッグで回転、ホイールで拡大。選択地へ戻るには「選択地」ボタン。';
-      tiles.tileFailed.addEventListener(() => {
+      this.status.textContent = '地形・航空写真を表示しています。建物モデルを読み込んでいます…';
+      this.timer = setTimeout(() => {
+        if (request === this.request && !buildingVisible) this.status.textContent = '建物データの応答を待っています。地形・航空写真は操作できます。少し待つか、別の場所へ移動してください。';
+      }, 45000);
+      const tilesetOptions = {
+        maximumScreenSpaceError: mobile ? 80 : 60,
+        cacheBytes: (mobile ? 32 : 64) * 1024 * 1024,
+        maximumCacheOverflowBytes: (mobile ? 16 : 32) * 1024 * 1024
+      };
+      C.Cesium3DTileset.fromUrl(BUILDING_TILES_URL, tilesetOptions).then(tiles => {
+        if (request !== this.request) { tiles.destroy(); return; }
+        viewer.scene.primitives.add(tiles);
+        this.status.textContent = '建物モデルを読み込んでいます… 表示範囲内に建物がない場合は、地形・画像だけを表示します。';
+        tiles.tileFailed.addEventListener(() => {
+          if (request !== this.request) return;
+          tileFailed = true;
+          this.status.textContent = '建物タイルの一部を取得できません。地形・航空写真の表示は続きます。';
+        });
+        tiles.tileVisible.addEventListener(() => {
+          if (request !== this.request || tileFailed) return;
+          buildingVisible = true;
+          clearTimeout(this.timer);
+          this.status.textContent = 'PLATEAU LOD1 · ドラッグで移動、右ドラッグで回転、ホイールで拡大。選択地へ戻るには「選択地」ボタン。';
+        });
+      }).catch(error => {
         if (request !== this.request) return;
-        tileFailed = true; clearTimeout(this.timer);
-        this.status.textContent = '表示範囲内の一部の建物タイルを取得できません。別の場所へ移動してお試しください。';
+        clearTimeout(this.timer);
+        this.status.textContent = `建物データに接続できません（${error.message || '通信エラー'}）。地形・航空写真は表示を続けます。`;
       });
-      tiles.tileVisible.addEventListener(() => {
-        if (request !== this.request || tileFailed) return;
-        this.status.textContent = '全国PLATEAU LOD1 · ドラッグで移動、右ドラッグで回転、ホイールで拡大。選択地へ戻るには「選択地」ボタン。';
+      this.initialHeight = mobile ? 3500 : 4500;
+      viewer.camera.setView({
+        destination: C.Cartesian3.fromDegrees(location.longitude, location.latitude, this.initialHeight),
+        orientation: { heading: 0, pitch: C.Math.toRadians(-85), roll: 0 }
       });
-      viewer.camera.lookAt(C.Cartesian3.fromDegrees(location.longitude, location.latitude),
-        new C.HeadingPitchRange(0, C.Math.toRadians(-45), 1500));
-      viewer.camera.lookAtTransform(C.Matrix4.IDENTITY);
       viewer.scene.requestRender();
     } catch (error) {
       if (request !== this.request) return;
