@@ -1,15 +1,13 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.24.1';
-import { setupViewerUI } from './viewer-ui.js?v=0.24.1';
-import { LocationMap } from './map.js?v=0.24.1';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.24.1';
-import { createMesh } from './mesh.js?v=0.24.1';
-import { TerrainRenderer } from './renderer.js?v=0.24.1';
-import { createShareUrl, readSharedView } from './share.js?v=0.24.1';
-import { flightTourPose } from './controls.js?v=0.24.1';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.24.1';
-import { UrbanView } from './urban.js?v=0.24.1';
+import { loadMapTexture, textureKey } from './texture.js?v=0.24.2';
+import { setupViewerUI } from './viewer-ui.js?v=0.24.2';
+import { LocationMap } from './map.js?v=0.24.2';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.24.2';
+import { createMesh } from './mesh.js?v=0.24.2';
+import { TerrainRenderer } from './renderer.js?v=0.24.2';
+import { createShareUrl, readSharedView } from './share.js?v=0.24.2';
+import { flightTourPose } from './controls.js?v=0.24.2';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.24.2';
 const viewerUI=setupViewerUI();
-const urbanView=new UrbanView();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
@@ -19,15 +17,6 @@ const qualitySelect=document.querySelector('#quality');
 const contoursToggle=document.querySelector('#contours');
 const sunSettings=document.querySelector('#sun-settings'), sunAzimuth=document.querySelector('#sun-azimuth'), sunAltitude=document.querySelector('#sun-altitude');
 const surfaceSelect=document.querySelector('#surface');
-document.querySelector('#guide-shading').addEventListener('click',()=>{
-  surfaceSelect.value='shading';surfaceSelect.dispatchEvent(new Event('change',{bubbles:true}));
-  document.querySelector('#guide-shading').textContent='陰影を表示中';
-});
-document.querySelector('#guide-contours').addEventListener('click',()=>{
-  contoursToggle.checked=true;contoursToggle.dispatchEvent(new Event('change',{bubbles:true}));
-  document.querySelector('#guide-contours').textContent='等高線を表示中';
-});
-document.querySelector('#guide-section').addEventListener('click',()=>document.querySelector('#profile-start').click());
 const sunAzimuthValue=document.querySelector('#sun-azimuth-value'), sunAltitudeValue=document.querySelector('#sun-altitude-value');
 const savedSun=(()=>{try{return JSON.parse(localStorage.getItem('terrain-stereo-sun')||'{}')}catch{return {}}})();
 sunAzimuth.value=String(sharedView?.sunAzimuth ?? (Number.isFinite(savedSun.azimuth)?Math.max(0,Math.min(359,savedSun.azimuth)):315));
@@ -129,7 +118,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.24.1');
+  const {pickSurface}=await import('./profile.js?v=0.24.2');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -167,7 +156,6 @@ const guides={
   anaglyph:'赤シアン眼鏡が必要です。左眼に赤、右眼にシアンのレンズを合わせてください。'
 };
 let profile, renderer, data, loading=false, flightMode=false, selectedLocation={...(sharedView?.location ?? LOCATION)}, requestedLocation={...(sharedView?.location ?? LOCATION)};
-document.querySelector('#urban-open').addEventListener('click',()=>urbanView.open(data?.location));
 if(sharedView){
   qualitySelect.value=sharedView.quality; modeSelect.value=sharedView.mode; surfaceSelect.value=sharedView.surface;
   slider.value=String(sharedView.exaggeration); factor.textContent=`${sharedView.exaggeration.toFixed(1)}×`;
@@ -402,7 +390,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.24.1');
+      const {SectionTool}=await import('./profile-ui.js?v=0.24.2');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();

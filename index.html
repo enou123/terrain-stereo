@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#14251e">
   <title>terrain-stereo — 日本の地形を探索</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.24.1">
-  <script type="module" src="js/app.js?v=0.24.1"></script>
+  <link rel="stylesheet" href="styles.css?v=0.24.2">
+  <script type="module" src="js/app.js?v=0.24.2"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
@@ -28,7 +28,7 @@
     <section id="workspace" class="workspace" aria-label="3D地形ビューア">
       <nav class="viewer-toolbar" aria-label="地形ビューの操作">
         <a id="back-to-map" href="#place-picker">地図へ ↑</a>
-        <div class="viewer-actions"><button id="urban-open" type="button" aria-haspopup="dialog">都市3D</button><button id="save-image" type="button" aria-label="表示中の地形をPNG画像で保存" title="立体視モードでは左右の画像をそのまま保存します">PNG</button><button id="share-view" type="button" aria-label="地形の場所と表示設定を共有">共有</button><button id="flight-toggle" type="button" aria-pressed="false" aria-controls="flight-pad" aria-label="移動パッドを開く">移動</button><button id="toggle-settings" type="button" aria-controls="view-settings" aria-expanded="true">設定を閉じる</button><button id="expand-view" type="button" aria-pressed="false">大きく表示</button></div>
+        <div class="viewer-actions"><button id="save-image" type="button" aria-label="表示中の地形をPNG画像で保存" title="立体視モードでは左右の画像をそのまま保存します">PNG</button><button id="share-view" type="button" aria-label="地形の場所と表示設定を共有">共有</button><button id="flight-toggle" type="button" aria-pressed="false" aria-controls="flight-pad" aria-label="移動パッドを開く">移動</button><button id="toggle-settings" type="button" aria-controls="view-settings" aria-expanded="true">設定を閉じる</button><button id="expand-view" type="button" aria-pressed="false">大きく表示</button></div>
       <div id="profile-prompt" class="profile-prompt" hidden><span id="profile-instruction"></span><button id="profile-cancel" type="button">中止</button></div></nav>
       <div class="viewer" id="viewer">
         <div class="viewer-top"><span class="mode" id="mode-label">● 通常3D</span><span class="live-label"><span id="terrain-location">石鎚山周辺</span></span></div>
@@ -43,12 +43,7 @@
         <div class="message" id="message" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><p id="status">標高データを取得しています…</p><button id="retry" hidden>もう一度読み込む</button></div>
         <div class="viewer-bottom"><span>ドラッグで回転 <span class="desktop-hint"> / ホイールでズーム・中ボタンで移動</span><span class="touch-hint"> / 2本指で拡大縮小・移動</span></span><span class="axis">標高を立体表示</span></div>
       </div>
-      <aside id="view-settings" class="panel" aria-label="地形の表示設定"><p class="eyebrow">VIEW SETTINGS</p><h2>地形の見え方</h2>
-        <details id="terrain-guide" class="terrain-guide"><summary>地形観察ガイド · 3つの見方</summary><p>表示中の場所で、尾根・斜面・谷の見え方を試します。いつでも通常の設定に戻せます。</p><ol>
-          <li><strong>陰影で尾根と谷を探す</strong><span>光の向きを変えると、斜面の向きや谷筋が見つけやすくなります。</span><button id="guide-shading" type="button">陰影表示にする</button></li>
-          <li><strong>等高線で斜面を比べる</strong><span>線の間隔が狭い場所は急斜面、広い場所は緩斜面です。</span><button id="guide-contours" type="button">等高線を表示する</button></li>
-          <li><strong>断面図で高さを比べる</strong><span>地形上の2点を選んで、間の標高と高低差を見ます。</span><button id="guide-section" type="button">断面図を始める</button></li>
-        </ol></details>
+      <aside id="view-settings" class="panel" aria-label="地形設定">
         <label class="setting-label" for="view-mode">表示モード</label>
         <select id="view-mode" aria-describedby="stereo-guide"><option value="mono">通常3D</option><option value="parallel">立体視 · 平行法</option><option value="cross">立体視 · 交差法</option><option value="anaglyph">立体視 · 赤シアン</option></select>
         <p id="stereo-guide" class="hint">1つの地形を自由に回転して眺めます。</p>
@@ -86,11 +81,5 @@
 
     <footer><span>出典：<a href="https://maps.gsi.go.jp/development/ichiran.html#dem" target="_blank" rel="noopener noreferrer">国土地理院（標高・標準地図・航空写真）</a>、<a href="https://www.gsj.jp/Map/JP/geology4-15.html" target="_blank" rel="noopener noreferrer">産総研 地質調査総合センター（シームレス地質図）</a></span><span>まずは、山を自由に眺める。</span></footer>
   </main>
-    <dialog id="urban-dialog" class="urban-dialog" aria-labelledby="urban-title">
-      <header class="urban-header"><div><p class="eyebrow">CITY MODEL</p><h2 id="urban-title">都市の建物を立体表示</h2></div><button id="urban-tokyo" type="button">東京で試す</button><button id="urban-close" type="button" aria-label="都市3Dを閉じる">閉じる</button></header>
-      <p id="urban-status" class="urban-status" role="status" aria-live="polite">選択した場所の建物データを確認します。</p>
-      <div id="urban-map" class="urban-map" aria-label="PLATEAUの地形・航空写真・建物モデル"><button id="urban-home" class="urban-home" type="button" hidden>選択地へ</button></div>
-      <p class="urban-attribution">建物・地形：<a href="https://www.mlit.go.jp/plateau/" target="_blank" rel="noopener noreferrer">Project PLATEAU（国土交通省）</a> · 地形・画像：PLATEAU | Mapterhorn | 国土地理院。建物データの範囲と詳細さは地域ごとに異なります。立体視は未対応。</p>
-    </dialog>
 </body>
 </html>
