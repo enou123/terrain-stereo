@@ -1,0 +1,16 @@
+{
+  "id": "./",
+  "name": "terrain-stereo｜地形探訪",
+  "short_name": "地形探訪",
+  "description": "日本各地の地形を探し、3Dで立体的に眺める地形探訪アプリ。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f5f0",
+  "theme_color": "#14251e",
+  "icons": [
+    { "src": "icons/terrain-tanbo-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/terrain-tanbo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

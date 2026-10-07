@@ -4,15 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#14251e">
-  <title>terrain-stereo — 日本の地形を探索</title>
+  <title>terrain-stereo｜地形探訪</title>
+  <meta name="description" content="日本各地の地形を探し、3Dで立体的に眺める地形探訪アプリ。">
+  <meta property="og:title" content="terrain-stereo｜地形探訪">
+  <meta property="og:description" content="日本各地の地形を探し、3Dで立体的に眺める地形探訪アプリ。">
+  <meta name="apple-mobile-web-app-title" content="地形探訪">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/terrain-tanbo-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/terrain-tanbo-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.24.2">
-  <script type="module" src="js/app.js?v=0.24.2"></script>
+  <link rel="stylesheet" href="styles.css?v=0.24.3">
+  <script type="module" src="js/app.js?v=0.24.3"></script>
 </head>
 <body>
-  <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span></a><span class="edition">TERRAIN EXPLORER <span> / EXPLORE 03</span></span></header>
+  <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span><span class="brand-subtitle">｜地形探訪</span></a><span class="edition">JAPAN TERRAIN EXPLORER</span></header>
   <main>
-    <section class="intro"><div><p class="eyebrow">EXPLORE JAPAN</p><h1>日本<span>の地形を探索</span></h1><p class="description">地図で見つけて、立体で眺める。日本各地の尾根や谷を探索。</p></div><div class="location"><span>立体表示中の場所</span><strong id="loaded-location">石鎚山周辺</strong><small>国土地理院の標高データを使用</small></div></section>
+    <section class="intro"><div><p class="eyebrow">EXPLORE JAPAN</p><h1>地形探訪</h1><p class="description">地図で見つけて、立体で眺める。日本各地の尾根や谷を探索。</p></div><div class="location"><span>立体表示中の場所</span><strong id="loaded-location">石鎚山周辺</strong><small>国土地理院の標高データを使用</small></div></section>
     <section id="place-picker" class="location-picker" aria-labelledby="map-heading" tabindex="-1">
       <div class="map-heading"><div><p class="eyebrow">FIND A PLACE</p><h2 id="map-heading">見たい場所を探す</h2></div><a href="#workspace" class="viewer-link">立体表示へ ↓</a></div>
       <p class="map-help">地図を動かして中央の＋を見たい場所に合わせ、「ここを立体表示」を押してください。枠が表示範囲です。ホイールやピンチでなめらかに縮尺を変えられます。</p>

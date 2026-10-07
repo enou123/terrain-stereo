@@ -1,12 +1,12 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.24.2';
-import { setupViewerUI } from './viewer-ui.js?v=0.24.2';
-import { LocationMap } from './map.js?v=0.24.2';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.24.2';
-import { createMesh } from './mesh.js?v=0.24.2';
-import { TerrainRenderer } from './renderer.js?v=0.24.2';
-import { createShareUrl, readSharedView } from './share.js?v=0.24.2';
-import { flightTourPose } from './controls.js?v=0.24.2';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.24.2';
+import { loadMapTexture, textureKey } from './texture.js?v=0.24.3';
+import { setupViewerUI } from './viewer-ui.js?v=0.24.3';
+import { LocationMap } from './map.js?v=0.24.3';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.24.3';
+import { createMesh } from './mesh.js?v=0.24.3';
+import { TerrainRenderer } from './renderer.js?v=0.24.3';
+import { createShareUrl, readSharedView } from './share.js?v=0.24.3';
+import { flightTourPose } from './controls.js?v=0.24.3';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.24.3';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -118,7 +118,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.24.2');
+  const {pickSurface}=await import('./profile.js?v=0.24.3');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -224,7 +224,7 @@ saveImage.addEventListener('click',async()=>{
     const image=await new Promise((resolve,reject)=>capture.toBlob(blob=>blob?resolve(blob):reject(new Error('PNG画像を作成できませんでした。')),'image/png'));
     const now=new Date(),stamp=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0'),'-',String(now.getHours()).padStart(2,'0'),String(now.getMinutes()).padStart(2,'0')].join('');
     const file=new File([image],`terrain-stereo-${stamp}.png`,{type:'image/png'});
-    if(navigator.canShare?.({files:[file]}) && navigator.share) await navigator.share({files:[file],title:'terrain-stereo 地形画像'});
+    if(navigator.canShare?.({files:[file]}) && navigator.share) await navigator.share({files:[file],title:'terrain-stereo｜地形探訪の地形画像'});
     else {
       const url=URL.createObjectURL(image),link=document.createElement('a');link.href=url;link.download=file.name;link.hidden=true;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
     }
@@ -245,7 +245,7 @@ shareView.addEventListener('click',async()=>{
       strength:Number(strengthSlider.value),contours:contoursToggle.checked,
       sunAzimuth:Number(sunAzimuth.value),sunAltitude:Number(sunAltitude.value)
     });
-    if(navigator.share) await navigator.share({title:'terrain-stereo — 地形の表示',url});
+    if(navigator.share) await navigator.share({title:'terrain-stereo｜地形探訪',url});
     else {
       let copied=false;
       try{if(navigator.clipboard?.writeText){await navigator.clipboard.writeText(url);copied=true;}}catch{}
@@ -390,7 +390,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.24.2');
+      const {SectionTool}=await import('./profile-ui.js?v=0.24.3');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();

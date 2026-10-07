@@ -28,6 +28,13 @@ body {
 .brand span:not(.brand-icon) {
   font-weight:400;
 }
+.brand .brand-subtitle {
+  margin-left:10px;
+  font-size:15px;
+  letter-spacing:0;
+  color:#536b59;
+  font-weight:550;
+}
 .brand-icon {
   display:inline-block;
   color:#6b8261;
@@ -368,7 +375,11 @@ footer a {
     padding:0 18px;
   }
   .brand {
-    font-size:20px;
+    font-size:18px;
+  }
+  .brand .brand-subtitle {
+    margin-left:5px;
+    font-size:12px;
   }
   .edition {
     letter-spacing:1px;
@@ -436,6 +447,9 @@ footer a {
   footer>span:last-child {
     display:none;
   }
+}
+@media(max-width:380px) {
+  .edition { display:none; }
 }
 @media(prefers-reduced-motion:reduce) {
   .spinner {
