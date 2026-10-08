@@ -79,7 +79,7 @@ with sync_playwright() as p:
         page.wait_for_function("!uiTest.loading && uiTest.renderer.mesh && document.querySelector('#message').hidden",timeout=120000)
         assert page.locator('#message').is_hidden(),page.locator('#status').inner_text()
         if width==1440:
-            page.evaluate("window.tourMetric={heights:[],sun:[],surfaces:[],modes:[]};document.querySelector('#exaggeration').addEventListener('input',e=>tourMetric.heights.push(+e.target.value));document.querySelector('#sun-azimuth').addEventListener('input',e=>tourMetric.sun.push(+e.target.value));document.querySelector('#surface').addEventListener('change',e=>tourMetric.surfaces.push(e.target.value));document.querySelector('#view-mode').addEventListener('change',e=>tourMetric.modes.push(e.target.value));")
+            page.evaluate("window.tourMetric={heights:[],sun:[],surfaces:[],surfaceTimes:[],modes:[]};document.querySelector('#exaggeration').addEventListener('input',e=>tourMetric.heights.push(+e.target.value));document.querySelector('#sun-azimuth').addEventListener('input',e=>tourMetric.sun.push(+e.target.value));document.querySelector('#surface').addEventListener('change',e=>{tourMetric.surfaces.push(e.target.value);tourMetric.surfaceTimes.push(performance.now())});document.querySelector('#view-mode').addEventListener('change',e=>tourMetric.modes.push(e.target.value));")
             page.locator('#start-app-tour').click()
             page.wait_for_function("document.querySelector('#app-tour-title').textContent==='尾根と谷を立体で眺める'")
             sample=(8,50)
@@ -102,10 +102,13 @@ with sync_playwright() as p:
             page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('斜面の明暗')",timeout=15000)
             sun=page.evaluate('tourMetric.sun');assert max(sun)-min(sun)>150
             page.screenshot(path=str(OUT/'03-desktop-shading.png'));page.locator('.app-tour-next').click()
-            page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('標高色・陰影')||document.querySelector('.app-tour-status').textContent.includes('一部の画像')",timeout=90000)
-            surfaces=page.evaluate('tourMetric.surfaces');assert all(name in surfaces for name in ['elevation','shading','map','photo','geology']),surfaces
-            assert page.evaluate("uiTest.renderer.surface==='geology'")
+            page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('各表示をゆっくり')||document.querySelector('.app-tour-status').textContent.includes('一部の画像')",timeout=90000)
+            surfaces=page.evaluate('tourMetric.surfaces');assert surfaces[-6:]==['elevation','shading','map','photo','geology','elevation'],surfaces
+            surface_times=page.evaluate('tourMetric.surfaceTimes')[-6:];assert all(b-a>=2300 for a,b in zip(surface_times,surface_times[1:])),surface_times
+            assert page.locator('#surface').input_value()=='elevation'
+            assert page.evaluate("uiTest.renderer.surface==='elevation'")
             page.screenshot(path=str(OUT/'04-desktop-surfaces.png'));page.locator('.app-tour-next').click()
+            assert page.locator('#surface').input_value()=='elevation'
             page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('切り替えました')",timeout=20000)
             modes=page.evaluate('tourMetric.modes');assert all(name in modes for name in ['mono','parallel','cross','anaglyph']),modes
             assert page.evaluate("uiTest.renderer.mode==='anaglyph'")

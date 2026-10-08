@@ -1,13 +1,13 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.26.2';
-import { setupViewerUI } from './viewer-ui.js?v=0.26.2';
-import { LocationMap } from './map.js?v=0.26.2';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.26.2';
-import { createMesh } from './mesh.js?v=0.26.2';
-import { TerrainRenderer } from './renderer.js?v=0.26.2';
-import { createShareUrl, readSharedView } from './share.js?v=0.26.2';
-import { flightTourPose } from './controls.js?v=0.26.2';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.26.2';
-import { setupAppTour } from './tour.js?v=0.26.2';
+import { loadMapTexture, textureKey } from './texture.js?v=0.26.3';
+import { setupViewerUI } from './viewer-ui.js?v=0.26.3';
+import { LocationMap } from './map.js?v=0.26.3';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.26.3';
+import { createMesh } from './mesh.js?v=0.26.3';
+import { TerrainRenderer } from './renderer.js?v=0.26.3';
+import { createShareUrl, readSharedView } from './share.js?v=0.26.3';
+import { flightTourPose } from './controls.js?v=0.26.3';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.26.3';
+import { setupAppTour } from './tour.js?v=0.26.3';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -121,7 +121,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.26.2');
+  const {pickSurface}=await import('./profile.js?v=0.26.3');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -396,7 +396,7 @@ load();
 // Load section calculations/UI only when explicitly requested.
 async function getProfileTool(){
   if(!data||loading||renderer?.lost)throw new Error('地形が読み込み中です。');
-  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.26.2');profile=new SectionTool(renderer,viewerUI);}
+  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.26.3');profile=new SectionTool(renderer,viewerUI);}
   profile.setData(data);return profile;
 }
 document.querySelector('#profile-start').addEventListener('click',async()=>{
@@ -540,9 +540,12 @@ async function demoSurfaces(api,signal){
     applySelect(surfaceSelect,name);
     const ok=await texturePromise;
     if(!ok&&['map','photo','geology'].includes(name))failed.push(name);
-    await api.wait(1100);
+    await api.wait(2400);
   }
-  return failed.length?{message:`地形表面を順番に切り替えました。一部の画像を取得できませんでした（${failed.join('・')}）。標高データの地形は表示を続けています。`}:{message:'標高色・陰影・地図・航空写真・地質図を実際に表示しました。'};
+  applySelect(surfaceSelect,'elevation');
+  const restored=await texturePromise;
+  if(!restored&&failed.length===0)failed.push('標高色');
+  return failed.length?{message:`各表示を見比べ、標高の色に戻しました。一部の画像を取得できませんでした（${failed.join('・')}）。`}:{message:'各表示をゆっくり見比べ、標高の色に戻しました。'};
 }
 async function demoStereo(api,signal){
   for(const mode of ['mono','parallel','cross','anaglyph']){
@@ -561,7 +564,7 @@ async function demoContours(api,signal){
 async function demoProfile(api,signal){
   applySelect(modeSelect,'mono');viewerUI.setSettingsOpen(true);
   const tool=await getProfileTool();tool.clear();tool.start();api.focus('#terrain');await api.wait(700);
-  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.26.2');
+  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.26.3');
   if(signal.aborted)throw new DOMException('Stopped','AbortError');
   renderer.draw();const rect=terrainCanvas.getBoundingClientRect(),camera=renderer.cameras(undefined,undefined,true)[0];
   const candidates=[];
