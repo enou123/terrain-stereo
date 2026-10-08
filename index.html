@@ -15,13 +15,13 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/terrain-tanbo-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.24.3">
-  <script type="module" src="js/app.js?v=0.24.3"></script>
+  <link rel="stylesheet" href="styles.css?v=0.25.0">
+  <script type="module" src="js/app.js?v=0.25.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span><span class="brand-subtitle">｜地形探訪</span></a><span class="edition">JAPAN TERRAIN EXPLORER</span></header>
   <main>
-    <section class="intro"><div><p class="eyebrow">EXPLORE JAPAN</p><h1>地形探訪</h1><p class="description">地図で見つけて、立体で眺める。日本各地の尾根や谷を探索。</p></div><div class="location"><span>立体表示中の場所</span><strong id="loaded-location">石鎚山周辺</strong><small>国土地理院の標高データを使用</small></div></section>
+    <section class="intro"><div><p class="eyebrow">EXPLORE JAPAN</p><h1>地形探訪</h1><p class="description">地図で見つけて、立体で眺める。日本各地の尾根や谷を探索。</p><button id="start-app-tour" class="app-tour-launch" type="button">アプリの使い方を見る <span aria-hidden="true">→</span></button></div><div class="location"><span>立体表示中の場所</span><strong id="loaded-location">石鎚山周辺</strong><small>国土地理院の標高データを使用</small></div></section>
     <section id="place-picker" class="location-picker" aria-labelledby="map-heading" tabindex="-1">
       <div class="map-heading"><div><p class="eyebrow">FIND A PLACE</p><h2 id="map-heading">見たい場所を探す</h2></div><a href="#workspace" class="viewer-link">立体表示へ ↓</a></div>
       <p class="map-help">地図を動かして中央の＋を見たい場所に合わせ、「ここを立体表示」を押してください。枠が表示範囲です。ホイールやピンチでなめらかに縮尺を変えられます。</p>

@@ -1,4 +1,4 @@
-import { worldPixel } from './elevation.js?v=0.24.3';
+import { worldPixel } from './elevation.js?v=0.25.0';
 
 const sources = {
   map:{url:'https://cyberjapandata.gsi.go.jp/xyz/std',extension:'png',label:'地図画像'},

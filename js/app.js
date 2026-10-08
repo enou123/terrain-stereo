@@ -1,13 +1,15 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.24.3';
-import { setupViewerUI } from './viewer-ui.js?v=0.24.3';
-import { LocationMap } from './map.js?v=0.24.3';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.24.3';
-import { createMesh } from './mesh.js?v=0.24.3';
-import { TerrainRenderer } from './renderer.js?v=0.24.3';
-import { createShareUrl, readSharedView } from './share.js?v=0.24.3';
-import { flightTourPose } from './controls.js?v=0.24.3';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.24.3';
+import { loadMapTexture, textureKey } from './texture.js?v=0.25.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.25.0';
+import { LocationMap } from './map.js?v=0.25.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.25.0';
+import { createMesh } from './mesh.js?v=0.25.0';
+import { TerrainRenderer } from './renderer.js?v=0.25.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.25.0';
+import { flightTourPose } from './controls.js?v=0.25.0';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.25.0';
+import { setupAppTour } from './tour.js?v=0.25.0';
 const viewerUI=setupViewerUI();
+setupAppTour();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
 const retry=document.querySelector('#retry'), state=document.querySelector('#data-state');
@@ -118,7 +120,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.24.3');
+  const {pickSurface}=await import('./profile.js?v=0.25.0');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -390,7 +392,7 @@ document.querySelector('#profile-start').addEventListener('click',async()=>{
   const button=document.querySelector('#profile-start');button.disabled=true;
   try {
     if(!profile) {
-      const {SectionTool}=await import('./profile-ui.js?v=0.24.3');
+      const {SectionTool}=await import('./profile-ui.js?v=0.25.0');
       profile=new SectionTool(renderer,viewerUI);profile.setData(data);
     }
     profile.start();
