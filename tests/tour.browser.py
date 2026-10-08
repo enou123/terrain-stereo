@@ -8,6 +8,8 @@ from functools import partial
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
 import hashlib, json, math, os, struct, urllib.request, zlib
+from io import BytesIO
+from PIL import Image
 from playwright.sync_api import sync_playwright
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -80,10 +82,12 @@ with sync_playwright() as p:
             page.evaluate("window.tourMetric={heights:[],sun:[],surfaces:[],modes:[]};document.querySelector('#exaggeration').addEventListener('input',e=>tourMetric.heights.push(+e.target.value));document.querySelector('#sun-azimuth').addEventListener('input',e=>tourMetric.sun.push(+e.target.value));document.querySelector('#surface').addEventListener('change',e=>tourMetric.surfaces.push(e.target.value));document.querySelector('#view-mode').addEventListener('change',e=>tourMetric.modes.push(e.target.value));")
             page.locator('#start-app-tour').click()
             page.wait_for_function("document.querySelector('#app-tour-title').textContent==='尾根と谷を立体で眺める'")
+            sample=(8,50)
             before=page.evaluate('({yaw:uiTest.renderer.controls.yaw,distance:uiTest.renderer.controls.distance})')
             page.evaluate("window.cameraTrace=[{yaw:uiTest.renderer.controls.yaw,distance:uiTest.renderer.controls.distance}];(function sample(){if(uiTest.tour.active){cameraTrace.push({yaw:uiTest.renderer.controls.yaw,distance:uiTest.renderer.controls.distance});requestAnimationFrame(sample)}})()")
             page.locator('.app-tour-pause').click();paused_yaw=page.evaluate('uiTest.renderer.controls.yaw');page.wait_for_timeout(700)
             assert abs(page.evaluate('uiTest.renderer.controls.yaw')-paused_yaw)<1e-8,'camera must pause with the tour'
+            viewer_before=Image.open(BytesIO(page.locator('#viewer').screenshot())).convert('RGB').getpixel(sample)
             page.screenshot(path=str(OUT/'01-desktop-terrain-paused.png'))
             page.locator('.app-tour-pause').click()
             page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('実演を終えました')",timeout=25000)
@@ -91,6 +95,9 @@ with sync_playwright() as p:
             page.locator('.app-tour-next').click()
             page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('高さ強調を上げて')",timeout=15000)
             heights=page.evaluate('tourMetric.heights');assert max(heights)>2.9 and min(heights)<1.6
+            viewer_during=Image.open(BytesIO(page.locator('#viewer').screenshot())).convert('RGB').getpixel(sample)
+            luma=lambda rgb:sum(rgb)/3
+            assert luma(viewer_during)>=luma(viewer_before)*.9,(viewer_before,viewer_during,sample)
             page.screenshot(path=str(OUT/'02-desktop-height.png'));page.locator('.app-tour-next').click()
             page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('斜面の明暗')",timeout=15000)
             sun=page.evaluate('tourMetric.sun');assert max(sun)-min(sun)>150

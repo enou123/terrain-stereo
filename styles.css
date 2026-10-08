@@ -131,7 +131,9 @@ h1 span {
 .app-tour-launch span { margin-left:8px; color:#758c67; }
 .app-tour-scrim[hidden] { display:none; }
 .app-tour-scrim { position:fixed; inset:0; z-index:10000; background:transparent; animation:app-tour-fade .22s ease-out; }
-.app-tour-spotlight { position:fixed; z-index:1; pointer-events:none; border:2px solid #d4e6b4; box-shadow:0 0 0 9999px #0d1a1599,0 0 28px #d9edbb9c; transition:top .32s cubic-bezier(.2,.75,.25,1),left .32s cubic-bezier(.2,.75,.25,1),width .32s,height .32s; }
+.app-tour-dim { position:fixed; z-index:0; inset:0; width:100%; height:100%; overflow:visible; pointer-events:none; }
+.app-tour-dim-field { width:100%; height:100%; }
+.app-tour-spotlight { position:fixed; z-index:1; pointer-events:none; border:2px solid #d4e6b4; box-shadow:0 0 28px #d9edbb9c; transition:top .32s cubic-bezier(.2,.75,.25,1),left .32s cubic-bezier(.2,.75,.25,1),width .32s,height .32s; }
 .app-tour-highlight { outline:2px solid #cce5a7 !important; outline-offset:3px; box-shadow:0 0 0 6px #d5efac40,0 0 22px #d7eda780 !important; }
 .app-tour-card { position:fixed; z-index:2; right:max(18px,env(safe-area-inset-right)); bottom:max(18px,env(safe-area-inset-bottom)); width:min(480px,calc(100vw - 36px)); max-height:min(44vh,390px); overflow:auto; padding:17px 19px 14px; border:1px solid #d9e2d3; border-radius:17px; background:#fbfcf8f5; color:#263a2e; box-shadow:0 16px 50px #07110d55; backdrop-filter:blur(12px); animation:app-tour-card-in .24s ease-out; }
 .app-tour-card.app-tour-card-left { left:max(18px,env(safe-area-inset-left)); right:auto; }

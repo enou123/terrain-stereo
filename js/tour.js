@@ -35,9 +35,10 @@ export function setupAppTour(actions) {
   const launch=document.querySelector('#start-app-tour');
   if(!launch)return null;
   const root=document.createElement('div');root.className='app-tour-scrim';root.hidden=true;
-  root.innerHTML=`<div class="app-tour-spotlight" aria-hidden="true"></div><section class="app-tour-card" role="dialog" aria-modal="true" aria-labelledby="app-tour-title" aria-describedby="app-tour-copy"><div class="app-tour-kicker">地形探訪 · 機能紹介ツアー</div><div class="app-tour-meta"><span class="app-tour-count"></span><button class="app-tour-close" type="button" aria-label="ツアーを終了">×</button></div><h2 id="app-tour-title"></h2><p id="app-tour-copy"></p><p class="app-tour-status" aria-live="polite"></p><button class="app-tour-retry" type="button" hidden>もう一度試す</button><div class="app-tour-timer" aria-hidden="true"><span></span></div><div class="app-tour-controls"><button class="app-tour-back" type="button">← 戻る</button><button class="app-tour-auto" type="button" aria-pressed="false">▶ 自動で進む</button><button class="app-tour-pause" type="button" aria-pressed="false">⏸ 一時停止</button><div class="app-tour-spacer"></div><button class="app-tour-next" type="button">次へ →</button><button class="app-tour-end" type="button">終了</button></div></section>`;
+  root.innerHTML=`<svg class="app-tour-dim" aria-hidden="true" focusable="false"><defs><mask id="app-tour-dim-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" style="mask-type:luminance"><rect class="app-tour-mask-base" fill="white"></rect><rect class="app-tour-mask-target" fill="black"></rect><rect class="app-tour-mask-viewer" fill="black"></rect></mask></defs><rect class="app-tour-dim-field" fill="#0d1a1599" mask="url(#app-tour-dim-mask)"></rect></svg><div class="app-tour-spotlight" aria-hidden="true"></div><section class="app-tour-card" role="dialog" aria-modal="true" aria-labelledby="app-tour-title" aria-describedby="app-tour-copy"><div class="app-tour-kicker">地形探訪 · 機能紹介ツアー</div><div class="app-tour-meta"><span class="app-tour-count"></span><button class="app-tour-close" type="button" aria-label="ツアーを終了">×</button></div><h2 id="app-tour-title"></h2><p id="app-tour-copy"></p><p class="app-tour-status" aria-live="polite"></p><button class="app-tour-retry" type="button" hidden>もう一度試す</button><div class="app-tour-timer" aria-hidden="true"><span></span></div><div class="app-tour-controls"><button class="app-tour-back" type="button">← 戻る</button><button class="app-tour-auto" type="button" aria-pressed="false">▶ 自動で進む</button><button class="app-tour-pause" type="button" aria-pressed="false">⏸ 一時停止</button><div class="app-tour-spacer"></div><button class="app-tour-next" type="button">次へ →</button><button class="app-tour-end" type="button">終了</button></div></section>`;
   document.body.append(root);
   const spotlight=root.querySelector('.app-tour-spotlight'),card=root.querySelector('.app-tour-card');
+  const maskBase=root.querySelector('.app-tour-mask-base'),maskTarget=root.querySelector('.app-tour-mask-target'),maskViewer=root.querySelector('.app-tour-mask-viewer');
   const count=root.querySelector('.app-tour-count'),title=root.querySelector('#app-tour-title'),copy=root.querySelector('#app-tour-copy');
   const status=root.querySelector('.app-tour-status'),retry=root.querySelector('.app-tour-retry');
   const back=root.querySelector('.app-tour-back'),next=root.querySelector('.app-tour-next');
@@ -48,6 +49,12 @@ export function setupAppTour(actions) {
   function position(){
     if(!active||!target||!target.isConnected||!target.getClientRects().length)return;
     const r=target.getBoundingClientRect(),pad=7;
+    const setHole=(el,box,padding=0)=>{el.setAttribute('x',Math.max(0,box.left-padding));el.setAttribute('y',Math.max(0,box.top-padding));el.setAttribute('width',Math.max(0,Math.min(innerWidth,box.right+padding)-Math.max(0,box.left-padding)));el.setAttribute('height',Math.max(0,Math.min(innerHeight,box.bottom+padding)-Math.max(0,box.top-padding)));el.setAttribute('rx',padding?Math.max(5,parseFloat(getComputedStyle(target).borderRadius)||5):10);};
+    [maskBase,root.querySelector('.app-tour-dim-field')].forEach(el=>{el.setAttribute('width',innerWidth);el.setAttribute('height',innerHeight);});
+    root.querySelector('.app-tour-dim').setAttribute('viewBox',`0 0 ${innerWidth} ${innerHeight}`);
+    setHole(maskTarget,r,pad);
+    const viewer=document.querySelector('#viewer'),vr=viewer?.getBoundingClientRect();
+    if(innerWidth>900&&vr&&vr.width&&vr.height)setHole(maskViewer,vr);else setHole(maskViewer,{left:0,top:0,right:0,bottom:0});
     spotlight.style.left=`${Math.max(6,r.left-pad)}px`;spotlight.style.top=`${Math.max(6,r.top-pad)}px`;
     spotlight.style.width=`${Math.max(12,Math.min(innerWidth-12,r.width+pad*2))}px`;
     spotlight.style.height=`${Math.max(12,Math.min(innerHeight-12,r.height+pad*2))}px`;
