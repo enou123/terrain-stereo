@@ -1,4 +1,4 @@
-import {gridSample,sectionSamples,projectPoint,gridPosition,pickSurface} from './profile.js?v=0.25.0';
+import {gridSample,sectionSamples,projectPoint,gridPosition,pickSurface} from './profile.js?v=0.26.0';
 const NS='http://www.w3.org/2000/svg';
 function svg(parent,name,attributes,text='') {
   const element=document.createElementNS(NS,name);
@@ -39,6 +39,24 @@ export class SectionTool {
     this.key=key;this.data=data;
     if(this.points.length===2)this.drawChart();
     this.drawMarkers();
+  }
+  captureState() {
+    return {points:this.points.map(point=>({...point})),active:this.active};
+  }
+  restoreState(state,data) {
+    this.setData(data);
+    this.points=state?.points?.map(point=>({...point}))||[];
+    this.active=Boolean(state?.active&&this.points.length<2);
+    this.prompt.hidden=!this.active;
+    this.renderer.canvas.classList.toggle('section-selecting',this.active);
+    document.querySelector('#workspace').classList.toggle('section-selecting',this.active);
+    document.querySelector('#profile-clear').hidden=this.points.length!==2;
+    document.querySelector('#profile-note').hidden=this.points.length!==2;
+    document.querySelector('#profile-start').textContent=this.points.length===2?'選び直す':'2点を選ぶ';
+    if(this.active)this.instruction();
+    else this.prompt.hidden=true;
+    if(this.points.length===2)this.drawChart();
+    else {this.chart.setAttribute('hidden','');this.overlay.toggleAttribute('hidden',!this.points.length);this.drawMarkers();}
   }
   clear() {
     this.active=false;this.points=[];this.result=null;this.prompt.hidden=true;this.overlay.setAttribute('hidden','');this.chart.setAttribute('hidden','');

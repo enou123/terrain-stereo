@@ -1,4 +1,4 @@
-import { worldPixel, terrainZoom } from './elevation.js?v=0.25.0';
+import { worldPixel, terrainZoom } from './elevation.js?v=0.26.0';
 
 export function pixelLocation(x, y, zoom) {
   const scale = 256 * 2 ** zoom;
@@ -69,6 +69,7 @@ export class LocationMap {
     this.zoom = next; this.render();
   }
   setCenter(location) { this.center = constrainLocation(location); this.zoom = 11; this.render(); }
+  setView(location, zoom) { this.center = constrainLocation(location); this.zoom = Math.max(4, Math.min(13, zoom)); this.render(); }
   render() {
     const width = this.element.clientWidth, height = this.element.clientHeight;
     if (!width || !height) return;

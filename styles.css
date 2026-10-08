@@ -130,25 +130,36 @@ h1 span {
 .app-tour-launch:hover { background:#edf2e9; transform:translateY(-1px); }
 .app-tour-launch span { margin-left:8px; color:#758c67; }
 .app-tour-scrim[hidden] { display:none; }
-.app-tour-scrim { position:fixed; inset:0; z-index:10000; background:#0d1a1599; animation:app-tour-fade .2s ease-out; }
-.app-tour-spotlight { position:fixed; z-index:1; pointer-events:none; border:2px solid #d4e6b4; box-shadow:0 0 0 9999px #0d1a1599,0 0 26px #d9edbb80; transition:top .28s cubic-bezier(.2,.75,.25,1),left .28s cubic-bezier(.2,.75,.25,1),width .28s,height .28s; }
-.app-tour-card { position:fixed; z-index:2; left:50%; bottom:max(20px,env(safe-area-inset-bottom)); width:min(470px,calc(100vw - 32px)); padding:22px 24px 18px; transform:translateX(-50%); border:1px solid #d9e2d3; border-radius:18px; background:#fbfcf8; color:#263a2e; box-shadow:0 18px 60px #07110d66; animation:app-tour-card-in .24s ease-out; }
-.app-tour-card.is-above { top:20px; bottom:auto; }
-.app-tour-kicker { margin:0 38px 10px 0; color:#718468; font-size:10px; font-weight:700; letter-spacing:.12em; }
-.app-tour-card h2 { margin:0 0 8px; color:#263c2d; font-size:20px; letter-spacing:.01em; }
-.app-tour-card p { margin:0; color:#617063; font-size:13px; line-height:1.8; }
-.app-tour-close { position:absolute; top:13px; right:14px; width:36px; height:36px; border:0; border-radius:50%; background:#eef2eb; color:#536450; font-size:24px; cursor:pointer; }
-.app-tour-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; }
-.app-tour-progress { color:#7b8879; font-size:11px; }
-.app-tour-footer div { display:flex; gap:8px; }
-.app-tour-footer button { min-height:40px; padding:0 16px; border:1px solid #d4ddd0; border-radius:10px; background:white; color:#455744; font:inherit; font-size:12px; font-weight:650; cursor:pointer; }
-.app-tour-footer .app-tour-next { border-color:#496344; background:#496344; color:white; }
-.app-tour-footer button:disabled { opacity:.45; cursor:default; }
+.app-tour-scrim { position:fixed; inset:0; z-index:10000; background:transparent; animation:app-tour-fade .22s ease-out; }
+.app-tour-spotlight { position:fixed; z-index:1; pointer-events:none; border:2px solid #d4e6b4; box-shadow:0 0 0 9999px #0d1a1599,0 0 28px #d9edbb9c; transition:top .32s cubic-bezier(.2,.75,.25,1),left .32s cubic-bezier(.2,.75,.25,1),width .32s,height .32s; }
+.app-tour-highlight { outline:2px solid #cce5a7 !important; outline-offset:3px; box-shadow:0 0 0 6px #d5efac40,0 0 22px #d7eda780 !important; }
+.app-tour-card { position:fixed; z-index:2; right:max(18px,env(safe-area-inset-right)); bottom:max(18px,env(safe-area-inset-bottom)); width:min(480px,calc(100vw - 36px)); max-height:min(44vh,390px); overflow:auto; padding:17px 19px 14px; border:1px solid #d9e2d3; border-radius:17px; background:#fbfcf8f5; color:#263a2e; box-shadow:0 16px 50px #07110d55; backdrop-filter:blur(12px); animation:app-tour-card-in .24s ease-out; }
+.app-tour-card.app-tour-card-left { left:max(18px,env(safe-area-inset-left)); right:auto; }
+.app-tour-card.app-tour-card-top { top:max(16px,env(safe-area-inset-top)); bottom:auto; }
+.app-tour-meta { display:flex; justify-content:flex-end; align-items:center; height:0; }
+.app-tour-count { margin-right:auto; color:#718468; font-size:10px; font-weight:750; letter-spacing:.12em; }
+.app-tour-kicker { position:absolute; top:19px; left:19px; color:#718468; font-size:10px; font-weight:700; letter-spacing:.12em; }
+.app-tour-card h2 { margin:23px 44px 8px 0; color:#263c2d; font-size:19px; letter-spacing:.01em; }
+.app-tour-card p { margin:0; color:#56675a; font-size:12px; line-height:1.7; }
+.app-tour-card .app-tour-status { min-height:1.5em; margin-top:7px; color:#6f805f; font-size:10px; }
+.app-tour-close { position:absolute; top:9px; right:10px; width:34px; height:34px; border:0; border-radius:50%; background:#eef2eb; color:#536450; font-size:23px; cursor:pointer; }
+.app-tour-retry { margin:4px 0 8px; min-height:34px; padding:0 12px; border:1px solid #a8ba95; border-radius:9px; background:#fff; color:#445b3e; font:inherit; font-size:11px; cursor:pointer; }
+.app-tour-timer { height:3px; margin:7px 0 10px; overflow:hidden; border-radius:5px; background:#e6ebdf; }
+.app-tour-timer span { display:block; width:100%; height:100%; transform-origin:left center; background:#78915f; transition:transform .12s linear; }
+.app-tour-controls { display:flex; align-items:center; gap:6px; }
+.app-tour-spacer { flex:1; }
+.app-tour-controls button { min-height:36px; padding:0 10px; border:1px solid #d4ddd0; border-radius:9px; background:#fff; color:#455744; font:inherit; font-size:10px; font-weight:650; white-space:nowrap; cursor:pointer; }
+.app-tour-controls .app-tour-next { border-color:#496344; background:#496344; color:#fff; }
+.app-tour-controls .app-tour-end { border-color:#b8c5b4; background:#eef2eb; }
+.app-tour-controls button[aria-pressed="true"] { border-color:#82996e; background:#edf3e7; }
+.app-tour-controls button:disabled { opacity:.45; cursor:default; }
 .app-tour-card button:focus-visible,.app-tour-launch:focus-visible { outline:3px solid #a5bd7d; outline-offset:3px; }
 @keyframes app-tour-fade { from { opacity:0; } to { opacity:1; } }
-@keyframes app-tour-card-in { from { opacity:0; translate:0 12px; } to { opacity:1; translate:0 0; } }
-@media (max-width:640px) { .app-tour-card { padding:19px 18px 15px; } .app-tour-card.is-above { top:max(10px,env(safe-area-inset-top)); } .app-tour-card h2 { font-size:18px; } }
-@media (prefers-reduced-motion:reduce) { .app-tour-scrim,.app-tour-card { animation:none; } .app-tour-spotlight,.app-tour-launch { transition:none; } }
+@keyframes app-tour-card-in { from { opacity:0; translate:0 10px; } to { opacity:1; translate:0 0; } }
+@media (max-width:900px) { .app-tour-card { left:10px; right:10px; bottom:max(10px,env(safe-area-inset-bottom)); width:auto; max-height:min(34svh,275px); padding:14px 14px 10px; border-radius:14px; } .app-tour-card.app-tour-card-left { left:10px; right:10px; } .app-tour-card.app-tour-card-top { top:max(8px,env(safe-area-inset-top)); bottom:auto; } .app-tour-card h2 { margin:22px 38px 6px 0; font-size:17px; } .app-tour-card p { font-size:11px; line-height:1.55; } .app-tour-card .app-tour-status { margin-top:5px; } .app-tour-controls { gap:4px; flex-wrap:wrap; } .app-tour-spacer { display:none; } .app-tour-controls .app-tour-next { margin-left:auto; } .app-tour-controls button { min-height:34px; padding:0 7px; font-size:9px; } .app-tour-kicker { top:15px; left:14px; } }
+@media (max-width:900px) { body.app-tour-mini-scene #viewer { position:fixed; z-index:10001; top:8px; right:10px; width:42vw; height:19svh; min-height:0; border:1px solid #d3dbce; border-radius:10px; box-shadow:0 8px 30px #07110d55; pointer-events:none; } body.app-tour-mini-scene .app-tour-card { top:calc(19svh + 18px); bottom:auto; max-height:min(34svh,275px); } }
+@media (max-width:900px) and (orientation:landscape) { .app-tour-card { max-height:min(58svh,260px); } .app-tour-card h2 { font-size:15px; } .app-tour-card p { font-size:10px; line-height:1.45; } .app-tour-card #app-tour-copy { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; } .app-tour-card .app-tour-status { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:1; overflow:hidden; } body.app-tour-mini-scene #viewer { width:32vw; height:30svh; } body.app-tour-mini-scene .app-tour-card { top:calc(30svh + 14px); max-height:min(58svh,260px); } }
+@media (prefers-reduced-motion:reduce) { .app-tour-scrim,.app-tour-card { animation:none; } .app-tour-spotlight,.app-tour-launch,.app-tour-timer span { transition:none; } }
 canvas {
   position:absolute;
   inset:0;
