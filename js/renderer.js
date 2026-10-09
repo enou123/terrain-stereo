@@ -1,8 +1,8 @@
-import { lookAt } from './math.js?v=0.26.6';
-import { ObservationOverlay } from './observation.js?v=0.26.6';
-import { fitMeshPositions } from './mesh.js?v=0.26.6';
-import { stereoCamera } from './stereo.js?v=0.26.6';
-import { OrbitControls } from './controls.js?v=0.26.6';
+import { lookAt } from './math.js?v=0.26.7';
+import { ObservationOverlay } from './observation.js?v=0.26.7';
+import { fitMeshPositions } from './mesh.js?v=0.26.7';
+import { stereoCamera } from './stereo.js?v=0.26.7';
+import { OrbitControls } from './controls.js?v=0.26.7';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;

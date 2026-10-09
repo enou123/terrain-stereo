@@ -37,6 +37,21 @@ export function setupAppTour(actions) {
   const root=document.createElement('div');root.className='app-tour-scrim';root.hidden=true;
   root.innerHTML=`<svg class="app-tour-dim" aria-hidden="true" focusable="false"><defs><mask id="app-tour-dim-mask" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" style="mask-type:luminance"><rect class="app-tour-mask-base" fill="white"></rect><rect class="app-tour-mask-target" fill="black"></rect><rect class="app-tour-mask-viewer" fill="black"></rect></mask></defs><rect class="app-tour-dim-field" fill="#0d1a1599" mask="url(#app-tour-dim-mask)"></rect></svg><div class="app-tour-spotlight" aria-hidden="true"></div><section class="app-tour-card" role="dialog" aria-modal="true" aria-labelledby="app-tour-title" aria-describedby="app-tour-copy"><div class="app-tour-kicker">地形探訪 · 機能紹介ツアー</div><div class="app-tour-meta"><span class="app-tour-count"></span><button class="app-tour-close" type="button" aria-label="ツアーを終了">×</button></div><h2 id="app-tour-title"></h2><p id="app-tour-copy"></p><p class="app-tour-status" aria-live="polite"></p><button class="app-tour-retry" type="button" hidden>もう一度試す</button><div class="app-tour-timer" aria-hidden="true"><span></span></div><div class="app-tour-controls"><button class="app-tour-back" type="button">← 戻る</button><button class="app-tour-auto" type="button" aria-pressed="false">▶ 自動で進む</button><button class="app-tour-pause" type="button" aria-pressed="false">⏸ 一時停止</button><div class="app-tour-spacer"></div><button class="app-tour-next" type="button">次へ →</button><button class="app-tour-end" type="button">終了</button></div></section>`;
   document.body.append(root);
+  const operation=document.createElement('section');operation.className='app-tour-operation';operation.hidden=true;operation.setAttribute('aria-label','実演中の操作');root.append(operation);
+  let relocated=[];
+  function restoreOperation(){
+    for(const {node,placeholder} of relocated){placeholder.replaceWith(node);}
+    relocated=[];operation.replaceChildren();operation.hidden=true;
+  }
+  function presentOperation(element){
+    if(!matchMedia('(max-width:900px)').matches||element===document.querySelector('#terrain'))return;
+    const wrapper=element.matches('input[type=checkbox]')?element.closest('label'):element;
+    const heading=element.previousElementSibling?.matches('.control-heading')?element.previousElementSibling:document.querySelector(`label[for="${element.id}"]`);
+    const move=node=>{const placeholder=document.createComment('tour operation');node.before(placeholder);relocated.push({node,placeholder});operation.append(node);};
+    if(heading&&heading!==wrapper&&!wrapper.contains(heading))move(heading);
+    else if(wrapper===element){const label=document.createElement('div');label.className='app-tour-operation-label';label.textContent=element.getAttribute('aria-label')||element.textContent||STEPS[index].title;operation.append(label);}
+    move(wrapper);operation.hidden=false;
+  }
   const spotlight=root.querySelector('.app-tour-spotlight'),card=root.querySelector('.app-tour-card');
   const maskBase=root.querySelector('.app-tour-mask-base'),maskTarget=root.querySelector('.app-tour-mask-target'),maskViewer=root.querySelector('.app-tour-mask-viewer');
   const count=root.querySelector('.app-tour-count'),title=root.querySelector('#app-tour-title'),copy=root.querySelector('#app-tour-copy');
@@ -48,6 +63,17 @@ export function setupAppTour(actions) {
 
   function position(){
     if(!active||!target||!target.isConnected||!target.getClientRects().length)return;
+    document.body.classList.toggle('app-tour-mini-scene',innerWidth<=900);
+    if(innerWidth>900&&relocated.length)restoreOperation();
+    if(innerWidth<=900&&!relocated.length&&operation.hidden)presentOperation(target);
+    if(innerWidth<=900){
+      card.classList.remove('app-tour-card-left','app-tour-card-top');
+      const landscape=innerWidth>innerHeight,c=card.getBoundingClientRect();
+      const top=landscape?c.bottom+12:document.querySelector('#viewer').getBoundingClientRect().bottom+12;
+      operation.style.top=`${top}px`;operation.style.maxHeight=`${Math.max(60,(landscape?innerHeight-10:c.top-12)-top)}px`;
+      const chart=operation.querySelector('#profile-chart');
+      if(chart){const heading=operation.querySelector('.app-tour-operation-label');operation.style.setProperty('--app-tour-chart-height',`${Math.max(50,Math.min(150,parseFloat(operation.style.maxHeight)-28-(heading?.getBoundingClientRect().height||0)-8))}px`);}
+    }
     const r=target.getBoundingClientRect(),pad=7;
     const setHole=(el,box,padding=0)=>{el.setAttribute('x',Math.max(0,box.left-padding));el.setAttribute('y',Math.max(0,box.top-padding));el.setAttribute('width',Math.max(0,Math.min(innerWidth,box.right+padding)-Math.max(0,box.left-padding)));el.setAttribute('height',Math.max(0,Math.min(innerHeight,box.bottom+padding)-Math.max(0,box.top-padding)));el.setAttribute('rx',padding?Math.max(5,parseFloat(getComputedStyle(target).borderRadius)||5):10);};
     [maskBase,root.querySelector('.app-tour-dim-field')].forEach(el=>{el.setAttribute('width',innerWidth);el.setAttribute('height',innerHeight);});
@@ -59,15 +85,18 @@ export function setupAppTour(actions) {
     spotlight.style.width=`${Math.max(12,Math.min(innerWidth-12,r.width+pad*2))}px`;
     spotlight.style.height=`${Math.max(12,Math.min(innerHeight-12,r.height+pad*2))}px`;
     spotlight.style.borderRadius=getComputedStyle(target).borderRadius||'10px';
+    if(innerWidth<=900)return;
     card.classList.toggle('app-tour-card-left',innerWidth>760&&r.left+r.width/2>innerWidth*.58);
     const cardHeight=card.getBoundingClientRect().height;
     card.classList.toggle('app-tour-card-top',r.bottom>innerHeight-cardHeight-22&&r.top>cardHeight+18);
   }
   function focus(selector){
+    restoreOperation();
     const nextTarget=document.querySelector(selector);if(!nextTarget)return false;
     target?.classList.remove('app-tour-highlight');target=nextTarget;target.classList.add('app-tour-highlight');
-    document.body.classList.toggle('app-tour-mini-scene',matchMedia('(max-width:900px)').matches&&(index>0||document.querySelector('#view-settings').contains(target)));
-    target.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest',inline:'nearest'});
+    document.body.classList.toggle('app-tour-mini-scene',matchMedia('(max-width:900px)').matches);
+    presentOperation(target);
+    if(innerWidth>900)target.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest',inline:'nearest'});
     requestAnimationFrame(position);return true;
   }
   function timerTick(now){
@@ -95,7 +124,7 @@ export function setupAppTour(actions) {
   }
   async function show(nextIndex){
     if(!active)return;
-    stopTimer();controller?.abort();actions.stopDemo?.();
+    stopTimer();controller?.abort();restoreOperation();actions.stopDemo?.();
     index=Math.max(0,Math.min(STEPS.length-1,nextIndex));stepReady=false;paused=false;actions.setPaused?.(false);
     const s=STEPS[index];renderStep();actions.prepare?.(s.target);focus(s.target);
     controller=new AbortController();const signal=controller.signal;
@@ -124,6 +153,7 @@ export function setupAppTour(actions) {
   }
   async function start(){
     if(active||starting)return;starting=true;previousFocus=document.activeElement;
+    window.addEventListener('scroll',position,true);window.addEventListener('resize',position);
     root.hidden=false;document.body.classList.add('app-tour-active');active=true;index=0;
     status.textContent='現在の3D地形を準備しています…';title.textContent='地形を準備しています';copy.textContent='標高データの読み込みが終わるまでお待ちください。';count.textContent='';
     next.disabled=true;
@@ -137,7 +167,7 @@ export function setupAppTour(actions) {
     }catch(error){starting=false;if(active){status.textContent=`ツアーを開始できませんでした。${error.message||''}`;retry.hidden=false;}}
   }
   async function finish(){
-    if(!active)return;stopTimer();controller?.abort();actions.stopDemo?.();stepReady=false;
+    if(!active)return;stopTimer();controller?.abort();restoreOperation();actions.stopDemo?.();stepReady=false;
     title.textContent='通常の表示に戻しています';status.textContent='ツアー中に変えた場所と設定を戻しています…';next.disabled=true;back.disabled=true;auto.disabled=true;pause.disabled=true;end.disabled=true;
     try{await actions.restore();}
     catch(error){status.textContent=`元の表示へ戻せませんでした。${error.message||''}`;next.disabled=false;end.disabled=false;return;}

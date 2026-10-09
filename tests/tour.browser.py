@@ -7,7 +7,7 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from functools import partial
 from threading import Thread
 from concurrent.futures import ThreadPoolExecutor
-import hashlib, json, math, os, struct, urllib.request, zlib
+import hashlib, json, math, os, struct, urllib.request, zlib, time
 from io import BytesIO
 from PIL import Image
 from playwright.sync_api import sync_playwright
@@ -144,30 +144,41 @@ with sync_playwright() as p:
             results.append({'viewport':'1440x900','allTenDemos':True,'autoFinishedAndRestored':True,'webglError':0,'pageErrors':errors})
         else:
             page.locator('#start-app-tour').click();page.wait_for_function('uiTest.tour.active')
-            page.wait_for_timeout(600)
-            card=page.locator('.app-tour-card').bounding_box();assert card['height']<height*.52,(width,height,card)
-            assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-            page.screenshot(path=str(OUT/f'{width}x{height}-tour-start.png'))
-            page.locator('.app-tour-next').click();page.wait_for_function("document.querySelector('#app-tour-title').textContent==='高さを強調して起伏を比べる'")
-            page.wait_for_timeout(800)
-            scene=page.locator('#viewer').bounding_box();assert page.evaluate("document.body.classList.contains('app-tour-mini-scene')") and scene and scene['height']>40,(width,height,scene)
-            assert scene['width']>=width*(.85 if height>width else .60),(width,height,scene)
-            assert scene['height']>=height*(.35 if height>width else .42),(width,height,scene)
-            for button in ['.app-tour-next','.app-tour-end']:
-                box=page.locator(button).bounding_box();assert box and 0<=box['y'] and box['y']+box['height']<=height,(width,height,button,box)
-            page.screenshot(path=str(OUT/f'{width}x{height}-tour-height.png'))
-            for selector,name in [('#flight-toggle','flight'),('#share-view','share')]:
-                assert page.evaluate(f"uiTest.tour.focus('{selector}')")
-                assert page.evaluate("document.body.classList.contains('app-tour-mini-scene')"),name
-                assert page.evaluate("getComputedStyle(document.querySelector('#viewer')).position==='fixed'"),name
-                layout=page.evaluate("(()=>{const s=document.querySelector('#viewer').getBoundingClientRect(),c=document.querySelector('.app-tour-card').getBoundingClientRect();return {sceneLeft:s.left,sceneTop:s.top,sceneRight:s.right,sceneBottom:s.bottom,cardTop:c.top}})()")
-                assert layout['sceneLeft']>=0 and layout['sceneTop']>=0 and layout['sceneRight']<=width and layout['sceneBottom']<=height,(name,layout)
-                assert layout['cardTop']>=layout['sceneBottom']-1,(name,layout)
-                page.wait_for_timeout(1000)
-                page.screenshot(path=str(OUT/f'{width}x{height}-tour-{name}-control.png'))
+            captured=set();checked=0
+            for step in range(1,11):
+                page.wait_for_function(f"document.querySelector('.app-tour-count').textContent==='{step} / 10'")
+                deadline=time.monotonic()+120
+                page.wait_for_timeout(400)
+                while True:
+                    assert time.monotonic()<deadline,(width,height,step,'demo timed out')
+                    info=page.evaluate("""(()=>{
+                      const t=document.querySelector('.app-tour-highlight'),c=document.querySelector('.app-tour-card'),v=document.querySelector('#viewer'),o=document.querySelector('.app-tour-operation');
+                      const box=e=>{const r=e.getBoundingClientRect();return {x:r.left,y:r.top,right:r.right,bottom:r.bottom,w:r.width,h:r.height}};
+                      return {id:t?.id,target:t&&box(t),card:box(c),scene:box(v),inScene:t&&v.contains(t),operationVisible:!o.hidden,operationHeight:o.clientHeight,operationContentHeight:o.scrollHeight,status:document.querySelector('.app-tour-status').textContent,retry:!document.querySelector('.app-tour-retry').hidden,surface:document.querySelector('#surface').value};
+                    })()""")
+                    assert not info['retry'],info
+                    if info['operationVisible']:assert info['operationContentHeight']<=info['operationHeight']+1,(step,'operation content clipped',info)
+                    t,c,v=info['target'],info['card'],info['scene']
+                    def overlaps(a,b):return min(a['right'],b['right'])-max(a['x'],b['x'])>2 and min(a['bottom'],b['bottom'])-max(a['y'],b['y'])>2
+                    if t and t['w']>0 and t['h']>0:
+                        assert t['x']>=-1 and t['y']>=-1 and t['right']<=width+1 and t['bottom']<=height+1,(step,info)
+                        assert not overlaps(t,c),(step,'target behind explanation',info)
+                        if not info['inScene']:assert not overlaps(t,v),(step,'target behind terrain',info)
+                        assert not overlaps(v,c),(step,'terrain behind explanation',info)
+                        checked+=1
+                        key=(step,info['id'],info['surface'] if step==4 else '')
+                        if key not in captured:
+                            page.screenshot(path=str(OUT/f'{width}x{height}-{step:02d}-{info["id"]}-{info["surface"] if step==4 else "demo"}.png'));captured.add(key)
+                    if info['status'] not in ['3D地形を動かしています…','実演を準備しています…']:break
+                    page.wait_for_timeout(250)
+                page.screenshot(path=str(OUT/f'{width}x{height}-{step:02d}-complete.png'))
+                if step<10:page.locator('.app-tour-next').click()
+            expected={(1,'terrain'),(2,'exaggeration'),(3,'sun-azimuth'),(4,'surface'),(5,'view-mode'),(6,'contours'),(7,'profile-start'),(7,'terrain'),(7,'profile-chart'),(8,'map-place'),(8,'show-terrain'),(8,'terrain'),(9,'flight-toggle'),(9,'tour-toggle'),(10,'share-view')}
+            assert expected<={(s,i) for s,i,_ in captured},expected-{(s,i) for s,i,_ in captured}
             page.locator('.app-tour-end').click();page.wait_for_function('!uiTest.tour.active')
+            assert page.evaluate("document.querySelector('#view-settings').contains(document.querySelector('#surface')) && document.querySelector('.viewer-actions').contains(document.querySelector('#share-view'))")
             assert not errors,errors
-            results.append({'viewport':f'{width}x{height}','tourStartAndManualSkip':True,'cardHeight':card['height'],'pinnedLargeLiveTerrainDuringSettingsAndFlight':True,'pageErrors':errors})
+            results.append({'viewport':f'{width}x{height}','allTenDemos':True,'operationVisibilitySamples':checked,'noTargetOrTerrainBehindExplanation':True,'controlsRestored':True,'pageErrors':errors})
         page.close()
     browser.close();server.shutdown()
 (OUT/'results.json').write_text(json.dumps(results,ensure_ascii=False,indent=2))

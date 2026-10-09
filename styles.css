@@ -161,6 +161,22 @@ h1 span {
 @media (max-width:900px) { .app-tour-card { left:10px; right:10px; bottom:max(10px,env(safe-area-inset-bottom)); width:auto; max-height:min(34svh,275px); padding:14px 14px 10px; border-radius:14px; } .app-tour-card.app-tour-card-left { left:10px; right:10px; } .app-tour-card.app-tour-card-top { top:max(8px,env(safe-area-inset-top)); bottom:auto; } .app-tour-card h2 { margin:22px 38px 6px 0; font-size:17px; } .app-tour-card p { font-size:11px; line-height:1.55; } .app-tour-card .app-tour-status { margin-top:5px; } .app-tour-controls { gap:4px; flex-wrap:wrap; } .app-tour-spacer { display:none; } .app-tour-controls .app-tour-next { margin-left:auto; } .app-tour-controls button { min-height:34px; padding:0 7px; font-size:9px; } .app-tour-kicker { top:15px; left:14px; } }
 @media (max-width:900px) { .app-tour-dim-field { fill:#0d1a154a; } body.app-tour-mini-scene #viewer { position:fixed; z-index:10001; top:max(8px,env(safe-area-inset-top)); left:50%; right:auto; width:min(90vw,560px); height:36svh; min-height:0; transform:translateX(-50%); border:1px solid #d3dbce; border-radius:12px; box-shadow:0 8px 30px #07110d55; pointer-events:none; } body.app-tour-mini-scene .app-tour-card { top:calc(36svh + 18px); bottom:auto; max-height:min(34svh,275px); } }
 @media (max-width:900px) and (orientation:landscape) { .app-tour-card { max-height:min(48svh,190px); } .app-tour-card h2 { font-size:15px; } .app-tour-card p { font-size:10px; line-height:1.45; } .app-tour-card #app-tour-copy { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; } .app-tour-card .app-tour-status { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:1; overflow:hidden; } body.app-tour-mini-scene #viewer { width:min(62vw,640px); height:44svh; } body.app-tour-mini-scene .app-tour-card { top:calc(44svh + 14px); max-height:min(48svh,190px); } }
+.app-tour-operation[hidden] { display:none; }
+.app-tour-operation { position:fixed; z-index:3; padding:12px; border:1px solid #bbceaa; border-radius:12px; background:#fbfcf8; color:#263a2e; overflow:auto; }
+.app-tour-operation-label { margin-bottom:8px; font-size:12px; font-weight:650; }
+.app-tour-operation > label { display:block; margin-bottom:8px; }
+.app-tour-operation input[type=range] { margin:4px 0; }
+.app-tour-operation button { min-height:44px; padding:8px 16px; border:1px solid #a6b697; border-radius:8px; background:#eef3e7; color:#385a39; font:inherit; }
+.app-tour-operation #profile-chart { display:block; width:100%; height:var(--app-tour-chart-height,150px); max-height:150px; }
+@media (max-width:900px) {
+  body.app-tour-mini-scene .app-tour-card { top:auto; bottom:max(10px,env(safe-area-inset-bottom)); max-height:32svh; }
+  .app-tour-operation { left:5vw; right:5vw; }
+}
+@media (max-width:900px) and (orientation:landscape) {
+  body.app-tour-mini-scene #viewer { left:10px; right:auto; transform:none; width:52vw; height:calc(100svh - 16px); }
+  body.app-tour-mini-scene .app-tour-card { left:auto; right:10px; top:8px; bottom:auto; width:calc(48vw - 30px); max-height:54svh; }
+  .app-tour-operation { left:auto; right:10px; width:calc(48vw - 30px); }
+}
 @media (prefers-reduced-motion:reduce) { .app-tour-scrim,.app-tour-card { animation:none; } .app-tour-spotlight,.app-tour-launch,.app-tour-timer span { transition:none; } }
 canvas {
   position:absolute;
