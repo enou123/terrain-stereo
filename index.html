@@ -15,8 +15,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/terrain-tanbo-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.28.0">
-  <script type="module" src="js/app.js?v=0.28.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.29.0">
+  <script type="module" src="js/app.js?v=0.29.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span><span class="brand-subtitle">｜地形探訪</span></a><span class="edition">JAPAN TERRAIN EXPLORER</span></header>
@@ -92,6 +92,12 @@
       <section id="landmark-guide" class="landmark-guide" hidden aria-labelledby="landmark-guide-title">
         <div class="landmark-guide-heading"><div><p id="landmark-guide-meta" class="landmark-meta"></p><h2 id="landmark-guide-title"></h2></div><div class="landmark-modes" role="group" aria-label="名所の観察方法"><button type="button" data-landmark-mode="terrain" aria-pressed="true">地形を楽しむ</button><button type="button" data-landmark-mode="geology" aria-pressed="false">地質を学ぶ</button></div></div>
         <p id="landmark-guide-summary" class="landmark-summary"></p><p id="landmark-guide-status" class="landmark-meta" role="status" aria-live="polite"></p>
+        <button id="learning-tour-start" class="learning-tour-start" type="button">地形と地質をめぐるミニツアーを見る</button>
+        <section id="learning-tour" class="learning-tour" hidden aria-labelledby="learning-tour-title">
+          <div class="learning-tour-heading"><p id="learning-tour-count" class="landmark-meta"></p><button id="learning-tour-close" type="button">ツアーを終了</button></div>
+          <h3 id="learning-tour-title"></h3><p id="learning-tour-copy"></p><p id="learning-tour-prompt" class="learning-tour-prompt"></p>
+          <div class="learning-tour-actions"><button id="learning-tour-prev" type="button">← 戻る</button><button id="learning-tour-legend" type="button" hidden>地質の凡例を開く</button><button id="learning-tour-next" type="button">次へ →</button></div>
+        </section>
         <section id="landmark-spots" class="landmark-spots" hidden aria-labelledby="landmark-spots-title"><h3 id="landmark-spots-title">見どころへ近づく</h3><div class="spot-actions"><div><label for="landmark-spot-select">この名所の見どころ</label><select id="landmark-spot-select"></select></div><button id="visit-landmark-spot" type="button">この見どころを見る</button><button id="landmark-overview" type="button">名所全体へ戻る</button></div><p id="landmark-spot-copy"></p><p id="landmark-spot-limit" class="landmark-meta"></p><p id="landmark-spot-current" class="landmark-meta" role="status"></p></section>
         <div class="landmark-guide-columns"><div><h3>ここを見てみよう</h3><ul id="landmark-points"></ul><p id="landmark-detail-copy"></p><div id="landmark-geology-facts" hidden><h3>地質年代を確かめる</h3><p id="landmark-age"></p><button id="landmark-show-geology-key" type="button">地質の凡例・地点情報を見る</button><p class="landmark-meta">地形をタップすると、その地点の岩石と年代を確認できます。</p></div></div><div><details><summary>資料と表示の限界</summary><h3>参考資料</h3><ul id="landmark-references"></ul><h3>この表示で分かること・分からないこと</h3><ul id="landmark-limitations"></ul></details><button id="landmark-recommend" type="button">おすすめ設定に戻す</button><p class="landmark-meta">回転・ズームや表示設定は自由に変更できます。観察方法の切り替えでは視点と範囲を保ちます。</p></div></div>
       </section>

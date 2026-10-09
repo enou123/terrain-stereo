@@ -1,0 +1,107 @@
+[
+  {
+    "viewport": "1440x900",
+    "place": "akiyoshidai",
+    "steps": [
+      "台地の形をつかむ",
+      "石灰岩の分布を重ねる",
+      "ドリーネ群へ近づく"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "1440x900",
+    "place": "aogashima",
+    "steps": [
+      "島を囲む火山地形",
+      "池の沢火口を観察",
+      "地表の地質を比べる"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "1440x900",
+    "place": "itoigawa",
+    "steps": [
+      "姫川の谷と山地",
+      "地質の違いを重ねる"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "390x844",
+    "place": "akiyoshidai",
+    "steps": [
+      "台地の形をつかむ",
+      "石灰岩の分布を重ねる",
+      "ドリーネ群へ近づく"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "390x844",
+    "place": "aogashima",
+    "steps": [
+      "島を囲む火山地形",
+      "池の沢火口を観察",
+      "地表の地質を比べる"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "390x844",
+    "place": "itoigawa",
+    "steps": [
+      "姫川の谷と山地",
+      "地質の違いを重ねる"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "844x390",
+    "place": "akiyoshidai",
+    "steps": [
+      "台地の形をつかむ",
+      "石灰岩の分布を重ねる",
+      "ドリーネ群へ近づく"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "844x390",
+    "place": "aogashima",
+    "steps": [
+      "島を囲む火山地形",
+      "池の沢火口を観察",
+      "地表の地質を比べる"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "844x390",
+    "place": "itoigawa",
+    "steps": [
+      "姫川の谷と山地",
+      "地質の違いを重ねる"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  }
+]

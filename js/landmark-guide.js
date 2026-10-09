@@ -1,12 +1,55 @@
-import { spotsFor, findSpot } from './landmark-spots.js?v=0.28.0';
-import { LANDMARKS, CATEGORIES, REGIONS, findLandmark, filterLandmarks } from './landmarks.js?v=0.28.0';
-import { terrainExtent } from './elevation.js?v=0.28.0';
+import { spotsFor, findSpot } from './landmark-spots.js?v=0.29.0';
+import { LANDMARKS, CATEGORIES, REGIONS, findLandmark, filterLandmarks } from './landmarks.js?v=0.29.0';
+import { terrainExtent } from './elevation.js?v=0.29.0';
+import { learningTourFor } from './learning-tour.js?v=0.29.0';
 
 // UI owns no renderer state. Explicit visit/switch actions are supplied by app.js.
 export function setupLandmarkGuide(actions){
   const select=document.querySelector('#map-place'),category=document.querySelector('#landmark-category'),region=document.querySelector('#landmark-region');
   const preview=document.querySelector('#landmark-preview'),guide=document.querySelector('#landmark-guide'),visit=document.querySelector('#visit-landmark');
   let selected=null,active=null,mode='terrain',busy=false,activeSpot=null;
+  let learningSteps=null,learningIndex=0,learningBusy=false;
+  const learningPanel=document.querySelector('#learning-tour');
+  const learningStart=document.querySelector('#learning-tour-start');
+  function renderLearning(){
+    const step=learningSteps?.[learningIndex];
+    learningStart.hidden=!learningTourFor(active?.id)||Boolean(step);
+    learningPanel.hidden=!step;
+    if(!step)return;
+    document.querySelector('#learning-tour-count').textContent=`地形・地質ミニツアー · ${learningIndex+1} / ${learningSteps.length}`;
+    document.querySelector('#learning-tour-title').textContent=step.title;
+    document.querySelector('#learning-tour-copy').textContent=step.copy;
+    document.querySelector('#learning-tour-prompt').textContent=step.prompt;
+    document.querySelector('#learning-tour-prev').disabled=learningBusy||learningIndex===0;
+    document.querySelector('#learning-tour-next').disabled=learningBusy;
+    document.querySelector('#learning-tour-close').disabled=learningBusy;
+    document.querySelector('#learning-tour-legend').hidden=step.mode!=='geology';
+    document.querySelector('#learning-tour-next').textContent=learningIndex===learningSteps.length-1?'ツアーを終える':'次へ →';
+  }
+  async function goLearning(index,forcePreset=false){
+    if(!active||!learningSteps||learningBusy)return;
+    if(index<0||index>=learningSteps.length){learningSteps=null;renderLearning();return;}
+    const step=learningSteps[index],previousSpot=activeSpot,previousMode=mode;
+    learningBusy=true;renderLearning();
+    try{
+      // Reuse the production visit for a new view/spot and the production
+      // surface switch when only terrain/geology mode changes.
+      const result=forcePreset||step.spot!==previousSpot
+        ? await actions.visit(active,step.mode,step.spot)
+        : step.mode!==previousMode
+          ? await actions.switchMode(active,step.mode)
+          : true;
+      if(result===false)throw new Error('地形または地質図を表示できませんでした。画面の状態を確認して再試行してください。');
+      learningIndex=index;renderLearning();
+      document.querySelector('#learning-tour').scrollIntoView({behavior:'smooth',block:'nearest'});
+    }catch(error){learningSteps=null;renderLearning();actions.status?.(`ミニツアーを進められませんでした。${error.message}`);}
+    finally{learningBusy=false;renderLearning();}
+  }
+  learningStart.addEventListener('click',()=>{learningSteps=learningTourFor(active?.id);learningIndex=0;goLearning(0,true);});
+  document.querySelector('#learning-tour-prev').addEventListener('click',()=>goLearning(learningIndex-1));
+  document.querySelector('#learning-tour-next').addEventListener('click',()=>goLearning(learningIndex+1));
+  document.querySelector('#learning-tour-close').addEventListener('click',()=>{learningSteps=null;renderLearning();});
+  document.querySelector('#learning-tour-legend').addEventListener('click',()=>actions.legend?.({scroll:false}));
   const spotSelect=document.querySelector('#landmark-spot-select');
   function spotDescription(){
     const spot=findSpot(active?.id,spotSelect.value);
@@ -51,6 +94,7 @@ export function setupLandmarkGuide(actions){
   visit.addEventListener('click',()=>selected&&!busy&&actions.visit(selected,document.querySelector('#landmark-visit-mode').value));
   function render(){
     guide.hidden=!active;if(!active)return;
+    renderLearning();
     renderSpots();
     const content=active[mode];document.querySelector('#landmark-guide-title').textContent=active.name;
     document.querySelector('#landmark-guide-meta').textContent=`${active.prefecture} · ${mode==='geology'?'地質を学ぶ':'地形を楽しむ'}`;
@@ -73,9 +117,9 @@ export function setupLandmarkGuide(actions){
     preview:previewPlace,
     ensureOption(id){if(id&&!select.querySelector(`option[value="${id}"]`)){category.value='';region.value='';options();}select.value=id||'';previewPlace(id);},
     show(place,nextMode='terrain',spotId=null){active=place;mode=nextMode;activeSpot=findSpot(place?.id,spotId)?.id||null;render();},
-    clear(){active=null;activeSpot=null;render();},
+    clear(){active=null;activeSpot=null;learningSteps=null;render();},
     status(text){document.querySelector('#landmark-guide-status').textContent=text;},
-    setBusy(value){busy=value;visit.disabled=value;document.querySelectorAll('[data-landmark-mode],#landmark-recommend,#visit-landmark-spot,#landmark-overview,#landmark-spot-select').forEach(button=>button.disabled=value);},
+    setBusy(value){busy=value;visit.disabled=value;document.querySelectorAll('[data-landmark-mode],#landmark-recommend,#visit-landmark-spot,#landmark-overview,#landmark-spot-select,#learning-tour-start').forEach(button=>button.disabled=value);},
     snapshot(){return {id:active?.id||null,mode,spot:activeSpot,selectedSpot:spotSelect.value,status:document.querySelector('#landmark-guide-status').textContent,selected:select.value,category:category.value,region:region.value};},
     restore(saved){category.value=saved.category;region.value=saved.region;options();this.ensureOption(saved.selected);this.show(findLandmark(saved.id),saved.mode,saved.spot);if(findSpot(saved.id,saved.selectedSpot)){spotSelect.value=saved.selectedSpot;spotDescription();}this.status(saved.status);},
     get active(){return active;},get spot(){return activeSpot;},get mode(){return mode;},
