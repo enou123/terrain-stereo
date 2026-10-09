@@ -708,3 +708,14 @@ body.view-focused { overflow:hidden; }
  .landmark-modes { width:100%; }
  .landmark-modes button { flex:1; padding:10px 8px; font-size:13px; }
 }
+
+.landmark-spots[hidden] { display:none; }
+.landmark-spots { margin:20px 0; padding:16px; border:1px solid #cfdbc4; border-radius:10px; background:#f1f5e9; }
+.spot-actions { display:flex; flex-wrap:wrap; align-items:end; gap:10px; }
+.spot-actions>div { flex:1; min-width:190px; }
+.spot-actions label { display:block; font-size:12px; margin-bottom:6px; }
+.spot-actions select { width:100%; }
+@media(max-width:640px) {
+ .spot-actions>div { flex-basis:100%; }
+ .spot-actions>button { flex:1; padding:10px 8px; font-size:13px; }
+}

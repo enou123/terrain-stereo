@@ -1,0 +1,25 @@
+[
+  {
+    "viewport": "1440x900",
+    "allTenDemos": true,
+    "autoFinishedAndRestored": true,
+    "webglError": 0,
+    "pageErrors": []
+  },
+  {
+    "viewport": "390x844",
+    "allTenDemos": true,
+    "operationVisibilitySamples": 192,
+    "noTargetOrTerrainBehindExplanation": true,
+    "controlsRestored": true,
+    "pageErrors": []
+  },
+  {
+    "viewport": "844x390",
+    "allTenDemos": true,
+    "operationVisibilitySamples": 205,
+    "noTargetOrTerrainBehindExplanation": true,
+    "controlsRestored": true,
+    "pageErrors": []
+  }
+]

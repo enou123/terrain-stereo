@@ -141,7 +141,7 @@ export const LANDMARKS = [
     'サンゴなどが作った石灰岩と、その下の砂・泥からなる地層が分布します。海の中でできた岩石が現在の陸にあることが、隆起を考える手掛かりです。地質の年代と段丘面ができた時期は同じとは限りません。',
     'サンゴ礁起源の石灰岩と砂・泥の地層','主なサンゴ礁段丘は第四紀。区分の年代は凡例で確認。',
     ['百之台付近の高い平坦面','島の海岸側と内陸側の高さを断面図で比べる'],['石灰岩の分布と段丘面を比較する'],
-    ['島全体を優先した広域表示です。低い海岸段丘は拡大・画質変更で観察してください。100 mの等高線では低い段差を表せません。'],source('喜界島ジオパーク・隆起する島','https://kikaijima-geo.com/'),
+    ['島全体を優先した広域表示です。低い海岸段丘は拡大・画質変更で観察してください。低い段差には10 m等高線がおすすめです。'],source('喜界島ジオパーク・隆起する島','https://kikaijima-geo.com/'),
     '国土地理院の喜界島北部・南部の図郭と地理院地図から島の中心を設定。',[129.89,28.26,130.055,28.39]),
   entry('minamidaito','南大東島','沖縄県','九州・南西諸島',['island','karst'],25.8333,131.2333,12,4,1.05,
     '周囲が高く、中央が低い、隆起した環礁の島。',
@@ -149,10 +149,14 @@ export const LANDMARKS = [
     'サンゴ礁に由来する石灰岩が島の骨格を作っています。環礁が繰り返し隆起し、かつて海の中だった地形が陸となりました。石灰岩の分布と現在の外周・中央の高低差を重ねて見ます。',
     'サンゴ礁起源の石灰岩','形成時期は地質区分ごとに凡例で確認。隆起は複数回にわたる。',
     ['外周の高まりと中央の低地','断面図で島を横切り、低い中央部を確かめる'],['石灰岩の分布と環礁の形を比較する'],
-    ['数十mの起伏のため高さを強調しています。地下洞窟や海底は表示しません。100 mの等高線には現れにくい地形です。'],source('南大東村・島の紹介','https://www.vill.minamidaito.okinawa.jp/site/iju/377.html'),
+    ['数十mの起伏のため高さを強調しています。地下洞窟や海底は表示しません。低い起伏には10 m等高線がおすすめです。'],source('南大東村・島の紹介','https://www.vill.minamidaito.okinawa.jp/site/iju/377.html'),
     '南大東村が示す島の中央の北緯25度50分・東経131度14分を採用。',[131.20,25.80,131.275,25.875]),
 ];
 
+for(const place of LANDMARKS){
+  const interval=['kikaijima','minamidaito'].includes(place.id)?10:place.id==='akiyoshidai'?20:['fuji','kurobe'].includes(place.id)?200:100;
+  for(const preset of Object.values(place.settings))preset.contourInterval=interval;
+}
 for(const place of LANDMARKS)if(['aogashima','akiyoshidai','kikaijima','minamidaito'].includes(place.id))place.settings.terrain.surface='shading';
 
 export function findLandmark(id){return LANDMARKS.find(place=>place.id===id)||null;}

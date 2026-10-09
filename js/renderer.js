@@ -1,8 +1,9 @@
-import { lookAt } from './math.js?v=0.27.0';
-import { ObservationOverlay } from './observation.js?v=0.27.0';
-import { fitMeshPositions } from './mesh.js?v=0.27.0';
-import { stereoCamera } from './stereo.js?v=0.27.0';
-import { OrbitControls } from './controls.js?v=0.27.0';
+import { contourInterval } from './contours.js?v=0.28.0';
+import { lookAt } from './math.js?v=0.28.0';
+import { ObservationOverlay } from './observation.js?v=0.28.0';
+import { fitMeshPositions } from './mesh.js?v=0.28.0';
+import { stereoCamera } from './stereo.js?v=0.28.0';
+import { OrbitControls } from './controls.js?v=0.28.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -19,7 +20,7 @@ void main() {
   vUV = aUV;
   vNormal = aNormal;
   vColor = aColor;
-  vContourHeight = aElevation / 100.0;
+  vContourHeight = aElevation;
   gl_Position = uProjection * uView * vec4(aPosition, 1.0);
 }`;
 const fragmentSource = `
@@ -33,6 +34,7 @@ uniform float uShading;
 uniform float uTextureEnabled;
 uniform sampler2D uTexture;
 uniform float uContours;
+uniform float uContourInterval;
 uniform float uPixelRatio;
 uniform vec3 uSunDirection;
 varying vec2 vUV;
@@ -42,12 +44,16 @@ varying float vContourHeight;
 void main() {
   float light = max(dot(normalize(vNormal), normalize(uSunDirection)), 0.0);
   vec3 color = mix(vColor, vec3(0.68), uShading) * (0.38 + 0.78 * light);
-  if (uTextureEnabled > 0.5) color = texture2D(uTexture, vUV).rgb * (0.65 + 0.35 * light);
+  if (uTextureEnabled > 0.5) {
+    vec4 texel = texture2D(uTexture, vUV);
+    color = mix(color, texel.rgb * (0.65 + 0.35 * light), texel.a);
+  }
   #ifdef CONTOUR_DERIVATIVES
   if (uContours > 0.5) {
-    // One contour every 100 real metres; derivatives maintain a thin screen-space line.
-    float slope = fwidth(vContourHeight);
-    float distanceToLine = abs(fract(vContourHeight + 0.5) - 0.5);
+    // Use real metres, independent of mesh fitting and height exaggeration.
+    float height = vContourHeight / uContourInterval;
+    float slope = fwidth(height);
+    float distanceToLine = abs(fract(height + 0.5) - 0.5);
     float lineWidth = max(slope * 0.7 * uPixelRatio, 0.00001);
     float line = 1.0 - smoothstep(lineWidth * 0.4, lineWidth, distanceToLine);
     // Flat surfaces are not contours; fade unresolved dense lines when zoomed out.
@@ -68,6 +74,7 @@ export class TerrainRenderer {
     this.uintIndices = gl.getExtension('OES_element_index_uint');
     this.contoursSupported = Boolean(gl.getExtension('OES_standard_derivatives'));
     this.contours = false;
+    this.contourInterval = 100;
     const compile = (type, source) => {
       const shader = gl.createShader(type);
       gl.shaderSource(shader, source); gl.compileShader(shader);
@@ -96,6 +103,7 @@ export class TerrainRenderer {
     this.viewLocation = gl.getUniformLocation(this.program,'uView');
     this.monochromeLocation = gl.getUniformLocation(this.program,'uMonochrome');
     this.contoursLocation = gl.getUniformLocation(this.program,'uContours');
+    this.contourIntervalLocation = gl.getUniformLocation(this.program,'uContourInterval');
     this.pixelRatioLocation = gl.getUniformLocation(this.program,'uPixelRatio');
     this.shadingLocation = gl.getUniformLocation(this.program,'uShading');
     this.sunDirectionLocation = gl.getUniformLocation(this.program,'uSunDirection');
@@ -133,6 +141,10 @@ export class TerrainRenderer {
   }
   setContours(enabled) {
     this.contours = this.contoursSupported && Boolean(enabled);
+    this.requestDraw();
+  }
+  setContourInterval(value) {
+    this.contourInterval = contourInterval(value);
     this.requestDraw();
   }
   setSun(azimuth, altitude) {
@@ -206,6 +218,7 @@ export class TerrainRenderer {
     const azimuth=this.sunAzimuth*Math.PI/180, altitude=this.sunAltitude*Math.PI/180;
     gl.uniform3f(this.sunDirectionLocation,Math.sin(azimuth)*Math.cos(altitude),Math.sin(altitude),-Math.cos(azimuth)*Math.cos(altitude));
     gl.uniform1f(this.contoursLocation,this.contours ? 1 : 0);
+    gl.uniform1f(this.contourIntervalLocation,this.contourInterval);
     gl.uniform1f(this.pixelRatioLocation,ratio);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,this.indexBuffer);
     const cameras=this.cameras(width,height);

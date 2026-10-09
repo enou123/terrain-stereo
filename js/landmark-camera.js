@@ -1,9 +1,15 @@
 // Fit the actual visible mesh, excluding missing sea vertices. The renderer
 // adds its own narrow-screen distance factor; account for it exactly here.
-export function landmarkCamera(mesh, recommendation, aspect) {
+export function landmarkCamera(mesh, recommendation, aspect, focus=null) {
   const min=[Infinity,Infinity,Infinity],max=[-Infinity,-Infinity,-Infinity];
-  for(const index of mesh.indices)for(let k=0;k<3;k++){
-    const value=mesh.positions[index*3+k];min[k]=Math.min(min[k],value);max[k]=Math.max(max[k],value);
+  let highest=-Infinity;
+  for(const index of mesh.indices){
+    highest=Math.max(highest,mesh.positions[index*3+1]);
+    const u=(index%mesh.size)/(mesh.size-1),v=Math.floor(index/mesh.size)/(mesh.size-1);
+    if(focus&&(u<focus[0]||v<focus[1]||u>focus[2]||v>focus[3]))continue;
+    for(let k=0;k<3;k++){
+      const value=mesh.positions[index*3+k];min[k]=Math.min(min[k],value);max[k]=Math.max(max[k],value);
+    }
   }
   if(!min.every(Number.isFinite))throw new Error('観察できる地形がありません。');
   const target=min.map((v,k)=>(v+max[k])/2),{yaw,pitch}=recommendation;
@@ -18,6 +24,6 @@ export function landmarkCamera(mesh, recommendation, aspect) {
     const vx=cos*dx-sin*dz,vy=cp*dy-sp*horizontal,depth=sp*dy+cp*horizontal;
     distance=Math.max(distance,depth+Math.abs(vx)/(tan*aspect*.78),depth+Math.abs(vy)/(tan*.76));
   }
-  distance=Math.max(distance,(max[1]+.5-target[1])/sp);
+  distance=Math.max(distance,(highest+.5-target[1])/sp);
   return {yaw,pitch,target,distance:Math.max(4,Math.min(45,distance/fit))};
 }

@@ -1,4 +1,4 @@
-import { worldPixel } from './elevation.js?v=0.27.0';
+import { worldPixel } from './elevation.js?v=0.28.0';
 
 const sources = {
   map:{url:'https://cyberjapandata.gsi.go.jp/xyz/std',extension:'png',label:'地図画像'},
@@ -54,5 +54,12 @@ export async function loadMapTexture(location, signal, surface = 'map') {
   const results = await Promise.allSettled(Array.from({ length: Math.min(4, plan.tiles.length) }, worker));
   const failure = results.find(result => result.status === 'rejected');
   if (failure) throw failure.reason;
+  if(surface==='geology'){
+    // The official API returns transparent PNGs, rather than HTTP errors, where
+    // there is no map. Do not present an empty atlas as successful geology.
+    const pixels=context.getImageData(0,0,canvas.width,canvas.height).data;
+    let available=false;for(let i=3;i<pixels.length;i+=4)if(pixels[i]){available=true;break;}
+    if(!available)throw new Error('この範囲には地質図データがありません。標高の色で地形を表示します。');
+  }
   return canvas;
 }

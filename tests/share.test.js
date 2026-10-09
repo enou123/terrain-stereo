@@ -6,7 +6,7 @@ const view = {
   location: { latitude: 35.3606, longitude: 138.7274, zoom: 12 },
   camera: { yaw: -1.2173, pitch: 1.1, distance: 13.25, target: [3.4, 2.1, -4.5] },
   exaggeration: 2.3, mode: 'cross', quality: 'high', surface: 'photo', strength: 1.4,
-  contours: true, sunAzimuth: 250, sunAltitude: 48
+  contours: true, contourInterval:20, sunAzimuth: 250, sunAltitude: 48
 };
 
 test('shared view URL round trips location, camera, and display settings', () => {
@@ -33,4 +33,9 @@ test('shared view parameters are clamped and invalid choices use safe defaults',
 
 test('shared geology surface is restored as a valid surface', () => {
   assert.equal(readSharedView('?surface=geology').surface, 'geology');
+});
+
+test('contour spacing accepts public choices and old or invalid links keep 100m',()=>{
+  for(const n of [10,20,50,100,200])assert.equal(readSharedView(`?ci=${n}`).contourInterval,n);
+  for(const query of ['?ci=0','?ci=33','?ci=NaN','?contours=1'])assert.equal(readSharedView(query).contourInterval,100);
 });

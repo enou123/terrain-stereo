@@ -1,0 +1,755 @@
+[
+  {
+    "viewport": "1440x900",
+    "spots": [
+      {
+        "place": "aogashima",
+        "spot": "ikenosawa",
+        "location": {
+          "latitude": 32.452,
+          "longitude": 139.767,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.3055162225771546,
+          "maxX": 0.7202269280515932,
+          "minY": 0.20918139968468152,
+          "maxY": 0.8368565927649309,
+          "minW": 15.506283421528684,
+          "relief": 421.07000732421875,
+          "eyeHeight": 17.012755236294545,
+          "peak": 2.6547787189483643,
+          "spacing": 8.062589943497754,
+          "range": 3.0960345383031376,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "aogashima",
+        "spot": "maruyama",
+        "location": {
+          "latitude": 32.4525,
+          "longitude": 139.7664,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.22730655578855052,
+          "maxX": 0.723887533521773,
+          "minY": 0.23296998195885074,
+          "maxY": 0.8798486341775041,
+          "minW": 6.026622903887837,
+          "relief": 191.3599853515625,
+          "eyeHeight": 7.4523130371818525,
+          "peak": 2.4888689517974854,
+          "spacing": 8.062545202151238,
+          "range": 3.096017357626075,
+          "error": 0
+        },
+        "newDemRequests": 0,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "akiyoshidai",
+        "spot": "chojagamori",
+        "location": {
+          "latitude": 34.2565,
+          "longitude": 131.311,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.23594793653557222,
+          "maxX": 0.7351049338697184,
+          "minY": 0.16755904880921008,
+          "maxY": 0.8739592225272288,
+          "minW": 10.648354743573364,
+          "relief": 162.32998657226562,
+          "eyeHeight": 12.747053869818414,
+          "peak": 2.2881247997283936,
+          "spacing": 7.897147907693372,
+          "range": 3.032504796554255,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "kurobe",
+        "spot": "sennindani",
+        "location": {
+          "latitude": 36.6475,
+          "longitude": 137.681,
+          "zoom": 13
+        },
+        "metrics": {
+          "minX": 0.25028832017403035,
+          "maxX": 0.7095018181177196,
+          "minY": 0.2210480481390619,
+          "maxY": 0.8294775999460227,
+          "minW": 12.514215147717309,
+          "relief": 1264.5599975585938,
+          "eyeHeight": 14.711632807870659,
+          "peak": 4.2783732414245605,
+          "spacing": 15.331794745641973,
+          "range": 5.887409182326517,
+          "error": 0
+        },
+        "newDemRequests": 16,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "kurobe",
+        "spot": "asohara",
+        "location": {
+          "latitude": 36.66,
+          "longitude": 137.679,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.26476663164688685,
+          "maxX": 0.6897861423250925,
+          "minY": 0.23034598117486726,
+          "maxY": 0.852587393499568,
+          "minW": 14.23837964896888,
+          "relief": 709.43994140625,
+          "eyeHeight": 16.055820725842487,
+          "peak": 6.0287065505981445,
+          "spacing": 7.664652974748471,
+          "range": 2.9432267423034126,
+          "error": 0
+        },
+        "newDemRequests": 0,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "aso",
+        "spot": "central-cones",
+        "location": {
+          "latitude": 32.889,
+          "longitude": 131.075,
+          "zoom": 12
+        },
+        "metrics": {
+          "minX": 0.23251177902376524,
+          "maxX": 0.745547593388245,
+          "minY": 0.2506117571382659,
+          "maxY": 0.8754435722264168,
+          "minW": 15.716911110199923,
+          "relief": 1151.5299682617188,
+          "eyeHeight": 16.521751615654136,
+          "peak": 1.626279592514038,
+          "spacing": 32.09300857912468,
+          "range": 12.323715294383877,
+          "error": 0
+        },
+        "newDemRequests": 16,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "aso",
+        "spot": "nakadake",
+        "location": {
+          "latitude": 32.884,
+          "longitude": 131.086,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.2778174088897861,
+          "maxX": 0.7053404458343642,
+          "minY": 0.21996938846930097,
+          "maxY": 0.8773377463937653,
+          "minW": 12.143365941261415,
+          "relief": 256.800048828125,
+          "eyeHeight": 14.203705397299291,
+          "peak": 2.899725914001465,
+          "spacing": 8.023704877931692,
+          "range": 3.08110267312577,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "kikaijima",
+        "spot": "hyakunoday",
+        "location": {
+          "latitude": 28.32,
+          "longitude": 129.981,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.23418297499615398,
+          "maxX": 0.715656936815138,
+          "minY": 0.25598350621253035,
+          "maxY": 0.839475500431934,
+          "minW": 16.90826639335932,
+          "relief": 202.86000061035156,
+          "eyeHeight": 19.247078279675126,
+          "peak": 3.0780234336853027,
+          "spacing": 8.411052357935331,
+          "range": 3.2298441054471674,
+          "error": 0
+        },
+        "newDemRequests": 6,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "minamidaito",
+        "spot": "western-rim",
+        "location": {
+          "latitude": 25.835,
+          "longitude": 131.222,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.24969896793668644,
+          "maxX": 0.723435734805387,
+          "minY": 0.24339557986589372,
+          "maxY": 0.8780869145613878,
+          "minW": 17.53863558906795,
+          "relief": 50,
+          "eyeHeight": 18.282982069929457,
+          "peak": 0.7439094185829163,
+          "spacing": 8.599669553923679,
+          "range": 3.3022731087066926,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "minamidaito",
+        "spot": "central-lowland",
+        "location": {
+          "latitude": 25.862,
+          "longitude": 131.24,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.25699664095641916,
+          "maxX": 0.7156789165327598,
+          "minY": 0.23942166138205417,
+          "maxY": 0.8792533187891786,
+          "minW": 17.46272134716804,
+          "relief": 54.52000045776367,
+          "eyeHeight": 18.298409305602263,
+          "peak": 0.8135502934455872,
+          "spacing": 8.597706489733655,
+          "range": 3.3015192920577237,
+          "error": 0
+        },
+        "newDemRequests": 3,
+        "intervalPixelsChanged": true
+      }
+    ],
+    "liveGSJ": false,
+    "GSJFixtureUsed": false,
+    "tourRestoresSpot": true,
+    "failureRetainsContext": true,
+    "sharedURLPriority": true,
+    "errors": []
+  },
+  {
+    "viewport": "390x844",
+    "spots": [
+      {
+        "place": "aogashima",
+        "spot": "ikenosawa",
+        "location": {
+          "latitude": 32.452,
+          "longitude": 139.767,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.21342363961667604,
+          "maxX": 0.8273412677411085,
+          "minY": 0.30401007894596643,
+          "maxY": 0.7189886508873957,
+          "minW": 24.405731816304076,
+          "relief": 421.07000732421875,
+          "eyeHeight": 15.522387861840503,
+          "peak": 2.6547787189483643,
+          "spacing": 8.062589943497754,
+          "range": 3.0960345383031376,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "aogashima",
+        "spot": "maruyama",
+        "location": {
+          "latitude": 32.4525,
+          "longitude": 139.7664,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.11738039098958425,
+          "maxX": 0.8356467927791793,
+          "minY": 0.31408524690817025,
+          "maxY": 0.7497905499403563,
+          "minW": 9.491074216906636,
+          "relief": 191.3599853515625,
+          "eyeHeight": 6.791102258841731,
+          "peak": 2.4888689517974854,
+          "spacing": 8.062545202151238,
+          "range": 3.096017357626075,
+          "error": 0
+        },
+        "newDemRequests": 0,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "akiyoshidai",
+        "spot": "chojagamori",
+        "location": {
+          "latitude": 34.2565,
+          "longitude": 131.311,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.12878862265768015,
+          "maxX": 0.8439702301584309,
+          "minY": 0.27941022505530955,
+          "maxY": 0.7312594686254718,
+          "minW": 17.250789855572876,
+          "relief": 162.32998657226562,
+          "eyeHeight": 11.789936364064044,
+          "peak": 2.2881247997283936,
+          "spacing": 7.897147907693372,
+          "range": 3.032504796554255,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "kurobe",
+        "spot": "sennindani",
+        "location": {
+          "latitude": 36.6475,
+          "longitude": 137.681,
+          "zoom": 13
+        },
+        "metrics": {
+          "minX": 0.12159083194150037,
+          "maxX": 0.8339665523524089,
+          "minY": 0.29290911648110485,
+          "maxY": 0.7289921479433424,
+          "minW": 18.308198607189965,
+          "relief": 1264.5599975585938,
+          "eyeHeight": 12.470484239791045,
+          "peak": 4.2783732414245605,
+          "spacing": 15.331794745641973,
+          "range": 5.887409182326517,
+          "error": 0
+        },
+        "newDemRequests": 16,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "kurobe",
+        "spot": "asohara",
+        "location": {
+          "latitude": 36.66,
+          "longitude": 137.679,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.13163671403726002,
+          "maxX": 0.8142929852583678,
+          "minY": 0.29802087349474027,
+          "maxY": 0.7556101112283881,
+          "minW": 20.02936857108802,
+          "relief": 709.43994140625,
+          "eyeHeight": 13.370525020639382,
+          "peak": 6.0287065505981445,
+          "spacing": 7.664652974748471,
+          "range": 2.9432267423034126,
+          "error": 0
+        },
+        "newDemRequests": 0,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "aso",
+        "spot": "central-cones",
+        "location": {
+          "latitude": 32.889,
+          "longitude": 131.075,
+          "zoom": 12
+        },
+        "metrics": {
+          "minX": 0.12812691044971874,
+          "maxX": 0.8518735872582892,
+          "minY": 0.3315070497636766,
+          "maxY": 0.7283696762446881,
+          "minW": 25.838865074433322,
+          "relief": 1151.5299682617188,
+          "eyeHeight": 15.45057689716355,
+          "peak": 1.626279592514038,
+          "spacing": 32.09300857912468,
+          "range": 12.323715294383877,
+          "error": 0
+        },
+        "newDemRequests": 16,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "aso",
+        "spot": "nakadake",
+        "location": {
+          "latitude": 32.884,
+          "longitude": 131.086,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.13142368533619453,
+          "maxX": 0.8469755922832679,
+          "minY": 0.2795785578847329,
+          "maxY": 0.7809163497310021,
+          "minW": 16.311440549110536,
+          "relief": 256.800048828125,
+          "eyeHeight": 11.412267438452592,
+          "peak": 2.899725914001465,
+          "spacing": 8.023704877931692,
+          "range": 3.08110267312577,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "kikaijima",
+        "spot": "hyakunoday",
+        "location": {
+          "latitude": 28.32,
+          "longitude": 129.981,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.11722576934569767,
+          "maxX": 0.8319108447613409,
+          "minY": 0.3253789546360656,
+          "maxY": 0.72757861042306,
+          "minW": 26.19591936271967,
+          "relief": 202.86000061035156,
+          "eyeHeight": 17.005887125449284,
+          "peak": 3.0780234336853027,
+          "spacing": 8.411052357935331,
+          "range": 3.2298441054471674,
+          "error": 0
+        },
+        "newDemRequests": 6,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "minamidaito",
+        "spot": "western-rim",
+        "location": {
+          "latitude": 25.835,
+          "longitude": 131.222,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.12021044126672742,
+          "maxX": 0.8507247443972029,
+          "minY": 0.3135595640831008,
+          "maxY": 0.754967951703887,
+          "minW": 26.007694579546467,
+          "relief": 50,
+          "eyeHeight": 15.526962644854459,
+          "peak": 0.7439094185829163,
+          "spacing": 8.599669553923679,
+          "range": 3.3022731087066926,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "minamidaito",
+        "spot": "central-lowland",
+        "location": {
+          "latitude": 25.862,
+          "longitude": 131.24,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.12010551414327926,
+          "maxX": 0.8460821707442794,
+          "minY": 0.30573979503234894,
+          "maxY": 0.7657022618297682,
+          "minW": 24.925625323608468,
+          "relief": 54.52000045776367,
+          "eyeHeight": 15.129599256822495,
+          "peak": 0.8135502934455872,
+          "spacing": 8.597706489733655,
+          "range": 3.3015192920577237,
+          "error": 0
+        },
+        "newDemRequests": 3,
+        "intervalPixelsChanged": true
+      }
+    ],
+    "liveGSJ": false,
+    "GSJFixtureUsed": false,
+    "tourRestoresSpot": true,
+    "failureRetainsContext": true,
+    "sharedURLPriority": true,
+    "errors": []
+  },
+  {
+    "viewport": "844x390",
+    "spots": [
+      {
+        "place": "aogashima",
+        "spot": "ikenosawa",
+        "location": {
+          "latitude": 32.452,
+          "longitude": 139.767,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.3871905202503357,
+          "maxX": 0.6277416837001886,
+          "minY": 0.20918139968468152,
+          "maxY": 0.8368565927649307,
+          "minW": 15.506283421528684,
+          "relief": 421.07000732421875,
+          "eyeHeight": 17.012755236294545,
+          "peak": 2.6547787189483643,
+          "spacing": 8.062589943497754,
+          "range": 3.0960345383031376,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "aogashima",
+        "spot": "maruyama",
+        "location": {
+          "latitude": 32.4525,
+          "longitude": 139.7664,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.3418253389548563,
+          "maxX": 0.6298650021801764,
+          "minY": 0.23296998195885077,
+          "maxY": 0.8798486341775043,
+          "minW": 6.026622903887837,
+          "relief": 191.3599853515625,
+          "eyeHeight": 7.4523130371818525,
+          "peak": 2.4888689517974854,
+          "spacing": 8.062545202151238,
+          "range": 3.096017357626075,
+          "error": 0
+        },
+        "newDemRequests": 0,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "akiyoshidai",
+        "spot": "chojagamori",
+        "location": {
+          "latitude": 34.2565,
+          "longitude": 131.311,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.3468377347408082,
+          "maxX": 0.6363716070711547,
+          "minY": 0.16755904880921008,
+          "maxY": 0.8739592225272288,
+          "minW": 10.648354743573364,
+          "relief": 162.32998657226562,
+          "eyeHeight": 12.747053869818414,
+          "peak": 2.2881247997283936,
+          "spacing": 7.897147907693372,
+          "range": 3.032504796554255,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "kurobe",
+        "spot": "sennindani",
+        "location": {
+          "latitude": 36.6475,
+          "longitude": 137.681,
+          "zoom": 13
+        },
+        "metrics": {
+          "minX": 0.35515581267564705,
+          "maxX": 0.6215206297494126,
+          "minY": 0.22104804813906187,
+          "maxY": 0.8294775999460228,
+          "minW": 12.514215147717309,
+          "relief": 1264.5599975585938,
+          "eyeHeight": 14.711632807870659,
+          "peak": 4.2783732414245605,
+          "spacing": 15.331794745641973,
+          "range": 5.887409182326517,
+          "error": 0
+        },
+        "newDemRequests": 16,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "kurobe",
+        "spot": "asohara",
+        "location": {
+          "latitude": 36.66,
+          "longitude": 137.679,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.3635538950584025,
+          "maxX": 0.6100846366884404,
+          "minY": 0.23034598117486726,
+          "maxY": 0.8525873934995679,
+          "minW": 14.23837964896888,
+          "relief": 709.43994140625,
+          "eyeHeight": 16.055820725842487,
+          "peak": 6.0287065505981445,
+          "spacing": 7.664652974748471,
+          "range": 2.9432267423034126,
+          "error": 0
+        },
+        "newDemRequests": 0,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "aso",
+        "spot": "central-cones",
+        "location": {
+          "latitude": 32.889,
+          "longitude": 131.075,
+          "zoom": 12
+        },
+        "metrics": {
+          "minX": 0.34484460633502834,
+          "maxX": 0.6424288268716863,
+          "minY": 0.2506117571382659,
+          "maxY": 0.8754435722264167,
+          "minW": 15.716911110199923,
+          "relief": 1151.5299682617188,
+          "eyeHeight": 16.521751615654136,
+          "peak": 1.626279592514038,
+          "spacing": 32.09300857912468,
+          "range": 12.323715294383877,
+          "error": 0
+        },
+        "newDemRequests": 16,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "aso",
+        "spot": "nakadake",
+        "location": {
+          "latitude": 32.884,
+          "longitude": 131.086,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.3711239423425997,
+          "maxX": 0.6191068436303301,
+          "minY": 0.21996938846930097,
+          "maxY": 0.8773377463937652,
+          "minW": 12.143365941261415,
+          "relief": 256.800048828125,
+          "eyeHeight": 14.203705397299291,
+          "peak": 2.899725914001465,
+          "spacing": 8.023704877931692,
+          "range": 3.08110267312577,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "kikaijima",
+        "spot": "hyakunoday",
+        "location": {
+          "latitude": 28.32,
+          "longitude": 129.981,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.345813976380711,
+          "maxX": 0.6250908799124559,
+          "minY": 0.25598350621253035,
+          "maxY": 0.8394755004319341,
+          "minW": 16.90826639335932,
+          "relief": 202.86000061035156,
+          "eyeHeight": 19.247078279675126,
+          "peak": 3.0780234336853027,
+          "spacing": 8.411052357935331,
+          "range": 3.2298441054471674,
+          "error": 0
+        },
+        "newDemRequests": 6,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "minamidaito",
+        "spot": "western-rim",
+        "location": {
+          "latitude": 25.835,
+          "longitude": 131.222,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.3548139614417546,
+          "maxX": 0.6296029382752972,
+          "minY": 0.24339557986589372,
+          "maxY": 0.8780869145613878,
+          "minW": 17.53863558906795,
+          "relief": 50,
+          "eyeHeight": 18.282982069929457,
+          "peak": 0.7439094185829163,
+          "spacing": 8.599669553923679,
+          "range": 3.3022731087066926,
+          "error": 0
+        },
+        "newDemRequests": 4,
+        "intervalPixelsChanged": true
+      },
+      {
+        "place": "minamidaito",
+        "spot": "central-lowland",
+        "location": {
+          "latitude": 25.862,
+          "longitude": 131.24,
+          "zoom": 14
+        },
+        "metrics": {
+          "minX": 0.35904694533197024,
+          "maxX": 0.6251036291532555,
+          "minY": 0.23942166138205417,
+          "maxY": 0.8792533187891788,
+          "minW": 17.46272134716804,
+          "relief": 54.52000045776367,
+          "eyeHeight": 18.298409305602263,
+          "peak": 0.8135502934455872,
+          "spacing": 8.597706489733655,
+          "range": 3.3015192920577237,
+          "error": 0
+        },
+        "newDemRequests": 3,
+        "intervalPixelsChanged": true
+      }
+    ],
+    "liveGSJ": false,
+    "GSJFixtureUsed": false,
+    "tourRestoresSpot": true,
+    "failureRetainsContext": true,
+    "sharedURLPriority": true,
+    "errors": []
+  }
+]
