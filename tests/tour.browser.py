@@ -148,6 +148,8 @@ with sync_playwright() as p:
             page.locator('.app-tour-next').click();page.wait_for_function("document.querySelector('#app-tour-title').textContent==='高さを強調して起伏を比べる'")
             page.wait_for_timeout(800)
             scene=page.locator('#viewer').bounding_box();assert page.evaluate("document.body.classList.contains('app-tour-mini-scene')") and scene and scene['height']>40,(width,height,scene)
+            assert scene['width']>=width*(.85 if height>width else .60),(width,height,scene)
+            assert scene['height']>=height*(.35 if height>width else .42),(width,height,scene)
             for button in ['.app-tour-next','.app-tour-end']:
                 box=page.locator(button).bounding_box();assert box and 0<=box['y'] and box['y']+box['height']<=height,(width,height,button,box)
             page.screenshot(path=str(OUT/f'{width}x{height}-tour-height.png'))
@@ -155,13 +157,14 @@ with sync_playwright() as p:
                 assert page.evaluate(f"uiTest.tour.focus('{selector}')")
                 assert page.evaluate("document.body.classList.contains('app-tour-mini-scene')"),name
                 assert page.evaluate("getComputedStyle(document.querySelector('#viewer')).position==='fixed'"),name
-                layout=page.evaluate("({sceneBottom:document.querySelector('#viewer').getBoundingClientRect().bottom,cardTop:document.querySelector('.app-tour-card').getBoundingClientRect().top})")
+                layout=page.evaluate("(()=>{const s=document.querySelector('#viewer').getBoundingClientRect(),c=document.querySelector('.app-tour-card').getBoundingClientRect();return {sceneLeft:s.left,sceneTop:s.top,sceneRight:s.right,sceneBottom:s.bottom,cardTop:c.top}})()")
+                assert layout['sceneLeft']>=0 and layout['sceneTop']>=0 and layout['sceneRight']<=width and layout['sceneBottom']<=height,(name,layout)
                 assert layout['cardTop']>=layout['sceneBottom']-1,(name,layout)
-                page.wait_for_timeout(350)
+                page.wait_for_timeout(1000)
                 page.screenshot(path=str(OUT/f'{width}x{height}-tour-{name}-control.png'))
             page.locator('.app-tour-end').click();page.wait_for_function('!uiTest.tour.active')
             assert not errors,errors
-            results.append({'viewport':f'{width}x{height}','tourStartAndManualSkip':True,'cardHeight':card['height'],'pinnedLiveTerrainDuringSettings':True,'pageErrors':errors})
+            results.append({'viewport':f'{width}x{height}','tourStartAndManualSkip':True,'cardHeight':card['height'],'pinnedLargeLiveTerrainDuringSettingsAndFlight':True,'pageErrors':errors})
         page.close()
     browser.close();server.shutdown()
 (OUT/'results.json').write_text(json.dumps(results,ensure_ascii=False,indent=2))

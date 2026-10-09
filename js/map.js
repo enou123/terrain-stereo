@@ -1,4 +1,4 @@
-import { worldPixel, terrainZoom } from './elevation.js?v=0.26.4';
+import { worldPixel, terrainZoom } from './elevation.js?v=0.26.5';
 
 export function pixelLocation(x, y, zoom) {
   const scale = 256 * 2 ** zoom;
