@@ -188,16 +188,13 @@ with sync_playwright() as p:
             (page.touchscreen.tap if touch else page.mouse.click)(stop_x,stop_y)
             assert page.locator('#tour-toggle').get_attribute('aria-pressed')=='false'
             assert page.locator('#flight-pad').is_visible()
-            manual_before=state()
-            page.locator('[data-flight="forward"]').click()
-            after_forward=state();assert after_forward['target']!=manual_before['target']
-            assert after_forward['yaw']==manual_before['yaw'] and after_forward['pitch']==manual_before['pitch']
-            page.locator('[data-flight="up"]').click();assert state()['target'][1]>after_forward['target'][1]
-            page.locator('#terrain').focus();page.keyboard.press('w');assert state()['target']!=after_forward['target']
+            assert page.locator('[data-flight]').count()==0
+            assert page.locator('#range-move').is_visible()
+            assert page.locator('#range-scale').is_visible()
             page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-flight.png'))
             page.click('#flight-toggle');assert page.locator('#flight-toggle').get_attribute('aria-pressed')=='false'
             assert page.locator('#flight-pad').is_hidden()
-            print(f'PASS flight movement and altitude controls at {width}x{height}',flush=True)
+            print(f'PASS range panel and sightseeing flight at {width}x{height}',flush=True)
         page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-normal.png'))
         canvas=page.locator('#terrain').bounding_box()
         if landscape:

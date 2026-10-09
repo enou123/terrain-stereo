@@ -113,19 +113,16 @@ h1 span {
   background:radial-gradient(ellipse at 50% 40%,#2d4336,#14251e 80%);
   overflow:hidden;
 }
-.flight-pad { position:absolute; z-index:4; left:14px; bottom:54px; display:grid; grid-template-columns:repeat(3,44px); grid-template-rows:repeat(3,42px) 18px 38px; gap:4px; padding:8px; border:1px solid #ffffff35; border-radius:12px; background:#10251dcc; color:#eef3e6; }
+.flight-pad { position:absolute; z-index:4; left:14px; bottom:54px; display:grid; width:min(260px,calc(100% - 28px)); gap:6px; padding:10px; border:1px solid #ffffff35; border-radius:12px; background:#10251de8; color:#eef3e6; box-sizing:border-box; }
 .flight-pad[hidden] { display:none; }
-.flight-pad button { min-width:44px; min-height:42px; border:1px solid #ffffff42; border-radius:8px; background:#294438; color:inherit; font:inherit; font-size:18px; touch-action:manipulation; }
+.flight-pad button { min-height:44px; border:1px solid #ffffff42; border-radius:8px; background:#294438; color:inherit; font:inherit; font-size:13px; touch-action:manipulation; }
 .flight-pad button:active { background:#67814e; }
-.flight-pad button[data-flight="forward"] { grid-area:1 / 2; }
-.flight-pad button[data-flight="left"] { grid-area:2 / 1; }
-.flight-pad button[data-flight="backward"] { grid-area:2 / 2; }
-.flight-pad button[data-flight="right"] { grid-area:2 / 3; }
-.flight-pad button[data-flight="up"] { grid-area:3 / 1; }
-.flight-pad button[data-flight="down"] { grid-area:3 / 3; }
-.flight-pad span { grid-area:4 / 1 / 5 / 4; align-self:center; text-align:center; color:#d1dbc7; font-size:10px; letter-spacing:.04em; }
-.flight-pad #tour-toggle { grid-area:5 / 1 / 6 / 4; font-size:11px; white-space:nowrap; background:#536c43; }
+.flight-pad button:disabled { opacity:.5; }
+.flight-pad p { margin:0; font-size:11px; line-height:1.5; }
+.flight-pad #tour-toggle { background:#536c43; }
 .flight-pad #tour-toggle[aria-pressed="true"] { background:#704c3b; }
+@media(max-height:500px) { .flight-pad { bottom:36px; gap:4px; padding:6px; } .flight-pad .range-help { display:none; } .flight-pad button { min-height:36px; } }
+
 .app-tour-launch { margin-top:18px; padding:10px 15px; border:1px solid #b6c6ad; border-radius:999px; background:#fff; color:#38513d; font:inherit; font-size:12px; font-weight:650; cursor:pointer; box-shadow:0 4px 14px #243d2d0d; transition:transform .18s,background .18s; }
 .app-tour-launch:hover { background:#edf2e9; transform:translateY(-1px); }
 .app-tour-launch span { margin-left:8px; color:#758c67; }
@@ -733,4 +730,11 @@ body.view-focused { overflow:hidden; }
  .spot-actions>button { flex:1; padding:10px 8px; font-size:13px; }
  .learning-tour { padding:12px; }
  .learning-tour-actions button { flex:1; padding:9px 8px; font-size:13px; }
+}
+
+/* Keep the mobile range actions in the sky above the terrain. */
+@media (max-width:600px) and (min-height:501px) {
+  .flight-pad { top:58px; bottom:auto; width:calc(100% - 28px); grid-template-columns:1fr 1fr; gap:5px; padding:8px; }
+  .flight-pad .range-help { display:none; }
+  .flight-pad #range-status,.flight-pad #tour-toggle { grid-column:1 / -1; }
 }

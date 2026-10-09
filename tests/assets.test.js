@@ -22,5 +22,5 @@ test('stylesheet and complete browser module graph share the release version', a
     }
   }
   for (const reference of references) await check(reference, root);
-  assert.equal(visited.size, 23, 'All twenty-two browser modules, including lazy view, feature-tour and learning-tour modules, and the stylesheet must be checked');
+  assert.equal(visited.size, 24, 'All twenty-three browser modules, including lazy view, feature-tour and learning-tour modules, and the stylesheet must be checked');
 });
