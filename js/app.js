@@ -1,13 +1,16 @@
-import { loadMapTexture, textureKey } from './texture.js?v=0.26.7';
-import { setupViewerUI } from './viewer-ui.js?v=0.26.7';
-import { LocationMap } from './map.js?v=0.26.7';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.26.7';
-import { createMesh } from './mesh.js?v=0.26.7';
-import { TerrainRenderer } from './renderer.js?v=0.26.7';
-import { createShareUrl, readSharedView } from './share.js?v=0.26.7';
-import { flightTourPose } from './controls.js?v=0.26.7';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.26.7';
-import { setupAppTour } from './tour.js?v=0.26.7';
+import { loadMapTexture, textureKey } from './texture.js?v=0.27.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.27.0';
+import { LocationMap } from './map.js?v=0.27.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.27.0';
+import { createMesh } from './mesh.js?v=0.27.0';
+import { TerrainRenderer } from './renderer.js?v=0.27.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.27.0';
+import { flightTourPose } from './controls.js?v=0.27.0';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.27.0';
+import { setupAppTour } from './tour.js?v=0.27.0';
+import { LANDMARKS, matchingLandmark, landmarkLocation } from './landmarks.js?v=0.27.0';
+import { setupLandmarkGuide } from './landmark-guide.js?v=0.27.0';
+import { landmarkCamera } from './landmark-camera.js?v=0.27.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -60,7 +63,10 @@ async function updateTexture() {
     return false;
   } finally {clearTimeout(timeout);if(request===textureRequest)textureController=null;}
 }
-textureRetry.addEventListener('click',()=>{texturePromise=updateTexture();});
+textureRetry.addEventListener('click',async()=>{
+  texturePromise=updateTexture();const ready=await texturePromise;
+  if(landmarkGuide?.active&&surfaceSelect.value==='geology')landmarkGuide.status(ready?'地質図を表示しました。視点と範囲はそのままです。':'地質図を取得できませんでした。地形は標高の色で表示しています。');
+});
 
 const geologyLegendButton=document.querySelector('#geology-legend-open'), geologyLegendPanel=document.querySelector('#geology-legend-panel');
 let geologyLegendKey='', geologyLegendController;
@@ -121,7 +127,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.26.7');
+  const {pickSurface}=await import('./profile.js?v=0.27.0');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -166,21 +172,28 @@ if(sharedView){
 }
 const showTerrain=document.querySelector('#show-terrain');
 const saveImage=document.querySelector('#save-image');
+let landmarkGuide=null;
 const places={ishizuchi:{latitude:33.767,longitude:133.115},fuji:{latitude:35.3606,longitude:138.7274},aso:{latitude:32.884,longitude:131.104},daisetsu:{latitude:43.6636,longitude:142.8541},yakushima:{latitude:30.3361,longitude:130.5044}};
 const coordinates=location=>`${location.latitude.toFixed(4)}° N / ${location.longitude.toFixed(4)}° E`;
 const locationName=location=>{
+  const landmark=matchingLandmark(location);if(landmark)return landmark.name+'周辺';
   const name=Object.keys(places).find(key=>Math.abs(places[key].latitude-location.latitude)<.0001 && Math.abs(places[key].longitude-location.longitude)<.0001);
-  return name ? document.querySelector(`#map-place option[value="${name}"]`).textContent+'周辺' : coordinates(location);
+  return name ? LANDMARKS.find(p=>p.id===name).name+'周辺' : coordinates(location);
 };
 const map=new LocationMap(document.querySelector('#location-map'),sharedView?.location ?? LOCATION,location=>{
   selectedLocation=location;
   document.querySelector('#selected-extent').textContent=`表示範囲：約${terrainExtent(location.latitude,location.mapZoom+1).toFixed(1)} km四方（地図の縮尺と連動）`;
   document.querySelector('#selected-location').textContent=coordinates(location);
-  document.querySelector('#map-place').value=Object.keys(places).find(key=>Math.abs(places[key].latitude-location.latitude)<.0001 && Math.abs(places[key].longitude-location.longitude)<.0001)||'';
+  document.querySelector('#map-place').value=matchingLandmark(location)?.id||'';
+  landmarkGuide?.preview(document.querySelector('#map-place').value);
 });
 document.querySelector('#map-zoom-in').addEventListener('click',()=>map.setZoom(map.zoom+0.5));
 document.querySelector('#map-zoom-out').addEventListener('click',()=>map.setZoom(map.zoom-0.5));
-document.querySelector('#map-place').addEventListener('change',event=>{if(places[event.target.value]) map.setCenter(places[event.target.value]);});
+landmarkGuide=setupLandmarkGuide({
+  select:place=>{if(place)map.setView(place.center,place.settings.terrain.zoom-1);},
+  visit:visitLandmark,switchMode:switchLandmarkMode,
+  legend:()=>{viewerUI.setSettingsOpen(true);setGeologyLegendOpen(true);loadGeologyLegend();geologyLegendButton.scrollIntoView({block:'center'});},
+});
 showTerrain.addEventListener('click',()=>{
   if(loading) return;
   stopFlightTour();
@@ -275,6 +288,47 @@ qualitySelect.addEventListener('change',()=>{
   resetView=false;
   load();
 });
+async function visitLandmark(place,mode='terrain'){
+  if(loading||appTour.active)return;
+  const preset=place.settings[mode],saved=landmarkGuide.snapshot();
+  const previous={surface:surfaceSelect.value,quality:qualitySelect.value,height:slider.value};
+  stopFlightTour();if(flightMode)flightToggle.click();profile?.clear();
+  map.setView(place.center,preset.zoom-1);landmarkGuide.ensureOption(place.id);
+  landmarkGuide.show(place,mode);landmarkGuide.status('おすすめの範囲の地形を読み込んでいます…');landmarkGuide.setBusy(true);
+  requestedLocation=landmarkLocation(place,mode);requestedQuality=renderer?.uintIndices?preset.quality:'standard';
+  qualitySelect.value=requestedQuality;surfaceSelect.value=preset.surface;slider.value=String(preset.exaggeration);resetView=false;
+  document.querySelector('#workspace').scrollIntoView({behavior:'auto',block:'start'});
+  try{
+    const same=data&&data.quality===requestedQuality&&data.location.latitude===requestedLocation.latitude&&data.location.longitude===requestedLocation.longitude&&data.location.zoom===requestedLocation.zoom;
+    if(same){renderer.setMesh(createMesh(data,preset.exaggeration));updateSurface();texturePromise=updateTexture();}
+    else if(!await load())throw new Error('標高データを読み込めませんでした。');
+    landmarkGuide.setBusy(true);
+    factor.textContent=`${preset.exaggeration.toFixed(1)}×`;applySelect(modeSelect,'mono');
+    sunAzimuth.value=String(preset.sunAzimuth);sunAltitude.value=String(preset.sunAltitude);updateSun();
+    contoursToggle.checked=preset.contours&&renderer.contoursSupported;contoursToggle.dispatchEvent(new Event('change',{bubbles:true}));
+    const rect=terrainCanvas.getBoundingClientRect();
+    setTourCamera(landmarkCamera(renderer.mesh,preset.camera,rect.width/rect.height));
+    const ready=await texturePromise;
+    landmarkGuide.show(place,mode);
+    landmarkGuide.status(ready===false?'地質図などの画像を取得できませんでした。地形は標高の色で表示しています。設定の再読み込みから再試行できます。':'おすすめ設定で表示しました。視点や表示方法は自由に変更できます。');
+  }catch(error){
+    surfaceSelect.value=previous.surface;qualitySelect.value=previous.quality;slider.value=previous.height;updateSurface();
+    landmarkGuide.restore(saved);landmarkGuide.status(`${place.name}の表示に失敗しました。${error.message}`);
+    document.querySelector('#landmark-preview-setting').textContent=`${place.name}を読み込めませんでした。通信を確認して「この場所を見る」で再試行してください。`;
+  }finally{landmarkGuide.setBusy(false);}
+}
+async function switchLandmarkMode(place,mode){
+  if(loading||appTour.active)return;
+  landmarkGuide.setBusy(true);stopFlightTour();
+  landmarkGuide.show(place,mode);landmarkGuide.status('表示を切り替えています…');
+  // Only the surface changes. Never reapply the preset camera, zoom, height,
+  // contours or quality over the user's current choices.
+  applySelect(surfaceSelect,place.settings[mode].surface);
+  try{
+    const ready=await texturePromise;
+    landmarkGuide.status(ready===false?'地質図を取得できませんでした。地形は標高の色で表示しています。設定の再読み込みから再試行できます。':'視点・範囲・高さを保って切り替えました。');
+  }finally{landmarkGuide.setBusy(false);}
+}
 async function load() {
   if (loading) return false;
   let loaded=false;
@@ -282,6 +336,7 @@ async function load() {
   stopFlightTour();
   loading=true; showTerrain.disabled=true; showTerrain.textContent='地形を読み込み中…'; retry.hidden=true; message.hidden=false; message.classList.remove('error');
   state.textContent='読み込み中'; status.textContent='標高データを取得しています…'; slider.disabled=true; qualitySelect.disabled=true;
+  landmarkGuide?.setBusy(true);
   try {
     if (!renderer) {
       renderer=new TerrainRenderer(document.querySelector('#terrain'),showError);
@@ -307,6 +362,7 @@ async function load() {
     const newKey=textureKey(nextData.location,renderer.textureSurface || 'map');
     if(activeTextureKey!==newKey) {renderer.setTexture(null);activeTextureKey=null;}
     data=nextData;
+    if(landmarkGuide?.active&&(!matchingLandmark(data.location)||matchingLandmark(data.location).id!==landmarkGuide.active.id))landmarkGuide.clear();
     profile?.setData(data);
     updateSurface();texturePromise=updateTexture();
     if(resetView) renderer.reset();
@@ -321,7 +377,7 @@ async function load() {
     state.textContent=`${data.tileCount}タイル取得済み`;
     message.hidden=true; slider.disabled=false;loaded=true;
   } catch (error) { showError(error, Boolean(renderer) && !renderer.lost); }
-  finally { qualitySelect.disabled=false; slider.disabled=!data; loading=false; showTerrain.disabled=false; showTerrain.textContent='ここを立体表示'; }
+  finally { qualitySelect.disabled=false; slider.disabled=!data; loading=false; showTerrain.disabled=false; showTerrain.textContent='ここを立体表示'; landmarkGuide?.setBusy(false); }
   return loaded;
 }
 slider.addEventListener('input',()=>{
@@ -396,7 +452,7 @@ load();
 // Load section calculations/UI only when explicitly requested.
 async function getProfileTool(){
   if(!data||loading||renderer?.lost)throw new Error('地形が読み込み中です。');
-  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.26.7');profile=new SectionTool(renderer,viewerUI);}
+  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.27.0');profile=new SectionTool(renderer,viewerUI);}
   profile.setData(data);return profile;
 }
 document.querySelector('#profile-start').addEventListener('click',async()=>{
@@ -462,7 +518,7 @@ async function captureTourState(){
     contours:contoursToggle.checked,sunAzimuth:sunAzimuth.value,sunAltitude:sunAltitude.value,
     settingsOpen:!document.querySelector('#view-settings').hidden,flightMode,
     stateText:state.textContent,profile:profile?.captureState()||null,
-    geologyOpen:!geologyLegendPanel.hidden,geologyPanelOpen:!geologyLegendPanel.hidden&&!document.querySelector('#geology-legend-panel').hidden,
+    geologyOpen:!geologyLegendPanel.hidden,geologyPanelOpen:!geologyLegendPanel.hidden&&!document.querySelector('#geology-legend-panel').hidden,landmark:landmarkGuide.snapshot(),
     scrollX:window.scrollX,scrollY:window.scrollY};
 }
 function prepareTourTarget(selector){
@@ -492,7 +548,7 @@ async function restoreTourState(){
   }else{
     data=saved.data;message.hidden=true;message.classList.remove('error');state.textContent=saved.stateText;updateTerrainLabels();
   }
-  document.querySelector('#map-place').value=Object.keys(places).find(key=>Math.abs(places[key].latitude-saved.mapCenter.latitude)<.0001&&Math.abs(places[key].longitude-saved.mapCenter.longitude)<.0001)||'';
+  landmarkGuide.restore(saved.landmark);
   applySelect(modeSelect,saved.mode);strengthSlider.value=saved.strength;strengthSlider.dispatchEvent(new Event('input',{bubbles:true}));
   surfaceSelect.value=saved.surface;updateSurface();texturePromise=updateTexture();await texturePromise;
   slider.value=saved.height;slider.dispatchEvent(new Event('input',{bubbles:true}));
@@ -567,7 +623,7 @@ async function demoContours(api,signal){
 async function demoProfile(api,signal){
   applySelect(modeSelect,'mono');contoursToggle.checked=false;contoursToggle.dispatchEvent(new Event('change',{bubbles:true}));viewerUI.setSettingsOpen(true);
   const tool=await getProfileTool();tool.clear();await api.wait(2000);tool.start();api.focus('#terrain');await api.wait(700);
-  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.26.7');
+  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.27.0');
   if(signal.aborted)throw new DOMException('Stopped','AbortError');
   renderer.draw();const rect=terrainCanvas.getBoundingClientRect(),camera=renderer.cameras(undefined,undefined,true)[0];
   const candidates=[];
@@ -590,7 +646,7 @@ async function demoProfile(api,signal){
 }
 async function demoLocation(api,signal){
   viewerUI.setSettingsOpen(true);map.setCenter(places.fuji);
-  document.querySelector('#map-place').value='fuji';api.focus('#map-place');
+  landmarkGuide.ensureOption('fuji');api.focus('#map-place');
   await api.wait(2200);api.focus('#show-terrain');await api.wait(2200);showTerrain.click();api.focus('#terrain');
   const ready=await waitForTerrainReady(signal);
   if(!ready)throw new Error(message.hidden?'富士山の地形を読み込めませんでした。':'地形データの読み込みに失敗しました。');

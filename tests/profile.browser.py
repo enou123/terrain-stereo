@@ -14,7 +14,7 @@ with sync_playwright() as p:
    try:r.fulfill(body=real(r.request.url),content_type='image/jpeg' if r.request.url.endswith('.jpg') else 'image/png' if r.request.url.endswith('.png') else 'text/plain',headers={'Access-Control-Allow-Origin':'*'})
    except Exception:r.fulfill(status=404,body='')
   page.route('https://cyberjapandata.gsi.go.jp/**',route)
-  page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.uiTest={get renderer(){return renderer},get data(){return data},get profile(){return profile},get map(){return map}};",content_type='text/javascript'))
+  page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.uiTest={get renderer(){return renderer},get data(){return data},set data(value){data=value},get profile(){return profile},get map(){return map}};",content_type='text/javascript'))
   page.goto(url);page.wait_for_function('window.uiTest && !document.querySelector("#quality").disabled',timeout=120000)
   assert page.locator('#message').is_hidden()
   assert not any('/profile' in u for u in modules)
@@ -102,7 +102,9 @@ with sync_playwright() as p:
    page.wait_for_function('!document.querySelector("#quality").disabled',timeout=120000)
    assert page.evaluate('uiTest.profile.points.length')==0
   # Synthetic coastal gap: actual taps must reject missing terrain and graph must split.
-  page.evaluate("""async ()=>{const {createMesh}=await import('./js/mesh.js?v=0.12.0');const r=uiTest.renderer;window.sectionFixture={size:9,spacing:1,location:uiTest.data.location,heights:new Float32Array(81)};for(let row=0;row<9;row++)for(let c=0;c<9;c++)sectionFixture.heights[row*9+c]=c===4?NaN:100+c*30;r.setMesh(createMesh(sectionFixture,1));r.reset();r.controls.pitch=1.1;r.requestDraw();uiTest.profile.setData(sectionFixture);} """)
+  # Starting the tool synchronizes it with app data. Install the fixture there
+  # as well as in the renderer, so the real DEM cannot replace the missing gap.
+  page.evaluate("""async ()=>{const {createMesh}=await import('./js/mesh.js?v=0.12.0');const r=uiTest.renderer;window.sectionFixture={size:9,spacing:1,location:uiTest.data.location,heights:new Float32Array(81)};for(let row=0;row<9;row++)for(let c=0;c<9;c++)sectionFixture.heights[row*9+c]=c===4?NaN:100+c*30;uiTest.data=sectionFixture;r.setMesh(createMesh(sectionFixture,1));r.reset();r.controls.pitch=1.1;r.requestDraw();uiTest.profile.setData(sectionFixture);} """)
   settings();page.click('#profile-start');page.wait_for_timeout(100)
   tap(.5,.6);assert page.evaluate('uiTest.profile.points.length')==0
   tap(.1,.6);tap(.9,.6)

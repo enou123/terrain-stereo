@@ -97,7 +97,7 @@ export function setupAppTour(actions) {
     document.body.classList.toggle('app-tour-mini-scene',matchMedia('(max-width:900px)').matches);
     presentOperation(target);
     if(innerWidth>900)target.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest',inline:'nearest'});
-    requestAnimationFrame(position);return true;
+    position();requestAnimationFrame(position);return true;
   }
   function timerTick(now){
     if(!active||!autoPlay||!stepReady)return;

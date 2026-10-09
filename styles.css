@@ -669,3 +669,42 @@ body.view-focused { overflow:hidden; }
   .viewer-toolbar > a,.viewer-actions { flex-shrink:0; }
   .viewer-toolbar button { white-space:nowrap; }
 }
+
+/* The landmark guide stays in document flow, never on top of the 3D scene. */
+.landmark-filters { display:flex; flex-wrap:wrap; align-items:end; gap:14px; margin-top:20px; }
+.landmark-filters>div { min-width:170px; flex:1; max-width:280px; }
+.landmark-filters label,.landmark-visit label { display:block; margin-bottom:6px; font-size:12px; }
+#landmark-count { padding-bottom:14px; font-size:12px; color:#596b59; }
+.landmark-select { flex:1; min-width:220px !important; max-width:380px; }
+.landmark-preview[hidden],.landmark-guide[hidden] { display:none; }
+.landmark-preview { display:grid; grid-template-columns:minmax(0,1fr) minmax(220px,280px); gap:24px; margin-top:20px; padding:20px; border:1px solid #cfdbc4; border-radius:12px; background:#f1f5e9; }
+.landmark-preview h3 { margin:6px 0 10px; font-size:20px; }
+.landmark-preview p,.landmark-guide p,.landmark-guide li { font-size:13px; line-height:1.85; }
+.landmark-meta { color:#596b59; font-size:12px !important; margin:6px 0; }
+.landmark-visit { display:grid; align-content:center; gap:8px; }
+.landmark-visit label { margin-bottom:0; }
+.landmark-visit button,.landmark-guide button { min-height:44px; padding:10px 16px; border:1px solid #acbc9f; border-radius:9px; background:#f7f9f2; color:#385a39; font:inherit; cursor:pointer; }
+.landmark-visit button { background:#385a39; color:white; }
+.landmark-guide { grid-column:1 / -1; padding:24px; border-top:1px solid #d3dbce; background:#fbfcf8; }
+.landmark-guide-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:16px; }
+.landmark-guide h2 { margin:4px 0; font-size:23px; }
+.landmark-guide h3 { margin:10px 0 8px; font-size:15px; }
+.landmark-modes { display:flex; flex-wrap:wrap; gap:8px; }
+.landmark-modes button[aria-pressed=true] { background:#385a39; color:white; }
+.landmark-guide button:disabled,.landmark-visit button:disabled { opacity:.6; cursor:wait; }
+.landmark-summary { font-weight:650; }
+.landmark-guide-columns { display:grid; grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); gap:28px; }
+.landmark-guide ul { padding-left:22px; }
+.landmark-guide a { color:#385a39; overflow-wrap:anywhere; }
+.landmark-guide details { margin-bottom:16px; }
+.view-focused .landmark-guide { display:none; }
+@media(max-width:640px) {
+ .landmark-filters { gap:10px; }
+ .landmark-filters>div { min-width:0; max-width:none; width:calc(50% - 5px); }
+ .landmark-select { max-width:none; }
+ .landmark-preview { grid-template-columns:1fr; padding:16px; gap:12px; }
+ .landmark-guide { padding:16px; }
+ .landmark-guide-columns { grid-template-columns:1fr; gap:12px; }
+ .landmark-modes { width:100%; }
+ .landmark-modes button { flex:1; padding:10px 8px; font-size:13px; }
+}
