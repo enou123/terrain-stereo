@@ -55,7 +55,10 @@ url=f'http://127.0.0.1:{server.server_port}/'
 with sync_playwright() as p:
     browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),args=['--no-sandbox','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
     results=[]
-    for width,height,touch in [(1440,900,False),(1024,768,False),(768,1024,True),(320,568,True),(390,844,True),(844,390,True),(932,430,True),(667,375,True)]:
+    viewports=[(1440,900,False),(1024,768,False),(768,1024,True),(320,568,True),(390,844,True),(844,390,True),(932,430,True),(667,375,True)]
+    selected=os.environ.get('TERRAIN_UI_VIEWPORTS')
+    if selected:viewports=[size for size in viewports if f'{size[0]}x{size[1]}' in selected.split(',')]
+    for width,height,touch in viewports:
         page=browser.new_page(viewport={'width':width,'height':height},is_mobile=touch,has_touch=touch,device_scale_factor=2 if touch else 1)
         errors=[];dem=[];fail={'enabled':False}
         page.on('pageerror',lambda error:errors.append(str(error)))
@@ -69,7 +72,7 @@ with sync_playwright() as p:
         page.route('https://cyberjapandata.gsi.go.jp/**',route)
         page.route('https://gbank.gsj.jp/**',lambda r:r.fulfill(status=200,body=json.dumps([{'value':'7f9b72','title':'新生代 第四紀, 火山岩','group_ja':'火成岩','formationAge_ja':'新生代 第四紀','lithology_ja':'火山岩'}]),content_type='application/json',headers={'Access-Control-Allow-Origin':'*'}) if 'legend.json' in r.request.url else r.fulfill(status=200,body=geology_fixture(),content_type='image/png',headers={'Access-Control-Allow-Origin':'*'}))
         # Expose existing objects only inside this test to verify view/data preservation.
-        page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.uiTest={get renderer(){return renderer},get data(){return data},get map(){return map}};",content_type='text/javascript'))
+        page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.uiTest={get renderer(){return renderer},get data(){return data},get map(){return map},get flightDuration(){return tourDuration}};",content_type='text/javascript'))
         page.goto(url)
         page.wait_for_function("window.uiTest && !document.querySelector('#quality').disabled",timeout=120000)
         assert page.locator('#message').is_hidden(),page.locator('#status').inner_text()
@@ -174,11 +177,14 @@ with sync_playwright() as p:
         landscape=width>height and height<=600 and width<=1100
         assert page.locator('#toggle-settings').get_attribute('aria-expanded')==('false' if landscape else 'true')
         page.locator('#workspace').evaluate("element=>element.scrollIntoView({block:'start',behavior:'instant'})");stable()
-        if (width,height) in [(1440,900),(390,844)]:
+        if (width,height) in [(1440,900),(390,844),(844,390)]:
             start_flight=state();page.click('#flight-toggle')
             assert page.locator('#flight-toggle').get_attribute('aria-pressed')=='true'
             assert page.locator('#flight-pad').is_visible()
-            page.click('#tour-toggle');assert page.locator('#tour-toggle').get_attribute('aria-pressed')=='true'
+            page.click('#tour-toggle');assert page.locator('#flight-options').is_visible()
+            flight_shots=ROOT/'docs/screenshots/flight-options';flight_shots.mkdir(parents=True,exist_ok=True)
+            page.screenshot(path=str(flight_shots/f'{width}x{height}-choices.png'))
+            page.click('[data-flight-laps="1"]');assert '遊覧中' in page.locator('#flight-toggle').inner_text()
             assert page.locator('#flight-pad').is_hidden()
             page.wait_for_timeout(3500);tour_pose=state()
             assert tour_pose['target']!=start_flight['target'] and tour_pose['yaw']!=start_flight['yaw']
@@ -186,12 +192,25 @@ with sync_playwright() as p:
             terrain_box=page.locator('#terrain').bounding_box()
             stop_x=terrain_box['x']+80;stop_y=terrain_box['y']+80
             (page.touchscreen.tap if touch else page.mouse.click)(stop_x,stop_y)
-            assert page.locator('#tour-toggle').get_attribute('aria-pressed')=='false'
+            assert page.locator('#flight-toggle').inner_text()=='閉じる'
             assert page.locator('#flight-pad').is_visible()
             assert page.locator('[data-flight]').count()==0
             assert page.locator('#range-move').is_visible()
             assert page.locator('#range-scale').is_visible()
             page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-flight.png'))
+            page.click('#tour-toggle');page.select_option('#flight-path','centered');page.locator('#flight-speed').evaluate("e=>{e.value='1.5';e.dispatchEvent(new Event('input',{bubbles:true}))}")
+            page.click('[data-flight-laps="2"]');assert page.locator('#flight-pad').is_hidden()
+            assert abs(page.evaluate('uiTest.flightDuration')-32000/1.5)<1
+            pivot=page.evaluate('({yaw:uiTest.renderer.controls.yaw,pitch:uiTest.renderer.controls.pitch,distance:uiTest.renderer.controls.distance,target:uiTest.renderer.controls.target.slice()})')
+            page.wait_for_timeout(800);orbit=state()
+            assert orbit['target']==pivot['target'] and orbit['pitch']==pivot['pitch'] and orbit['distance']==pivot['distance']
+            assert orbit['yaw']!=pivot['yaw']
+            (page.touchscreen.tap if touch else page.mouse.click)(stop_x,stop_y)
+            assert page.locator('#flight-toggle').inner_text()=='閉じる'
+            page.click('#tour-toggle');page.locator('#flight-speed').evaluate("e=>{e.value='2';e.dispatchEvent(new Event('input',{bubbles:true}))}");page.click('[data-flight-laps="infinite"]')
+            page.wait_for_timeout(500);assert '連続遊覧中' in page.locator('#flight-toggle').inner_text() and page.evaluate('uiTest.flightDuration')==16000
+            page.click('#flight-toggle');assert page.locator('#flight-toggle').inner_text()=='閉じる' and page.locator('#flight-toggle').get_attribute('aria-label')=='範囲・遊覧パネルを閉じる'
+            assert page.locator('#flight-pad').is_visible()
             page.click('#flight-toggle');assert page.locator('#flight-toggle').get_attribute('aria-pressed')=='false'
             assert page.locator('#flight-pad').is_hidden()
             print(f'PASS range panel and sightseeing flight at {width}x{height}',flush=True)
@@ -298,7 +317,7 @@ with sync_playwright() as p:
         page.locator('#expand-view').focus();page.keyboard.press('Tab')
         assert page.evaluate('document.activeElement.id')=='terrain'
         page.locator('#terrain').focus();page.keyboard.press('Tab')
-        assert page.evaluate('document.activeElement.id')=='back-to-map'
+        assert page.evaluate("document.activeElement.matches('.compass-control')")
         page.keyboard.press('Shift+Tab');assert page.evaluate('document.activeElement.id')=='terrain'
         page.keyboard.press('Escape');assert page.locator('#workspace').get_attribute('aria-modal') is None
         assert not page.evaluate("document.querySelector('#place-picker').inert")

@@ -58,8 +58,8 @@ with sync_playwright() as p:
    session.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
    assert page.evaluate('uiTest.renderer.controls.target.slice()')!=before
    session.detach()
-  page.click('#tour-toggle');yaw=page.evaluate('uiTest.renderer.controls.yaw');page.wait_for_timeout(500);assert page.evaluate('uiTest.renderer.controls.yaw')!=yaw
-  page.mouse.click(x,y);assert page.locator('#tour-toggle').get_attribute('aria-pressed')=='false'
+  page.click('#tour-toggle');page.click('[data-flight-laps="1"]');yaw=page.evaluate('uiTest.renderer.controls.yaw');page.wait_for_timeout(500);assert page.evaluate('uiTest.renderer.controls.yaw')!=yaw
+  page.mouse.click(x,y);assert page.locator('#flight-toggle').inner_text()=='閉じる'
   assert page.evaluate('uiTest.renderer.gl.getError()')==0 and not errors,errors
   print(f'PASS {w}x{h}: real DEM pan/scale, independent commits, rollback, flight, WebGL',flush=True)
   page.close()

@@ -1,19 +1,19 @@
-import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.31.0';
-import { contourInterval } from './contours.js?v=0.31.0';
-import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.31.0';
-import { loadMapTexture, textureKey } from './texture.js?v=0.31.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.31.0';
-import { LocationMap } from './map.js?v=0.31.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.31.0';
-import { createMesh } from './mesh.js?v=0.31.0';
-import { TerrainRenderer } from './renderer.js?v=0.31.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.31.0';
-import { flightTourPose } from './controls.js?v=0.31.0';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.31.0';
-import { setupAppTour } from './tour.js?v=0.31.0';
-import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.31.0';
-import { setupLandmarkGuide } from './landmark-guide.js?v=0.31.0';
-import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.31.0';
+import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.32.0';
+import { contourInterval } from './contours.js?v=0.32.0';
+import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.32.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.32.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.32.0';
+import { LocationMap } from './map.js?v=0.32.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.32.0';
+import { createMesh } from './mesh.js?v=0.32.0';
+import { TerrainRenderer } from './renderer.js?v=0.32.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.32.0';
+import { flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle } from './controls.js?v=0.32.0';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.32.0';
+import { setupAppTour } from './tour.js?v=0.32.0';
+import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.32.0';
+import { setupLandmarkGuide } from './landmark-guide.js?v=0.32.0';
+import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.32.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -130,7 +130,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.31.0');
+  const {pickSurface}=await import('./profile.js?v=0.32.0');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -405,47 +405,65 @@ slider.addEventListener('input',()=>{
 });
 document.querySelector('#reset').addEventListener('click',()=>{stopFlightTour();renderer?.reset();if(renderer)viewRangeBase=cameraPose();updateRangePanel();});
 const flightToggle=document.querySelector('#flight-toggle'), flightPad=document.querySelector('#flight-pad');
-const tourToggle=document.querySelector('#tour-toggle');
-let tourFrame=null,tourStarted=0,tourBase=null,tourDuration=32000,tourPaused=false,tourPausedAt=null;
-function stopFlightTour() {
+const tourToggle=document.querySelector('#tour-toggle'),tourOptions=document.querySelector('#flight-options');
+const flightPath=document.querySelector('#flight-path'),flightSpeed=document.querySelector('#flight-speed'),flightSpeedValue=document.querySelector('#flight-speed-value'),flightSummary=document.querySelector('#flight-summary');
+let selectedFlightLaps='1';
+let tourFrame=null,tourStarted=0,tourBase=null,tourDuration=32000,tourPaused=false,tourPausedAt=null,tourInfinite=false,tourLapCount=1,tourPose=centeredOrbitPose;
+function updateFlightSummary(){
+  const speed=Number(flightSpeed.value),laps=selectedFlightLaps==='infinite'?Infinity:Number(selectedFlightLaps),perLap=flightLapDuration(speed)/1000;
+  flightSpeedValue.textContent=`${speed.toFixed(1)}×`;
+  const mode=flightPath.value==='centered'?'中央軸':'従来';
+  flightSummary.textContent=Number.isFinite(laps)?`${mode} · ${laps}周 · 約${Math.round(perLap*laps)}秒`:`${mode} · 連続 · 約${Math.round(perLap)}秒／周`;
+
+}
+for(const control of [flightPath,flightSpeed])control.addEventListener('input',updateFlightSummary);
+for(const control of [flightPath])control.addEventListener('change',updateFlightSummary);
+document.querySelectorAll('[data-flight-laps]').forEach(button=>button.addEventListener('click',()=>{
+  selectedFlightLaps=button.dataset.flightLaps;updateFlightSummary();
+  startFlightTour(null,{path:flightPath.value,laps:selectedFlightLaps,speed:Number(flightSpeed.value)});
+}));
+function stopFlightTour(){
   const wasTouring=tourFrame!==null;
   if(tourFrame!==null)cancelAnimationFrame(tourFrame);
-  tourFrame=null;tourBase=null;tourToggle.setAttribute('aria-pressed','false');
-  tourPaused=false;tourPausedAt=null;
+  tourFrame=null;tourBase=null;tourInfinite=false;tourPaused=false;tourPausedAt=null;
   if(wasTouring&&flightMode)flightPad.hidden=false;
-  tourToggle.setAttribute('aria-label','遊覧飛行を開始（約32秒）');tourToggle.textContent='遊覧飛行 · 約32秒';
+  tourToggle.textContent='遊覧飛行を選ぶ ▾';tourToggle.setAttribute('aria-expanded','false');tourOptions.hidden=true;
+  flightToggle.textContent=flightMode?'閉じる':'範囲・遊覧';flightToggle.setAttribute('aria-label',flightMode?'範囲・遊覧パネルを閉じる':'範囲・遊覧パネルを開く');
+  updateFlightSummary();
 }
-function animateFlightTour(now) {
+function animateFlightTour(now){
   if(!renderer||!tourBase)return;
   if(tourPaused){tourFrame=requestAnimationFrame(animateFlightTour);return;}
   if(tourPausedAt!==null){tourStarted+=now-tourPausedAt;tourPausedAt=null;}
-  const progress=Math.min(1,(now-tourStarted)/tourDuration),pose=flightTourPose(tourBase,progress);
-  Object.assign(renderer.controls,{yaw:pose.yaw,pitch:pose.pitch,distance:pose.distance,target:pose.target});
-  renderer.requestDraw();
-  if(progress>=1){stopFlightTour();return;}
+  const cycle=flightCycle(now-tourStarted,tourDuration,tourLapCount,tourInfinite);
+  const {finished,progress,lap}=cycle;
+  const pose=tourPose(tourBase,progress);
+  Object.assign(renderer.controls,{yaw:pose.yaw,pitch:pose.pitch,distance:pose.distance,target:pose.target});renderer.requestDraw();
+  if(finished){stopFlightTour();return;}
+  if(!tourInfinite)flightToggle.textContent=`遊覧中 · ${lap}/${tourLapCount}周 · 停止`;
   tourFrame=requestAnimationFrame(animateFlightTour);
 }
-function startFlightTour(duration=32000) {
+function startFlightTour(duration=null,config=null){
   if(!renderer||!data||loading||renderer.lost)return false;
+  const choice=config||{path:flightPath.value,laps:selectedFlightLaps,speed:Number(flightSpeed.value)};
+  tourPose=choice.path==='centered'?centeredOrbitPose:flightTourPose;
+  tourInfinite=choice.laps==='infinite';tourLapCount=tourInfinite?Infinity:Number(choice.laps);
+  tourDuration=duration??flightLapDuration(choice.speed);
   if(!flightMode){flightMode=true;flightToggle.setAttribute('aria-pressed','true');flightToggle.textContent='閉じる';flightToggle.setAttribute('aria-label','範囲・遊覧パネルを閉じる');flightPad.hidden=false;}
-  const controls=renderer.controls;
-  tourBase={yaw:controls.yaw,pitch:controls.pitch,distance:controls.distance,target:controls.target.slice()};
-  tourDuration=duration;tourStarted=performance.now();tourToggle.setAttribute('aria-pressed','true');
-  tourToggle.setAttribute('aria-label','遊覧飛行を停止');tourToggle.textContent='遊覧飛行中 · 停止';
-  flightPad.hidden=true;
-  document.querySelector('#terrain').focus({preventScroll:true});
-  tourFrame=requestAnimationFrame(animateFlightTour);
-  return true;
+  const c=renderer.controls;tourBase={yaw:c.yaw,pitch:c.pitch,distance:c.distance,target:c.target.slice()};
+  tourStarted=performance.now();flightToggle.textContent=tourInfinite?'連続遊覧中 · 停止':`遊覧中 · 1/${tourLapCount}周 · 停止`;flightToggle.setAttribute('aria-label','遊覧を停止して設定を表示');flightToggle.title=flightToggle.getAttribute('aria-label');
+  tourOptions.hidden=true;tourToggle.setAttribute('aria-expanded','false');flightPad.hidden=true;
+  document.querySelector('#terrain').focus({preventScroll:true});tourFrame=requestAnimationFrame(animateFlightTour);return true;
 }
+tourToggle.addEventListener('click',()=>{const open=tourOptions.hidden;tourOptions.hidden=!open;tourToggle.setAttribute('aria-expanded',String(open));tourToggle.textContent=open?'遊覧の設定を閉じる ▴':'遊覧飛行を選ぶ ▾';});
+updateFlightSummary();
 flightToggle.addEventListener('click',()=>{
+  if(tourFrame!==null){stopFlightTour();flightPad.hidden=false;return;}
   flightMode=!flightMode;flightToggle.setAttribute('aria-pressed',String(flightMode));
   flightToggle.textContent=flightMode?'閉じる':'範囲・遊覧';flightToggle.setAttribute('aria-label',flightMode?'範囲・遊覧パネルを閉じる':'範囲・遊覧パネルを開く');flightToggle.title=flightToggle.getAttribute('aria-label');flightPad.hidden=!flightMode;updateRangePanel();
-  renderer?.controls.setFlightMode(false);
-  if(!flightMode)stopFlightTour();
+  renderer?.controls.setFlightMode(false);if(!flightMode)stopFlightTour();
   if(flightMode)document.querySelector('#terrain').focus({preventScroll:true});
 });
-tourToggle.addEventListener('click',()=>tourFrame!==null?stopFlightTour():startFlightTour());
-
 const terrainCanvas=document.querySelector('#terrain');
 terrainCanvas.addEventListener('pointerdown',stopFlightTour);
 document.querySelector('#observation-overlay').addEventListener('terrain-north-view',()=>{
@@ -523,7 +541,7 @@ load();
 // Load section calculations/UI only when explicitly requested.
 async function getProfileTool(){
   if(!data||loading||renderer?.lost)throw new Error('地形が読み込み中です。');
-  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.31.0');profile=new SectionTool(renderer,viewerUI);}
+  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.32.0');profile=new SectionTool(renderer,viewerUI);}
   profile.setData(data);return profile;
 }
 document.querySelector('#profile-start').addEventListener('click',async()=>{
@@ -590,6 +608,7 @@ async function captureTourState(){
     camera:cameraPose(),height:slider.value,mode:modeSelect.value,strength:strengthSlider.value,surface:surfaceSelect.value,
     contours:contoursToggle.checked,contourInterval:contourIntervalSelect.value,sunAzimuth:sunAzimuth.value,sunAltitude:sunAltitude.value,
     settingsOpen:!document.querySelector('#view-settings').hidden,flightMode,
+    flightOptionsOpen:!tourOptions.hidden,flightPath:flightPath.value,flightLaps:selectedFlightLaps,flightSpeed:flightSpeed.value,
     stateText:state.textContent,profile:profile?.captureState()||null,
     geologyOpen:!geologyLegendPanel.hidden,geologyPanelOpen:!geologyLegendPanel.hidden&&!document.querySelector('#geology-legend-panel').hidden,landmark:landmarkGuide.snapshot(),
     scrollX:window.scrollX,scrollY:window.scrollY};
@@ -634,6 +653,8 @@ async function restoreTourState(){
   setGeologyLegendOpen(saved.geologyOpen);document.querySelector('#geology-legend-panel').hidden=!saved.geologyPanelOpen;
   if(saved.geologyPanelOpen)await loadGeologyLegend();
   if(flightMode!==saved.flightMode)flightToggle.click();
+  flightPath.value=saved.flightPath||'classic';selectedFlightLaps=saved.flightLaps||'1';flightSpeed.value=saved.flightSpeed||'1';updateFlightSummary();
+  tourOptions.hidden=!saved.flightOptionsOpen;tourToggle.setAttribute('aria-expanded',String(saved.flightOptionsOpen));tourToggle.textContent=saved.flightOptionsOpen?'遊覧の設定を閉じる ▴':'遊覧飛行を選ぶ ▾';
   flightPad.hidden=!saved.flightMode;viewerUI.setSettingsOpen(saved.settingsOpen);
   window.scrollTo(saved.scrollX,saved.scrollY);
   tourSnapshot=null;
@@ -699,7 +720,7 @@ async function demoContours(api,signal){
 async function demoProfile(api,signal){
   applySelect(modeSelect,'mono');contoursToggle.checked=false;contoursToggle.dispatchEvent(new Event('change',{bubbles:true}));viewerUI.setSettingsOpen(true);
   const tool=await getProfileTool();tool.clear();await api.wait(2000);tool.start();api.focus('#terrain');await api.wait(700);
-  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.31.0');
+  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.32.0');
   if(signal.aborted)throw new DOMException('Stopped','AbortError');
   renderer.draw();const rect=terrainCanvas.getBoundingClientRect(),camera=renderer.cameras(undefined,undefined,true)[0];
   const candidates=[];
@@ -730,7 +751,7 @@ async function demoLocation(api,signal){
 }
 async function demoFlight(api,signal){
   await api.wait(1800);
-  if(!startFlightTour(14000))throw new Error('遊覧飛行を開始できませんでした。');
+  if(!startFlightTour(14000,{path:'classic',laps:1,speed:1}))throw new Error('遊覧飛行を開始できませんでした。');
   if(matchMedia('(max-width:900px)').matches)api.focus('#tour-toggle');
   await api.wait(14500);if(signal.aborted)throw new DOMException('Stopped','AbortError');
   return {message:'山の上を一周する遊覧飛行を終えました。'};

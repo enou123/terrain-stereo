@@ -15,8 +15,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/terrain-tanbo-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.31.0">
-  <script type="module" src="js/app.js?v=0.31.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.32.0">
+  <script type="module" src="js/app.js?v=0.32.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span><span class="brand-subtitle">｜地形探訪</span></a><span class="edition">JAPAN TERRAIN EXPLORER</span></header>
@@ -52,7 +52,17 @@
           <button id="range-scale" type="button">② ズームを範囲に反映</button>
           <p class="range-help">移動後は①、拡大・縮小後は②で地形を読み直します。②は今の読込中心を保ちます。</p>
           <p id="range-status" role="status" aria-live="polite"></p>
-          <button id="tour-toggle" type="button" aria-pressed="false">遊覧飛行 · 約32秒</button>
+          <button id="tour-toggle" type="button" aria-expanded="false" aria-controls="flight-options">遊覧飛行を選ぶ ▾</button>
+          <div id="flight-options" class="flight-options" hidden>
+            <label for="flight-path">飛行モード</label><select id="flight-path"><option value="classic">従来の遊覧飛行</option><option value="centered">画面中央を軸に水平周回</option></select>
+            <p class="flight-choice-label">周回数を選んで開始</p><div class="flight-lap-choices" role="group" aria-label="遊覧飛行の周回数">
+              <button type="button" data-flight-laps="1">1周</button><button type="button" data-flight-laps="2">2周</button><button type="button" data-flight-laps="3">3周</button>
+              <button type="button" data-flight-laps="5">5周</button><button type="button" data-flight-laps="10">10周</button><button type="button" data-flight-laps="infinite">連続</button>
+            </div>
+            <div class="control-heading"><label for="flight-speed">速度</label><output id="flight-speed-value" for="flight-speed">1.0×</output></div>
+            <input id="flight-speed" type="range" min="0.5" max="2" step="0.1" value="1">
+            <p id="flight-summary" role="status" aria-live="polite">中央軸 · 1周 · 約32秒</p>
+          </div>
         </div>
         <div class="message" id="message" role="status" aria-live="polite"><span class="spinner" aria-hidden="true"></span><p id="status">標高データを取得しています…</p><button id="retry" hidden>もう一度読み込む</button></div>
         <div class="viewer-bottom"><span>ドラッグで回転 <span class="desktop-hint"> / ホイールでズーム・中ボタンで移動</span><span class="touch-hint"> / 2本指で拡大縮小・移動</span></span><span class="axis">標高を立体表示</span></div>

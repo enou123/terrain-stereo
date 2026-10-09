@@ -36,7 +36,7 @@ export class ObservationOverlay {
   update(view,mode,width) {
     const paired=mode==='parallel'||mode==='cross';
     const directions=compassDirections(view), half=Math.floor(width/2);
-    this.element.hidden=false;
+    this.element.hidden=false;this.element.setAttribute('aria-hidden','false');
     for(const [i,{pane,mark,directions:nodes,arrow}] of this.panes.entries()) {
       pane.hidden=i===1&&!paired; mark.hidden=!paired;
       pane.style.left=`${paired&&i===1?(width-half)/width*100:0}%`;

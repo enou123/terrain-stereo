@@ -1,3 +1,15 @@
+export function flightLapDuration(speed, baseDuration=32000) {
+  return baseDuration/Math.max(.5,Math.min(2,Number(speed)||1));
+}
+
+export function flightCycle(elapsed,duration,laps=1,infinite=false) {
+  const time=Math.max(0,elapsed),period=Math.max(1,duration),count=infinite?Infinity:Math.max(1,Math.floor(laps));
+  const progress=time/period,finished=!infinite&&progress>=count;
+  const phase=progress-Math.floor(progress);
+  return {progress:finished?1:(infinite||progress>=1?phase:progress),finished,
+    lap:infinite?Math.floor(progress)+1:Math.min(count,Math.floor(progress)+1)};
+}
+
 export function flightTourPose(base, progress) {
   const angle=Math.PI*2*Math.max(0,Math.min(1,progress)),radius=2.4;
   const forward=[-Math.sin(base.yaw),-Math.cos(base.yaw)],right=[Math.cos(base.yaw),-Math.sin(base.yaw)];
@@ -12,6 +24,13 @@ export function flightTourPose(base, progress) {
       base.target[2]+right[1]*lateral+forward[1]*advance
     ]
   };
+}
+
+
+// Circle the camera around the screen-centered 3D pivot without moving it.
+export function centeredOrbitPose(base, progress) {
+  const angle=Math.PI*2*progress;
+  return {yaw:base.yaw-angle,pitch:base.pitch,distance:base.distance,target:base.target.slice()};
 }
 
 export class OrbitControls {

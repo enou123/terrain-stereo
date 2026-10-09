@@ -41,8 +41,8 @@ with sync_playwright() as p:
   page.locator('#terrain').focus();before_view=page.evaluate('Array.from(uiTest.renderer.cameras()[0].view)');page.keyboard.press('ArrowLeft');assert page.evaluate('Array.from(uiTest.renderer.cameras()[0].view)')!=before_view
   page.keyboard.press('ArrowDown');assert page.evaluate('uiTest.renderer.controls.pitch')<math.pi/2
   page.locator('.compass-control').first.click();assert page.evaluate('uiTest.renderer.controls.pitch')==math.pi/2
-  page.click('#flight-toggle');page.click('#tour-toggle');page.wait_for_timeout(300)
-  page.locator('.compass-control').first.click();assert page.locator('#tour-toggle').get_attribute('aria-pressed')=='false'
+  page.click('#flight-toggle');page.click('#tour-toggle');page.click('[data-flight-laps="1"]');page.wait_for_timeout(300)
+  page.locator('.compass-control').first.click();assert page.locator('#flight-toggle').inner_text()=='閉じる'
   assert page.evaluate('uiTest.renderer.controls.pitch')==math.pi/2 and not errors,errors
   print(f'PASS {w}x{h}: compass click/tap, north, exact overhead, center/fit, no DEM fetch, stereo, keyboard, flight stop',flush=True)
   page.close()

@@ -741,3 +741,15 @@ body.view-focused { overflow:hidden; }
   .flight-pad .range-help { display:none; }
   .flight-pad #range-status,.flight-pad #tour-toggle { grid-column:1 / -1; }
 }
+.flight-options { display:grid; gap:5px; padding-top:4px; }
+.flight-options label,.flight-options .control-heading { font-size:12px; }
+.flight-options select { width:100%; min-height:40px; padding:6px 9px; }
+.flight-choice-label { margin-top:3px!important; }
+.flight-lap-choices { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:5px; }
+.flight-lap-choices button { min-height:40px; padding:5px 4px; }
+.flight-options input[type="range"] { width:100%; margin:2px 0; }
+
+@media(max-height:500px) { .flight-options { gap:3px; } .flight-options select { min-height:34px; } }
+.flight-pad { max-height:calc(100% - 48px); overflow-y:auto; overscroll-behavior:contain; }
+@media(max-width:600px) and (min-height:501px) { .flight-pad #flight-options { grid-column:1 / -1; } }
+.flight-options .control-heading output { color:#d0e49e; }

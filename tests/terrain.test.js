@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { parseTile, worldPixel } from '../js/elevation.js';
 import { createMesh, fitMeshPositions } from '../js/mesh.js';
 import { perspective, lookAt } from '../js/math.js';
-import { OrbitControls, flightTourPose } from '../js/controls.js';
+import { OrbitControls, flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle } from '../js/controls.js';
 
 test('GSI text parser preserves positive, negative, zero and missing elevations',()=>{
   const rows=Array.from({length:256},()=>Array(256).fill('100'));
@@ -133,4 +133,25 @@ test('contour elevations retain real metres through exaggeration, fitting and mi
   assert.deepEqual(low.indices,high.indices);
   assert.notDeepEqual(low.positions,high.positions);
   assert.ok(low.elevations.every(Number.isFinite));
+});
+
+test('centered orbit circles the starting screen-center pivot with fixed pitch, radius and distance',()=>{
+  const base={yaw:.38,pitch:.75,distance:19,target:[2,1.5,-3]};
+  for(const progress of [0,.25,.5,.75,1]){
+    const pose=centeredOrbitPose(base,progress);
+    assert.ok(Math.abs(pose.pitch-base.pitch)<1e-12);
+    assert.ok(Math.abs(pose.distance-base.distance)<1e-12);
+    assert.deepEqual(pose.target,base.target);
+    const horizontal=pose.distance*Math.cos(pose.pitch);
+    assert.ok(Math.abs(horizontal-base.distance*Math.cos(base.pitch))<1e-12);
+    assert.ok(Math.abs(pose.yaw-(base.yaw-progress*Math.PI*2))<1e-12);
+  }
+});
+
+
+test('flight speed and lap selections control independent duration, wrapping and stopping',()=>{
+  assert.equal(flightLapDuration(.5),64000);assert.equal(flightLapDuration(1),32000);assert.equal(flightLapDuration(2),16000);
+  assert.deepEqual(flightCycle(64000,32000,3,false),{progress:0,finished:false,lap:3});
+  assert.deepEqual(flightCycle(96000,32000,3,false),{progress:1,finished:true,lap:3});
+  assert.deepEqual(flightCycle(80500,32000,Infinity,true),{progress:.515625,finished:false,lap:3});
 });
