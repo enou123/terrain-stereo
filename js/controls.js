@@ -4,7 +4,7 @@ export function flightTourPose(base, progress) {
   const lateral=radius*(1-Math.cos(angle)),advance=radius*Math.sin(angle);
   return {
     yaw:base.yaw-angle,
-    pitch:base.pitch+0.045*Math.sin(angle*2),
+    pitch:Math.max(.12,Math.min(Math.PI/2,base.pitch+0.045*Math.sin(angle*2))),
     distance:base.distance*(1-0.08*(1-Math.cos(angle*2))/2),
     target:[
       base.target[0]+right[0]*lateral+forward[0]*advance,
@@ -76,7 +76,7 @@ export class OrbitControls {
     });
   }
   reset() { this.yaw=0.38; this.pitch=0.75; this.distance=19; this.target=[0,1.1,0]; }
-  clamp() { this.pitch=Math.max(0.12,Math.min(1.48,this.pitch)); this.distance=Math.max(4,Math.min(45,this.distance)); }
+  clamp() { this.pitch=Math.max(0.12,Math.min(Math.PI/2,this.pitch)); this.distance=Math.max(4,Math.min(45,this.distance)); }
   zoom(factor) { this.distance*=factor; this.clamp(); }
   setFlightMode(enabled) { this.flightMode=Boolean(enabled); }
   fly(direction) {
@@ -103,8 +103,8 @@ export class OrbitControls {
     this.target[2]=Math.max(-12,Math.min(12,this.target[2]));
   }
   get eye() {
-    return [this.target[0]+this.distance*Math.cos(this.pitch)*Math.sin(this.yaw),
+    return [this.target[0]+this.distance*(this.pitch===Math.PI/2?0:Math.cos(this.pitch))*Math.sin(this.yaw),
       this.target[1]+this.distance*Math.sin(this.pitch),
-      this.target[2]+this.distance*Math.cos(this.pitch)*Math.cos(this.yaw)];
+      this.target[2]+this.distance*(this.pitch===Math.PI/2?0:Math.cos(this.pitch))*Math.cos(this.yaw)];
   }
 }

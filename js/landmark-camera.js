@@ -27,3 +27,16 @@ export function landmarkCamera(mesh, recommendation, aspect, focus=null) {
   distance=Math.max(distance,(highest+.5-target[1])/sp);
   return {yaw,pitch,target,distance:Math.max(4,Math.min(45,distance/fit))};
 }
+
+// Fit the loaded square with its geographic center on screen, including island sea margins.
+export function northTopCamera(mesh, aspect) {
+  let halfX=0,halfZ=0,minY=Infinity,maxY=-Infinity;
+  for(let i=0;i<mesh.positions.length;i+=3){
+    halfX=Math.max(halfX,Math.abs(mesh.positions[i]));halfZ=Math.max(halfZ,Math.abs(mesh.positions[i+2]));
+  }
+  for(const i of mesh.indices){minY=Math.min(minY,mesh.positions[i*3+1]);maxY=Math.max(maxY,mesh.positions[i*3+1]);}
+  if(!Number.isFinite(minY)||!(aspect>0))throw new Error('観察できる地形がありません。');
+  const targetY=(minY+maxY)/2,fit=Math.max(1,1.15/aspect),tan=Math.tan(Math.PI/8);
+  const distance=(maxY-targetY+Math.max(halfX/(tan*aspect*.88),halfZ/(tan*.88)))/fit;
+  return {yaw:0,pitch:Math.PI/2,distance:Math.max(4,Math.min(45,distance)),target:[0,targetY,0]};
+}

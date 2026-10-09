@@ -39,3 +39,8 @@ test('contour spacing accepts public choices and old or invalid links keep 100m'
   for(const n of [10,20,50,100,200])assert.equal(readSharedView(`?ci=${n}`).contourInterval,n);
   for(const query of ['?ci=0','?ci=33','?ci=NaN','?contours=1'])assert.equal(readSharedView(query).contourInterval,100);
 });
+
+test('overhead camera survives share link rounding',()=>{
+  const parsed=readSharedView('?pitch=1.5708&yaw=0&tx=0&tz=0');
+  assert.equal(parsed.camera.pitch,Math.PI/2);
+});

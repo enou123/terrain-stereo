@@ -44,3 +44,17 @@ test('compass vectors match projected geographic displacements across orbit and 
     }
   }
 });
+
+test('exact overhead view is finite, north up and stereo remains centered',()=>{
+  const target=[0,1,0],eye=[0,20,0];
+  const directions=compassDirections(lookAt(eye,target));
+  assert.deepEqual(directions.map(d=>[d.label,d.x+0,d.y+0]),[['N',0,-1],['E',1,0],['S',0,1],['W',-1,0]]);
+  for(const offset of [-.3,0,.3]){
+    const camera=stereoCamera(eye,target,.5,offset);
+    assert.ok([...camera.view,...camera.projection].every(Number.isFinite));
+    // Project the target; asymmetric stereo projection must cancel eye displacement.
+    const v=[...target,1].map((_,r)=>[...target,1].reduce((s,x,c)=>s+camera.view[c*4+r]*x,0));
+    const p=v.map((_,r)=>v.reduce((s,x,c)=>s+camera.projection[c*4+r]*x,0));
+    assert.ok(Math.abs(p[0]/p[3])<1e-6 && Math.abs(p[1]/p[3])<1e-6);
+  }
+});

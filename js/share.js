@@ -1,4 +1,4 @@
-import { contourInterval } from './contours.js?v=0.30.0';
+import { contourInterval } from './contours.js?v=0.31.0';
 const MODES = new Set(['mono', 'parallel', 'cross', 'anaglyph']);
 const QUALITIES = new Set(['standard', 'high', 'ultra']);
 const SURFACES = new Set(['elevation', 'shading', 'map', 'photo', 'geology']);
@@ -21,7 +21,7 @@ export function readSharedView(search) {
     },
     camera: {
       yaw: number(params, 'yaw', .38, -1000, 1000),
-      pitch: number(params, 'pitch', .75, .12, 1.48),
+      pitch: number(params, 'pitch', .75, .12, Math.PI/2),
       distance: number(params, 'dist', 19, 4, 45),
       target: [number(params, 'tx', 0, -12, 12), number(params, 'ty', 1.1, -100, 100), number(params, 'tz', 0, -12, 12)]
     },

@@ -19,7 +19,10 @@ export class ObservationOverlay {
       const pane=document.createElement('div'); pane.className='observation-pane';
       element.append(pane);
       const mark=document.createElement('span'); mark.className='alignment-mark'; pane.append(mark);
-      const svg=svgElement('svg',{viewBox:'0 0 64 64',class:'compass'},pane);
+      const button=document.createElement('button');button.type='button';button.className='compass-control';
+      button.setAttribute('aria-label','北を上にして地形を真上から表示');button.title='北を上にして地形を真上から表示';pane.append(button);
+      button.addEventListener('click',()=>element.dispatchEvent(new CustomEvent('terrain-north-view',{bubbles:true})));
+      const svg=svgElement('svg',{viewBox:'0 0 64 64',class:'compass','aria-hidden':'true'},button);
       svgElement('circle',{cx:32,cy:32,r:30,class:'compass-disc'},svg);
       const directions=['N','E','S','W'].map(label=>{
         const line=svgElement('line',{x1:32,y1:32,class:label==='N'?'north':'cardinal'},svg);

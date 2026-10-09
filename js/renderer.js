@@ -1,9 +1,9 @@
-import { contourInterval } from './contours.js?v=0.30.0';
-import { lookAt } from './math.js?v=0.30.0';
-import { ObservationOverlay } from './observation.js?v=0.30.0';
-import { fitMeshPositions } from './mesh.js?v=0.30.0';
-import { stereoCamera } from './stereo.js?v=0.30.0';
-import { OrbitControls } from './controls.js?v=0.30.0';
+import { contourInterval } from './contours.js?v=0.31.0';
+import { lookAt } from './math.js?v=0.31.0';
+import { ObservationOverlay } from './observation.js?v=0.31.0';
+import { fitMeshPositions } from './mesh.js?v=0.31.0';
+import { stereoCamera } from './stereo.js?v=0.31.0';
+import { OrbitControls } from './controls.js?v=0.31.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -180,12 +180,13 @@ export class TerrainRenderer {
     if (this.frame || this.lost) return;
     this.frame=requestAnimationFrame(()=>{this.frame=null; this.draw();});
   }
+  cameraUp() { return this.controls.pitch===Math.PI/2?[-Math.sin(this.controls.yaw),0,-Math.cos(this.controls.yaw)]:undefined; }
   cameras(width=this.canvas.width,height=this.canvas.height, centerAnaglyph=false) {
     const paired=this.mode==='parallel'||this.mode==='cross', half=Math.floor(width/2);
     const target=this.controls.target,fit=Math.max(1,1.15/((paired?half:width)/height));
     const eye=this.controls.eye.map((v,i)=>target[i]+(v-target[i])*fit);
     const separation=Math.hypot(...eye.map((v,i)=>v-target[i]))*.025*this.strength;
-    const camera=(offset,x,w)=>({...stereoCamera(eye,target,w/height,offset),x,width:w,height});
+    const camera=(offset,x,w)=>({...stereoCamera(eye,target,w/height,offset,this.cameraUp()),x,width:w,height});
     if(paired) {const order=this.mode==='cross'?1:-1;return [camera(order*separation/2,0,half),camera(-order*separation/2,width-half,half)];}
     if(this.mode==='anaglyph'&&!centerAnaglyph)return [camera(-separation/2,0,width),camera(separation/2,0,width)];
     return [camera(0,0,width)];
@@ -196,7 +197,7 @@ export class TerrainRenderer {
     const width=Math.max(1,Math.round(canvas.clientWidth*ratio));
     const height=Math.max(1,Math.round(canvas.clientHeight*ratio));
     if (canvas.width!==width || canvas.height!==height) {canvas.width=width; canvas.height=height;}
-    this.observation.update(lookAt(this.controls.eye,this.controls.target),this.mode,width);
+    this.observation.update(lookAt(this.controls.eye,this.controls.target,this.cameraUp()),this.mode,width);
     const paired = this.mode === 'parallel' || this.mode === 'cross';
     const anaglyph = this.mode === 'anaglyph';
     gl.colorMask(true,true,true,true);
