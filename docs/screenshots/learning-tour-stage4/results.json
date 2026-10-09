@@ -1,0 +1,161 @@
+[
+  {
+    "viewport": "1440x900",
+    "place": "kurobe",
+    "steps": [
+      "山並みと峡谷の位置",
+      "仙人谷へ近づく",
+      "峡谷の地質を重ねる",
+      "支谷との合流を見る"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "1440x900",
+    "place": "aso",
+    "steps": [
+      "カルデラ全体を眺める",
+      "中央火口丘群へ",
+      "噴出物の分布を重ねる",
+      "中岳火口周辺を観察",
+      "火口周辺の地質区分"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "1440x900",
+    "place": "kikaijima",
+    "steps": [
+      "隆起した島の全体像",
+      "百之台の段丘を観察",
+      "石灰岩の分布を確かめる",
+      "島全体へ戻して段差を比べる"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "1440x900",
+    "place": "minamidaito",
+    "steps": [
+      "火口ではなく環状の島",
+      "西側の「幕」と低地",
+      "石灰岩の島を地質図で見る",
+      "中央低地へ視点を移す"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "390x844",
+    "place": "kurobe",
+    "steps": [
+      "山並みと峡谷の位置",
+      "仙人谷へ近づく",
+      "峡谷の地質を重ねる",
+      "支谷との合流を見る"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "390x844",
+    "place": "aso",
+    "steps": [
+      "カルデラ全体を眺める",
+      "中央火口丘群へ",
+      "噴出物の分布を重ねる",
+      "中岳火口周辺を観察",
+      "火口周辺の地質区分"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "390x844",
+    "place": "kikaijima",
+    "steps": [
+      "隆起した島の全体像",
+      "百之台の段丘を観察",
+      "石灰岩の分布を確かめる",
+      "島全体へ戻して段差を比べる"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "390x844",
+    "place": "minamidaito",
+    "steps": [
+      "火口ではなく環状の島",
+      "西側の「幕」と低地",
+      "石灰岩の島を地質図で見る",
+      "中央低地へ視点を移す"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "844x390",
+    "place": "kurobe",
+    "steps": [
+      "山並みと峡谷の位置",
+      "仙人谷へ近づく",
+      "峡谷の地質を重ねる",
+      "支谷との合流を見る"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "844x390",
+    "place": "aso",
+    "steps": [
+      "カルデラ全体を眺める",
+      "中央火口丘群へ",
+      "噴出物の分布を重ねる",
+      "中岳火口周辺を観察",
+      "火口周辺の地質区分"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "844x390",
+    "place": "kikaijima",
+    "steps": [
+      "隆起した島の全体像",
+      "百之台の段丘を観察",
+      "石灰岩の分布を確かめる",
+      "島全体へ戻して段差を比べる"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  },
+  {
+    "viewport": "844x390",
+    "place": "minamidaito",
+    "steps": [
+      "火口ではなく環状の島",
+      "西側の「幕」と低地",
+      "石灰岩の島を地質図で見る",
+      "中央低地へ視点を移す"
+    ],
+    "geologyFixture": true,
+    "webglErrors": 0,
+    "jsErrors": []
+  }
+]

@@ -2,7 +2,9 @@
 from pathlib import Path
 exec(Path(__file__).with_name('landmarks.browser.py').read_text().split('with sync_playwright() as p:')[0])
 
-OUT=ROOT/'docs/screenshots/learning-tour';OUT.mkdir(parents=True,exist_ok=True)
+OUT=ROOT/'docs/screenshots/learning-tour-stage4';OUT.mkdir(parents=True,exist_ok=True)
+TOURS=json.loads(subprocess.check_output(['node','--input-type=module','-e',"import {LEARNING_TOURS} from './js/learning-tour.js';console.log(JSON.stringify(LEARNING_TOURS))"],cwd=ROOT))
+SPOTS=json.loads(subprocess.check_output(['node','--input-type=module','-e',"import {LANDMARK_SPOTS} from './js/landmark-spots.js';console.log(JSON.stringify(LANDMARK_SPOTS))"],cwd=ROOT))
 with sync_playwright() as p:
     browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),args=['--no-sandbox','--disable-crashpad','--disable-breakpad','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader'])
     checks=[]
@@ -23,7 +25,8 @@ with sync_playwright() as p:
         page.route('https://cyberjapandata.gsi.go.jp/**',route);page.route('https://gbank.gsj.jp/**',route)
         page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.uiTest={get renderer(){return renderer},get data(){return data},get guide(){return landmarkGuide},get loading(){return loading}};",content_type='text/javascript'))
         page.goto(URL);page.wait_for_function("window.uiTest&&!uiTest.loading&&document.querySelector('#message').hidden",timeout=180000)
-        for id in ['akiyoshidai','aogashima','itoigawa']:
+        for id in ['kurobe','aso','kikaijima','minamidaito']:
+            place=next(item for item in PLACES if item['id']==id)
             page.select_option('#map-place',id);page.click('#visit-landmark')
             page.wait_for_function("!uiTest.loading&&!document.querySelector('#visit-landmark').disabled&&uiTest.guide.active",timeout=180000)
             page.click('#learning-tour-start')
@@ -33,8 +36,15 @@ with sync_playwright() as p:
                 page.wait_for_function("!document.querySelector('#learning-tour-next').disabled",timeout=120000)
                 title=page.locator('#learning-tour-title').inner_text();titles.append(title)
                 expected=page.evaluate("({spot:uiTest.guide.spot,mode:uiTest.guide.mode,surface:uiTest.renderer.surface,location:uiTest.data.location,gl:uiTest.renderer.gl.getError()})")
+                step=TOURS[id][index]
+                assert title==step['title'] and expected['spot']==step['spot'] and expected['mode']==step['mode'],(id,index,title,expected,step)
                 assert expected['mode'] in ('terrain','geology') and expected['gl']==0,(id,title,expected)
                 assert (expected['surface']=='geology')== (expected['mode']=='geology'),(id,title,expected)
+                framing=(next((s for s in SPOTS.get(id,[]) if s['id']==step['spot']),None))
+                center=framing['center'] if framing else place['center']
+                zoom=(framing['settings']['zoom'] if framing else place['settings'][step['mode']]['zoom'])
+                assert expected['location']=={'latitude':center['latitude'],'longitude':center['longitude'],'zoom':zoom},(id,index,expected['location'],center,zoom)
+                assert page.locator('#learning-tour-copy').inner_text()==step['copy']
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
                 page.locator('#workspace').scroll_into_view_if_needed();page.locator('#viewer').screenshot(path=str(OUT/f'{width}x{height}-{id}-{index+1}.jpg'),type='jpeg',quality=84)
                 if expected['mode']=='geology':
@@ -46,8 +56,8 @@ with sync_playwright() as p:
                     page.wait_for_function(f"!document.querySelector('#learning-tour-next').disabled&&document.querySelector('#learning-tour-count').textContent.includes('{index+2} /')",timeout=120000)
                     after=page.evaluate('uiTest.data.location')
                     spot=page.evaluate('uiTest.guide.spot')
-                    if id=='akiyoshidai' and index==1: assert spot=='chojagamori' and after!=before
-                    if id=='aogashima' and index==0: assert spot=='ikenosawa' and after!=before
+                    nextspot=TOURS[id][index+1]['spot']
+                    if nextspot!=step['spot']: assert spot==nextspot and after!=before,(id,index,spot,nextspot,before,after)
             assert page.locator('#learning-tour-next').inner_text()=='ツアーを終える'
             page.click('#learning-tour-prev');page.wait_for_timeout(2500)
             back=page.evaluate("({count:document.querySelector('#learning-tour-count').textContent,nextDisabled:document.querySelector('#learning-tour-next').disabled,status:document.querySelector('#landmark-guide-status').textContent,spot:uiTest.guide.spot,mode:uiTest.guide.mode,loading:uiTest.loading,message:document.querySelector('#message').textContent})")

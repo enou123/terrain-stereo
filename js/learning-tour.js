@@ -1,5 +1,5 @@
-// Short, sourced observation sequences for the first learning-tour release.
-// Each step uses the same landmark and surface controls as normal exploration.
+// Short, source-backed observation sequences. Each step uses the same
+// landmark and surface controls as normal exploration.
 export const LEARNING_TOURS = Object.freeze({
   akiyoshidai: [
     { title:'台地の形をつかむ', mode:'terrain', spot:null,
@@ -30,6 +30,65 @@ export const LEARNING_TOURS = Object.freeze({
     { title:'地質の違いを重ねる', mode:'geology', spot:null,
       copy:'地質図を重ねて、姫川を挟む地質区分を比べます。色境界は概略で、地質図上の色境界すべてが糸魚川－静岡構造線ではありません。',
       prompt:'凡例で地質区分を確かめ、谷の形と地質の分布を別々に観察しましょう。地下構造や正確な断層線はこの表示からは分かりません。' },
+  ],
+  kurobe: [
+    { title:'山並みと峡谷の位置', mode:'terrain', spot:null,
+      copy:'立山連峰と黒部川沿いの山地を広く眺めます。山並みの高さと、深く刻まれた谷の位置関係を探してください。',
+      prompt:'山の稜線から谷底まで、どれほど大きく高さが変わっていますか？' },
+    { title:'仙人谷へ近づく', mode:'terrain', spot:'sennindani',
+      copy:'黒部川の仙人谷付近へ移動します。狭い谷底と両岸の急斜面を、谷沿いに回転して観察します。',
+      prompt:'主谷はどの方向に伸びていますか？ 道や橋ではなく、標高データに表れた谷の形に注目します。' },
+    { title:'峡谷の地質を重ねる', mode:'geology', spot:'sennindani',
+      copy:'同じ谷の視点に地質図を重ねます。凡例から岩石区分を読み、谷と周辺山地の分布を比べてください。',
+      prompt:'岩石区分の色と谷の位置を見比べます。地質図の区分だけで、侵食の速さや岩盤の強さまでは決められません。' },
+    { title:'支谷との合流を見る', mode:'terrain', spot:'asohara',
+      copy:'阿曽原谷との合流部へ移り、支谷が黒部川へ合流する地形を見ます。先ほどの峡谷とは範囲が変わります。',
+      prompt:'主谷と支谷の谷底の高さや幅を比べてください。河床や建物の細部はこの3Dデータの対象外です。' },
+  ],
+  aso: [
+    { title:'カルデラ全体を眺める', mode:'terrain', spot:null,
+      copy:'外輪山に囲まれた低地と、その内側の中央火口丘群を広く眺めます。大きな囲みと内部の山々を見つけてください。',
+      prompt:'外輪山・カルデラ内の低地・中央火口丘の三つは、どのように並んでいますか？' },
+    { title:'中央火口丘群へ', mode:'terrain', spot:'central-cones',
+      copy:'カルデラ内部の中央火口丘群へ近づきます。中岳・高岳と草千里付近の地形、周囲の低地を比べます。',
+      prompt:'中央の山々と外輪山は、地形の高さや起伏にどんな違いがありますか？' },
+    { title:'噴出物の分布を重ねる', mode:'geology', spot:'central-cones',
+      copy:'同じ視点に地質図を重ねます。凡例で中央火口丘の火山岩と、周囲の区分を確認します。',
+      prompt:'新しい火山の山体と外輪山の位置関係を見ます。地質図の色は地表区分で、現在の噴火状態を示すものではありません。' },
+    { title:'中岳火口周辺を観察', mode:'terrain', spot:'nakadake',
+      copy:'中岳火口周辺へ近づき、標高データに表れたくぼみと周りの山体を見ます。等高線を重ねると標高差を追いやすくなります。',
+      prompt:'火口の縁と周辺の斜面を見分けられますか？ 形や安全情報は現在の火山状況を表していません。' },
+    { title:'火口周辺の地質区分', mode:'geology', spot:'nakadake',
+      copy:'同じ範囲を地質図に切り替えます。凡例とともに、中央火口丘の岩石区分を確認してください。',
+      prompt:'細かな火口地形と広域地質図は縮尺が異なります。色境界を細部の火口壁と同じものとして読まないようにします。' },
+  ],
+  kikaijima: [
+    { title:'隆起した島の全体像', mode:'terrain', spot:null,
+      copy:'喜界島全体を眺めます。海岸から内陸へ続く段状の地形と、百之台付近の高い平坦面を探します。',
+      prompt:'島の中で高い面はどこにあり、周囲へどう下っていますか？' },
+    { title:'百之台の段丘を観察', mode:'terrain', spot:'hyakunoday',
+      copy:'百之台と東側の段丘崖へ近づきます。高さを強調し、10m等高線で平坦面と段差を見つけます。',
+      prompt:'台地上の間隔が広い等高線と、斜面で詰まる等高線を比べてください。細かな線はDEMの補間で、測量精度を増やしません。' },
+    { title:'石灰岩の分布を確かめる', mode:'geology', spot:'hyakunoday',
+      copy:'同じ範囲に地質図を重ね、凡例からサンゴ礁起源の石灰岩などの区分を確認します。',
+      prompt:'海でできた石灰岩が現在の陸上にあることを、隆起を考える手掛かりとして読みます。段丘面の年代と岩石の年代は同じとは限りません。' },
+    { title:'島全体へ戻して段差を比べる', mode:'terrain', spot:null,
+      copy:'広域のおすすめ表示へ戻ります。局所の段丘崖と島全体の起伏を結びつけて眺めます。',
+      prompt:'百之台の高まりは、島の中でどの位置を占めていますか？ 海岸段丘の細部は、再び見どころへ近づいて確認できます。' },
+  ],
+  minamidaito: [
+    { title:'火口ではなく環状の島', mode:'terrain', spot:null,
+      copy:'南大東島全体を眺め、周囲の高まりと中央の低地を探します。火山カルデラではなく、隆起した環礁に由来する地形です。',
+      prompt:'島の外周と中央部では、高さや地形の広がりがどう違いますか？' },
+    { title:'西側の「幕」と低地', mode:'terrain', spot:'western-rim',
+      copy:'西側の高まり「幕（はぐ）」から中央低地へ続く段差に近づきます。10m等高線と高さ強調で低い起伏を見ます。',
+      prompt:'外周の高まりから中央へ、地形はどのように下っていますか？ 海底や地下の洞窟は表示されません。' },
+    { title:'石灰岩の島を地質図で見る', mode:'geology', spot:'western-rim',
+      copy:'同じ地形に地質図を重ねます。凡例を見ながら、島の骨格となる石灰岩の区分と外周・中央の高低差を比べます。',
+      prompt:'地質図の色は岩石の区分です。環礁の海底形状や地下構造そのものを表示するものではありません。' },
+    { title:'中央低地へ視点を移す', mode:'terrain', spot:'central-lowland',
+      copy:'島の中央低地と北側の高まりへ移動します。平らな中央部から外側へ向かって地形をたどります。',
+      prompt:'低地を囲む縁の高さや連なりに注目します。湖沼の位置は地理院地図で確認できます。' },
   ],
 });
 

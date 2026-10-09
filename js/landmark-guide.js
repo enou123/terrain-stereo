@@ -116,7 +116,7 @@ export function setupLandmarkGuide(actions){
   return {
     preview:previewPlace,
     ensureOption(id){if(id&&!select.querySelector(`option[value="${id}"]`)){category.value='';region.value='';options();}select.value=id||'';previewPlace(id);},
-    show(place,nextMode='terrain',spotId=null){active=place;mode=nextMode;activeSpot=findSpot(place?.id,spotId)?.id||null;render();},
+    show(place,nextMode='terrain',spotId=null){if(!learningBusy&&active?.id!==place?.id)learningSteps=null;active=place;mode=nextMode;activeSpot=findSpot(place?.id,spotId)?.id||null;render();},
     clear(){active=null;activeSpot=null;learningSteps=null;render();},
     status(text){document.querySelector('#landmark-guide-status').textContent=text;},
     setBusy(value){busy=value;visit.disabled=value;document.querySelectorAll('[data-landmark-mode],#landmark-recommend,#visit-landmark-spot,#landmark-overview,#landmark-spot-select,#learning-tour-start').forEach(button=>button.disabled=value);},
