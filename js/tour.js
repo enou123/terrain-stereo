@@ -54,7 +54,7 @@ export function setupAppTour(actions) {
     root.querySelector('.app-tour-dim').setAttribute('viewBox',`0 0 ${innerWidth} ${innerHeight}`);
     setHole(maskTarget,r,pad);
     const viewer=document.querySelector('#viewer'),vr=viewer?.getBoundingClientRect();
-    if(innerWidth>900&&vr&&vr.width&&vr.height)setHole(maskViewer,vr);else setHole(maskViewer,{left:0,top:0,right:0,bottom:0});
+    if(vr&&vr.width&&vr.height)setHole(maskViewer,vr);else setHole(maskViewer,{left:0,top:0,right:0,bottom:0});
     spotlight.style.left=`${Math.max(6,r.left-pad)}px`;spotlight.style.top=`${Math.max(6,r.top-pad)}px`;
     spotlight.style.width=`${Math.max(12,Math.min(innerWidth-12,r.width+pad*2))}px`;
     spotlight.style.height=`${Math.max(12,Math.min(innerHeight-12,r.height+pad*2))}px`;
@@ -66,7 +66,7 @@ export function setupAppTour(actions) {
   function focus(selector){
     const nextTarget=document.querySelector(selector);if(!nextTarget)return false;
     target?.classList.remove('app-tour-highlight');target=nextTarget;target.classList.add('app-tour-highlight');
-    document.body.classList.toggle('app-tour-mini-scene',matchMedia('(max-width:900px)').matches&&document.querySelector('#view-settings').contains(target));
+    document.body.classList.toggle('app-tour-mini-scene',matchMedia('(max-width:900px)').matches&&(index>0||document.querySelector('#view-settings').contains(target)));
     target.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'nearest',inline:'nearest'});
     requestAnimationFrame(position);return true;
   }

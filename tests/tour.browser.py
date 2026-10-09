@@ -124,9 +124,14 @@ with sync_playwright() as p:
             flight_before=page.evaluate('uiTest.renderer.controls.yaw')
             page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('遊覧飛行を終え')",timeout=25000)
             assert abs(page.evaluate('uiTest.renderer.controls.yaw')-flight_before)>4
-            page.screenshot(path=str(OUT/'09-desktop-flight.png'));page.locator('.app-tour-next').click()
+            page.screenshot(path=str(OUT/'09-desktop-flight.png'))
+            flight_pixel=Image.open(BytesIO(page.locator('#viewer').screenshot())).convert('RGB').getpixel(sample)
+            assert luma(flight_pixel)>=luma(viewer_before)*.9,(viewer_before,flight_pixel,'flight')
+            page.locator('.app-tour-next').click()
             page.wait_for_function("document.querySelector('#app-tour-title').textContent==='見つけた地形を持ち帰る'")
             page.screenshot(path=str(OUT/'10-desktop-share.png'))
+            share_pixel=Image.open(BytesIO(page.locator('#viewer').screenshot())).convert('RGB').getpixel(sample)
+            assert luma(share_pixel)>=luma(viewer_before)*.9,(viewer_before,share_pixel,'share')
             page.locator('.app-tour-auto').click()
             page.wait_for_function("!uiTest.tour.active",timeout=15000)
             assert abs(page.evaluate('uiTest.data.location.latitude')-33.767)<.0001
@@ -146,6 +151,14 @@ with sync_playwright() as p:
             for button in ['.app-tour-next','.app-tour-end']:
                 box=page.locator(button).bounding_box();assert box and 0<=box['y'] and box['y']+box['height']<=height,(width,height,button,box)
             page.screenshot(path=str(OUT/f'{width}x{height}-tour-height.png'))
+            for selector,name in [('#flight-toggle','flight'),('#share-view','share')]:
+                assert page.evaluate(f"uiTest.tour.focus('{selector}')")
+                assert page.evaluate("document.body.classList.contains('app-tour-mini-scene')"),name
+                assert page.evaluate("getComputedStyle(document.querySelector('#viewer')).position==='fixed'"),name
+                layout=page.evaluate("({sceneBottom:document.querySelector('#viewer').getBoundingClientRect().bottom,cardTop:document.querySelector('.app-tour-card').getBoundingClientRect().top})")
+                assert layout['cardTop']>=layout['sceneBottom']-1,(name,layout)
+                page.wait_for_timeout(350)
+                page.screenshot(path=str(OUT/f'{width}x{height}-tour-{name}-control.png'))
             page.locator('.app-tour-end').click();page.wait_for_function('!uiTest.tour.active')
             assert not errors,errors
             results.append({'viewport':f'{width}x{height}','tourStartAndManualSkip':True,'cardHeight':card['height'],'pinnedLiveTerrainDuringSettings':True,'pageErrors':errors})

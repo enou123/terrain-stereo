@@ -1,4 +1,4 @@
-import {gridSample,sectionSamples,projectPoint,gridPosition,pickSurface} from './profile.js?v=0.26.3';
+import {gridSample,sectionSamples,projectPoint,gridPosition,pickSurface} from './profile.js?v=0.26.4';
 const NS='http://www.w3.org/2000/svg';
 function svg(parent,name,attributes,text='') {
   const element=document.createElementNS(NS,name);

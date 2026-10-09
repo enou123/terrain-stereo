@@ -1,4 +1,4 @@
-import { perspective, lookAt } from './math.js?v=0.26.3';
+import { perspective, lookAt } from './math.js?v=0.26.4';
 
 // Parallel cameras with off-axis projection put the target on the screen plane.
 // offset is in terrain units (km); positive offsets place the camera to the right.
