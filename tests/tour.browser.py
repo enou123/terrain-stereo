@@ -79,7 +79,7 @@ with sync_playwright() as p:
         page.wait_for_function("!uiTest.loading && uiTest.renderer.mesh && document.querySelector('#message').hidden",timeout=120000)
         assert page.locator('#message').is_hidden(),page.locator('#status').inner_text()
         if width==1440:
-            page.evaluate("window.tourMetric={heights:[],sun:[],surfaces:[],surfaceTimes:[],modes:[]};document.querySelector('#exaggeration').addEventListener('input',e=>tourMetric.heights.push(+e.target.value));document.querySelector('#sun-azimuth').addEventListener('input',e=>tourMetric.sun.push(+e.target.value));document.querySelector('#surface').addEventListener('change',e=>{tourMetric.surfaces.push(e.target.value);tourMetric.surfaceTimes.push(performance.now())});document.querySelector('#view-mode').addEventListener('change',e=>tourMetric.modes.push(e.target.value));")
+            page.evaluate("window.tourMetric={heights:[],sun:[],surfaces:[],surfaceTimes:[],modes:[],contours:[]};document.querySelector('#exaggeration').addEventListener('input',e=>tourMetric.heights.push(+e.target.value));document.querySelector('#sun-azimuth').addEventListener('input',e=>tourMetric.sun.push(+e.target.value));document.querySelector('#surface').addEventListener('change',e=>{tourMetric.surfaces.push(e.target.value);tourMetric.surfaceTimes.push(performance.now())});document.querySelector('#view-mode').addEventListener('change',e=>tourMetric.modes.push(e.target.value));document.querySelector('#contours').addEventListener('change',e=>tourMetric.contours.push(e.target.checked));")
             page.locator('#start-app-tour').click()
             page.wait_for_function("document.querySelector('#app-tour-title').textContent==='尾根と谷を立体で眺める'")
             sample=(8,50)
@@ -109,15 +109,18 @@ with sync_playwright() as p:
             assert page.evaluate("uiTest.renderer.surface==='elevation'")
             page.screenshot(path=str(OUT/'04-desktop-surfaces.png'));page.locator('.app-tour-next').click()
             assert page.locator('#surface').input_value()=='elevation'
-            page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('切り替えました')",timeout=20000)
-            modes=page.evaluate('tourMetric.modes');assert all(name in modes for name in ['mono','parallel','cross','anaglyph']),modes
-            assert page.evaluate("uiTest.renderer.mode==='anaglyph'")
+            page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('通常3Dに戻しました')",timeout=20000)
+            modes=page.evaluate('tourMetric.modes');assert all(name in modes for name in ['mono','parallel','cross','anaglyph']) and modes[-1]=='mono',modes
+            assert page.evaluate("uiTest.renderer.mode==='mono'")
             page.screenshot(path=str(OUT/'05-desktop-stereo.png'));page.locator('.app-tour-next').click()
-            page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('等高線を重ね')",timeout=20000)
-            assert page.locator('#contours').is_checked() and page.evaluate('uiTest.renderer.contours')
+            assert page.evaluate("uiTest.renderer.mode==='mono'")
+            page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('最後に消しました')",timeout=20000)
+            contour_trace=page.evaluate('tourMetric.contours');assert True in contour_trace and contour_trace[-1] is False,contour_trace
+            assert not page.locator('#contours').is_checked() and not page.evaluate('uiTest.renderer.contours')
             page.screenshot(path=str(OUT/'06-desktop-contours.png'));page.locator('.app-tour-next').click()
             page.wait_for_function("document.querySelector('#profile-chart').getAttribute('hidden')===null",timeout=25000)
             assert page.evaluate('uiTest.profile.points.length===2 && !uiTest.profile.active')
+            assert page.evaluate("uiTest.renderer.mode==='mono' && uiTest.renderer.contours===false")
             page.screenshot(path=str(OUT/'07-desktop-profile.png'));page.locator('.app-tour-next').click()
             page.wait_for_function("Math.abs(uiTest.data.location.latitude-35.3606)<0.0001 && document.querySelector('#message').hidden",timeout=120000)
             page.screenshot(path=str(OUT/'08-desktop-fuji.png'));page.locator('.app-tour-next').click()
