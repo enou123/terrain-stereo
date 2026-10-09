@@ -36,8 +36,7 @@ with sync_playwright() as p:
                 assert expected['mode'] in ('terrain','geology') and expected['gl']==0,(id,title,expected)
                 assert (expected['surface']=='geology')== (expected['mode']=='geology'),(id,title,expected)
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-                if index==0 or expected['mode']=='geology' or index==steps-1:
-                    page.locator('#workspace').scroll_into_view_if_needed();page.locator('#viewer').screenshot(path=str(OUT/f'{width}x{height}-{id}-{index+1}.jpg'),type='jpeg',quality=84)
+                page.locator('#workspace').scroll_into_view_if_needed();page.locator('#viewer').screenshot(path=str(OUT/f'{width}x{height}-{id}-{index+1}.jpg'),type='jpeg',quality=84)
                 if expected['mode']=='geology':
                     assert not page.locator('#learning-tour-legend').is_hidden()
                     page.click('#learning-tour-legend');page.wait_for_function("document.querySelector('#geology-legend-list').children.length>0")
