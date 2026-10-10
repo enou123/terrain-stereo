@@ -1,0 +1,415 @@
+{
+  "source": "GMRT official GridServer",
+  "sourceVersion": "GMRT v4.5.0 (2026-06)",
+  "regionGroup": "all",
+  "retrievedAt": "2026-10-10T10:27:20.974791+00:00",
+  "regions": [
+    {
+      "id": "izu-north",
+      "name": "伊豆諸島北部",
+      "requestedBounds": {
+        "west": 136.5,
+        "east": 143.7,
+        "south": 28.0,
+        "north": 36.4
+      },
+      "mresolution": 1500,
+      "status": "failed",
+      "error": "grid outside safe limit: 821x1134",
+      "trace": "Traceback (most recent call last):\n  File \"<stdin>\", line 39, in <module>\nAssertionError: grid outside safe limit: 821x1134\n"
+    },
+    {
+      "id": "izu-south",
+      "name": "伊豆・小笠原諸島南部",
+      "requestedBounds": {
+        "west": 137.0,
+        "east": 151.0,
+        "south": 22.0,
+        "north": 35.5
+      },
+      "mresolution": 2500,
+      "status": "ok",
+      "width": 800,
+      "height": 881,
+      "cells": 704800,
+      "bytes": 1497700,
+      "spacingMeters": [
+        1717.723329959789,
+        1711.2869639963376
+      ],
+      "seaMinimum": -9835.9404296875,
+      "seaMaximum": -0.010465328581631184,
+      "contributionCount": 4470,
+      "sha256": "866f42c3b0e1410049dec8c91efd38eb14ca432a45a63d8f66e9ce495ca95263",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 2823094,
+          "seconds": 2.61,
+          "sha256": "de2bed88e5d11c9e964e0fba8bd2a2a1433acfe2f6bb36b823730d3b0f5b8340",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 2823094,
+          "seconds": 1.86,
+          "sha256": "b755133d1043882b5f8081b70b635089603bf65a7505d5c4543809ade9ae61af",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "nankai-west",
+      "name": "南海トラフ西部〜紀伊半島沖",
+      "requestedBounds": {
+        "west": 128.0,
+        "east": 140.0,
+        "south": 28.5,
+        "north": 37.0
+      },
+      "mresolution": 2000,
+      "status": "ok",
+      "width": 686,
+      "height": 578,
+      "cells": 396508,
+      "bytes": 842580,
+      "spacingMeters": [
+        1648.145056135416,
+        1645.9879886749204
+      ],
+      "seaMinimum": -5716.9853515625,
+      "seaMaximum": -0.0025570583529770374,
+      "contributionCount": 3877,
+      "sha256": "171c204104c02bc91facfa56d8a16349554ff8c418f8f48cd859688d886f95a5",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 1588710,
+          "seconds": 2.04,
+          "sha256": "a753b4f2a8ed7008e9d2dd8979a020400e48c2fac8b89025425834f5cf06df5b",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 1588710,
+          "seconds": 1.83,
+          "sha256": "3b03f5ce629c002da587b4402ec5b5fc9bd7328d60ebb7ecd8dc2e38334d43f7",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "tokara-amami",
+      "name": "トカラ・奄美",
+      "requestedBounds": {
+        "west": 126.0,
+        "east": 132.5,
+        "south": 26.0,
+        "north": 33.5
+      },
+      "mresolution": 1250,
+      "status": "ok",
+      "width": 740,
+      "height": 985,
+      "cells": 728900,
+      "bytes": 1548913,
+      "spacingMeters": [
+        850.5938146363892,
+        849.2911814425618
+      ],
+      "seaMinimum": -6962.103515625,
+      "seaMaximum": -0.001625214470550418,
+      "contributionCount": 694,
+      "sha256": "a091928203ab3153acc16d429bf76ccb753e31b9df90ead724f4565c28ab7462",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 2919910,
+          "seconds": 2.36,
+          "sha256": "b5aa3007145394738cf3e24862a8ac595b86dc7860063ab26eab4f21ec77a12a",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 2919910,
+          "seconds": 2.13,
+          "sha256": "46bec324a842547881135e9997d32409c3af6fd6b0c0856658f38b15fc4e62e3",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "okinawa-islands",
+      "name": "沖縄諸島",
+      "requestedBounds": {
+        "west": 125.0,
+        "east": 132.0,
+        "south": 24.5,
+        "north": 28.5
+      },
+      "mresolution": 1000,
+      "status": "ok",
+      "width": 798,
+      "height": 511,
+      "cells": 407778,
+      "bytes": 866529,
+      "spacingMeters": [
+        876.7010038683464,
+        877.018504569885
+      ],
+      "seaMinimum": -7498.3134765625,
+      "seaMaximum": -0.0020169669296592474,
+      "contributionCount": 1711,
+      "sha256": "bdd972bf60d9f9efbf04ae865ac6a322e11e9d68cdb02c83dbf24facd212f73d",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 1633526,
+          "seconds": 2.15,
+          "sha256": "61f4f98e73b4d60269a8efba44724d3f178a6695bc255a3bd5d8779334f8ba69",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 1633526,
+          "seconds": 1.8,
+          "sha256": "4e051480e6da413bdf3c32a7b97993531eedf6bde11f8e05ec60f477028bcf9a",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "yaeyama",
+      "name": "宮古・八重山",
+      "requestedBounds": {
+        "west": 121.0,
+        "east": 127.0,
+        "south": 22.0,
+        "north": 26.0
+      },
+      "mresolution": 1250,
+      "status": "ok",
+      "width": 684,
+      "height": 501,
+      "cells": 342684,
+      "bytes": 728204,
+      "spacingMeters": [
+        895.1201034647676,
+        895.379701453449
+      ],
+      "seaMinimum": -7204.72216796875,
+      "seaMaximum": -0.019383594393730164,
+      "contributionCount": 1633,
+      "sha256": "7222890c542d4ffa5849880decd868eceec2bcaaaa2a515e4cc13f2726dcfd56",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 1373110,
+          "seconds": 2.36,
+          "sha256": "1cf484f86416a36085f0c04f983847ffc6e06927fcf151d7d7dde145d09d6561",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 1373110,
+          "seconds": 1.9,
+          "sha256": "24e2cde5eb3eb9385915cd7c15d1244a47f62dd36b807113014fc4a0065a6e22",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "ryukyu-trench-trough",
+      "name": "琉球海溝・沖縄トラフ",
+      "requestedBounds": {
+        "west": 121.0,
+        "east": 135.0,
+        "south": 20.5,
+        "north": 31.0
+      },
+      "mresolution": 2500,
+      "status": "ok",
+      "width": 799,
+      "height": 666,
+      "cells": 532134,
+      "bytes": 1130785,
+      "spacingMeters": [
+        1764.6921259643223,
+        1761.5493579853442
+      ],
+      "seaMinimum": -7434.47119140625,
+      "seaMaximum": -0.007384063675999641,
+      "contributionCount": 5308,
+      "sha256": "08f9195b8021fbda3bfcf9b33bdc22b3b7ceec006009ea91acc10e96cbee616c",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 2131566,
+          "seconds": 2.3,
+          "sha256": "62f6d4f2f1d1a0f9c1b58e0252cbd509a394e06788270b5b52ba184936110fd5",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 2131566,
+          "seconds": 2.06,
+          "sha256": "6ec3c4dd3cce5465326de19d9363bdd8850318ff71a55479d145680f6a50c9f1",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "daito",
+      "name": "大東諸島",
+      "requestedBounds": {
+        "west": 129.0,
+        "east": 134.0,
+        "south": 24.0,
+        "north": 28.0
+      },
+      "mresolution": 1000,
+      "status": "ok",
+      "width": 572,
+      "height": 509,
+      "cells": 291148,
+      "bytes": 618690,
+      "spacingMeters": [
+        880.9187582926606,
+        880.8423102405773
+      ],
+      "seaMinimum": -7338.9892578125,
+      "seaMaximum": -0.10987436771392822,
+      "contributionCount": 6867,
+      "sha256": "040dd3f9ff47523c023d9034b7be41adb59c2ee749a092f5dccedfd318bb6878",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 1166318,
+          "seconds": 1.96,
+          "sha256": "86bb4d06a6a1ef8bf1491a52369c82e7ee6ebc643f220c4a61c10a48b5ec2cd0",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 1166318,
+          "seconds": 1.98,
+          "sha256": "cd701ccc7f03efa77edff257ec577f52effeb78ae32dc935e5dce2a1271ce68a",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "suruga-sagami",
+      "name": "駿河湾・相模トラフ",
+      "requestedBounds": {
+        "west": 136.5,
+        "east": 141.8,
+        "south": 32.5,
+        "north": 37.0
+      },
+      "mresolution": 750,
+      "status": "failed",
+      "error": "grid outside safe limit: 1208x1250",
+      "trace": "Traceback (most recent call last):\n  File \"<stdin>\", line 39, in <module>\nAssertionError: grid outside safe limit: 1208x1250\n"
+    },
+    {
+      "id": "japan-trench",
+      "name": "日本海溝",
+      "requestedBounds": {
+        "west": 140.0,
+        "east": 149.0,
+        "south": 34.0,
+        "north": 43.0
+      },
+      "mresolution": 2500,
+      "status": "ok",
+      "width": 514,
+      "height": 657,
+      "cells": 337698,
+      "bytes": 717609,
+      "spacingMeters": [
+        1534.3903909915266,
+        1530.2343346713333
+      ],
+      "seaMinimum": -9259.7451171875,
+      "seaMaximum": -0.02194472961127758,
+      "contributionCount": 18572,
+      "sha256": "4dc75b572ccea9b5cd6252e7e1a2f3fcb0a1635ebbe16c9969d7e94338482a01",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 1352910,
+          "seconds": 1.98,
+          "sha256": "420af5b01f6d61efc2fbc25f0280f983b53b3f16f81c3ec01e0c1183e3166ca4",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 1352910,
+          "seconds": 2.19,
+          "sha256": "c8b1ff3c3c9262c1e117c5e82b1fdb1bf58737b9dd82e54d1a08c303bd8a983e",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "kuril-trench",
+      "name": "千島海溝",
+      "requestedBounds": {
+        "west": 144.0,
+        "east": 158.0,
+        "south": 41.0,
+        "north": 49.0
+      },
+      "mresolution": 3500,
+      "status": "ok",
+      "width": 798,
+      "height": 647,
+      "cells": 516306,
+      "bytes": 1097151,
+      "spacingMeters": [
+        1385.4004304821603,
+        1382.6059990065594
+      ],
+      "seaMinimum": -9630.103515625,
+      "seaMaximum": -0.009873511269688606,
+      "contributionCount": 5232,
+      "sha256": "b0e36bde48d4a7ca298a7d30e87a30c6e0565ca1ebb1cd866fa36ed4eb5ff6f1",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 2068182,
+          "seconds": 2.67,
+          "sha256": "0a0b45b1a47b0c59716e4324d57aa34dec7e40125830a4ca3d3d461771763a4c",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 2068182,
+          "seconds": 1.97,
+          "sha256": "3aaee5b40b2fb2fbd8021eb1b2514dcb250b0ad69569dbf6f54426662c0de42f",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    }
+  ],
+  "packedBytes": 9048161
+}

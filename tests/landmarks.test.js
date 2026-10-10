@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { LANDMARKS, CATEGORIES, REGIONS, filterLandmarks, findLandmark, landmarkLocation, matchingLandmark } from '../js/landmarks.js';
+import { BATHYMETRY_SPOTS } from '../js/bathymetry-spots.js';
+import { bathymetryRegions } from '../js/bathymetry.js';
 import { terrainExtent, worldPixel } from '../js/elevation.js';
 import { landmarkCamera } from '../js/landmark-camera.js';
 import { createMesh, fitMeshPositions } from '../js/mesh.js';
@@ -9,20 +11,22 @@ import { projectPoint } from '../js/profile.js';
 
 test('the five existing and twelve priority landmarks have unique, sourced learning records',()=>{
   const expected=['ishizuchi','fuji','aso','daisetsu','yakushima','aogashima','hachijojima','omuroyama','satsuma-iojima','suwanosejima','kurobe','oboke','akiyoshidai','itoigawa','izu','kikaijima','minamidaito'];
-  assert.deepEqual(LANDMARKS.map(p=>p.id),expected);
-  assert.equal(new Set(LANDMARKS.map(p=>p.id)).size,17);
+  assert.deepEqual(LANDMARKS.slice(0,17).map(p=>p.id),expected);
+  assert.equal(BATHYMETRY_SPOTS.length,30);
+  assert.deepEqual(LANDMARKS.slice(17).map(p=>p.id),BATHYMETRY_SPOTS.map(p=>p.id));
+  assert.equal(new Set(LANDMARKS.map(p=>p.id)).size,47);
   for(const p of LANDMARKS){
     assert.ok(p.name&&p.prefecture&&REGIONS.includes(p.region));
     assert.ok(p.categories.length&&p.categories.every(c=>c in CATEGORIES));
     assert.ok(p.center.latitude>=20&&p.center.latitude<=46&&p.center.longitude>=122&&p.center.longitude<=154);
     for(const mode of ['terrain','geology']){
       assert.ok(p[mode].summary&&p[mode].detail.length>35&&p[mode].points.length);
-      const s=p.settings[mode];assert.ok(Number.isInteger(s.zoom)&&s.zoom>=6&&s.zoom<=14);
+      const s=p.settings[mode];assert.ok(Number.isInteger(s.zoom)&&s.zoom>=5&&s.zoom<=14);
       assert.ok(s.exaggeration>=.5&&s.exaggeration<=4&&['standard','high','ultra'].includes(s.quality));
       assert.ok(['elevation','shading','photo','map','geology'].includes(s.surface));assert.equal(typeof s.contours,'boolean');
       assert.ok(s.camera.pitch>=.12&&s.camera.pitch<=1.48&&s.camera.distance>=4&&s.camera.distance<=45&&Number.isFinite(s.camera.yaw));
     }
-    assert.equal(p.settings.geology.surface,'geology');assert.ok(p.geology.rocks&&p.geology.age&&p.limitations.length&&p.coordinateNote);
+    if(!p.bathymetry)assert.equal(p.settings.geology.surface,'geology');assert.ok(p.geology.rocks&&p.geology.age&&p.limitations.length&&p.coordinateNote);
     assert.ok(p.references.length>=2&&p.references.every(r=>r.title&&new URL(r.url).protocol==='https:'&&r.checked));
   }
 });
@@ -38,10 +42,13 @@ test('the observation bounds fit the actual rounded 384-pixel DEM footprint',()=
   }
   assert.ok(terrainExtent(findLandmark('aso').center.latitude,findLandmark('aso').settings.terrain.zoom)>32);
   assert.ok(terrainExtent(findLandmark('aogashima').center.latitude,findLandmark('aogashima').settings.terrain.zoom)>3.5);
+  for(const p of BATHYMETRY_SPOTS)assert.ok(bathymetryRegions(landmarkLocation(p)).length,`${p.id}: no candidate data region`);
 });
 test('classification, regions and coordinate lookup do not mutate recommendations',()=>{
   const before=JSON.stringify(LANDMARKS);
-  assert.equal(filterLandmarks().length,17);
+  assert.equal(filterLandmarks().length,47);
+  assert.equal(filterLandmarks('marineVolcano').length,13);
+  assert.equal(filterLandmarks('trench').length,7);
   assert.deepEqual(filterLandmarks('karst','中国・四国').map(p=>p.id),['akiyoshidai']);
   assert.equal(filterLandmarks('unknown').length,0);
   assert.equal(findLandmark('unknown'),null);

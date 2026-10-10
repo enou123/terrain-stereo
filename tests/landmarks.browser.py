@@ -14,7 +14,8 @@ import hashlib,json,math,os,subprocess,urllib.request,urllib.error
 ROOT=Path(__file__).resolve().parents[1]
 OUT=Path(os.environ.get('LANDMARK_OUTPUT',str(ROOT/'docs/screenshots/landmarks')));OUT.mkdir(parents=True,exist_ok=True)
 CACHE=Path('/tmp/terrain-ui-gsi-cache');CACHE.mkdir(exist_ok=True)
-PLACES=json.loads(subprocess.check_output(['node','--input-type=module','-e',"import {LANDMARKS} from './js/landmarks.js';console.log(JSON.stringify(LANDMARKS))"],cwd=ROOT))
+ALL_PLACES=json.loads(subprocess.check_output(['node','--input-type=module','-e',"import {LANDMARKS} from './js/landmarks.js';console.log(JSON.stringify(LANDMARKS))"],cwd=ROOT))
+PLACES=ALL_PLACES[:17];MARINE_PLACES=ALL_PLACES[17:]
 failures={}
 def real(url):
     file=CACHE/hashlib.sha256(url.encode()).hexdigest()
@@ -61,7 +62,12 @@ with sync_playwright() as p:
         page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.uiTest={get renderer(){return renderer},get data(){return data},get map(){return map},get guide(){return landmarkGuide},get tour(){return appTour},get loading(){return loading}};",content_type='text/javascript'))
         page.goto(URL);page.wait_for_function("window.uiTest && !uiTest.loading && document.querySelector('#message').hidden",timeout=180000)
         assert page.evaluate('uiTest.data.location.latitude')==33.767
-        assert page.locator('#map-place option').count()==18
+        assert page.locator('#map-place option').count()==48
+        assert len(MARINE_PLACES)==30
+        page.select_option('#landmark-category','marineVolcano');assert page.locator('#map-place option').count()==14
+        assert '伊豆大島と周辺海底' in page.locator('#map-place option').all_text_contents()
+        page.select_option('#landmark-category','trench');assert page.locator('#map-place option').count()==8
+        assert '日本海溝周辺' in page.locator('#map-place option').all_text_contents()
         page.select_option('#landmark-category','karst');page.select_option('#landmark-region','中国・四国')
         assert page.locator('#map-place option').all_text_contents()==['地図で自由に選択','秋吉台']
         page.select_option('#landmark-category','');page.select_option('#landmark-region','')

@@ -1,7 +1,7 @@
-import { spotsFor, findSpot } from './landmark-spots.js?v=0.36.0';
-import { LANDMARKS, CATEGORIES, REGIONS, findLandmark, filterLandmarks } from './landmarks.js?v=0.36.0';
-import { terrainExtent } from './elevation.js?v=0.36.0';
-import { learningTourFor } from './learning-tour.js?v=0.36.0';
+import { spotsFor, findSpot } from './landmark-spots.js?v=0.37.0';
+import { LANDMARKS, CATEGORIES, REGIONS, findLandmark, filterLandmarks } from './landmarks.js?v=0.37.0';
+import { terrainExtent } from './elevation.js?v=0.37.0';
+import { learningTourFor } from './learning-tour.js?v=0.37.0';
 
 // UI owns no renderer state. Explicit visit/switch actions are supplied by app.js.
 export function setupLandmarkGuide(actions){
@@ -84,7 +84,7 @@ export function setupLandmarkGuide(actions){
     document.querySelector('#landmark-preview-meta').textContent=`${selected.prefecture} · ${selected.categories.map(k=>CATEGORIES[k]).join(' / ')}`;
     document.querySelector('#landmark-preview-copy').textContent=selected.summary;
     const mode=document.querySelector('#landmark-visit-mode').value,p=selected.settings[mode];
-    document.querySelector('#landmark-preview-setting').textContent=`おすすめ：約${terrainExtent(selected.center.latitude,p.zoom).toFixed(1)} km四方 · 高さ${p.exaggeration.toFixed(1)}倍 · ${{geology:'地質図',shading:'陰影',elevation:'標高の色'}[p.surface]} · 等高線${p.contourInterval} m（変更できます）`;
+    document.querySelector('#landmark-preview-setting').textContent=`おすすめ：約${terrainExtent(selected.center.latitude,p.zoom).toFixed(1)} km四方 · 高さ${p.exaggeration.toFixed(1)}倍 · ${{geology:'地質図',shading:'陰影',elevation:'標高の色'}[p.surface]} · 等高線${p.contourInterval} m${selected.bathymetry?' · 実水深データも読み込み':''}（変更できます）`;
   }
   for(const filter of [category,region])filter.addEventListener('change',()=>{
     const value=options();previewPlace(value);actions.select?.(findLandmark(value));

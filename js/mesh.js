@@ -1,7 +1,7 @@
 // Coordinates: X east, Y elevation, Z south, all in kilometres.
 export const SEABED_COLOR_STOPS = Object.freeze([[.48,.82,.88],[.22,.62,.78],[.12,.37,.62],[.10,.22,.44]].map(Object.freeze));
-export function seabedColorAtDepth(depthMetres) {
-  const t=Math.min(2.999,Math.max(0,depthMetres/2000*3));
+export function seabedColorAtDepth(depthMetres,scaleMaximumMetres=2000) {
+  const t=Math.min(SEABED_COLOR_STOPS.length-1.001,Math.max(0,depthMetres/scaleMaximumMetres*(SEABED_COLOR_STOPS.length-1)));
   const i=Math.floor(t),fraction=t-i,a=SEABED_COLOR_STOPS[i],b=SEABED_COLOR_STOPS[i+1];
   return a.map((value,k)=>value*(1-fraction)+b[k]*fraction);
 }
@@ -12,6 +12,7 @@ export function createMesh(data, exaggeration) {
   const elevations = new Float32Array(size * size);
   const normals = new Float32Array(positions.length);
   const colors = new Float32Array(positions.length);
+  const depthScaleMax=data.bathymetry?.depthScaleMax||2000;
   const stops = [[0.20,0.30,0.23],[0.39,0.53,0.35],[0.65,0.68,0.47],[0.88,0.84,0.68]];
   for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
     const i = r * size + c, p = i * 3;
@@ -19,7 +20,7 @@ export function createMesh(data, exaggeration) {
     elevations[i] = Number.isFinite(heights[i]) ? heights[i] : 0;
     positions.set([(c - (size - 1) / 2) * spacing, Number.isFinite(heights[i]) ? heights[i] / 1000 * exaggeration : 0, (r - (size - 1) / 2) * spacing], p);
     const sea=data.seaMask?.[i]===1;
-    if(sea){for(let k=0;k<3;k++)colors[p+k]=seabedColorAtDepth(-heights[i])[k];}
+    if(sea){for(let k=0;k<3;k++)colors[p+k]=seabedColorAtDepth(-heights[i],depthScaleMax)[k];}
     else{
       const t=Math.min(2.999,Math.max(0,heights[i]/2100*3)),a=Math.floor(t),f=t-a;
       for(let k=0;k<3;k++)colors[p+k]=Number.isFinite(t)?stops[a][k]*(1-f)+stops[a+1][k]*f:0;

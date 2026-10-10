@@ -1,0 +1,68 @@
+{
+  "format": "gmrt-int16-mask-v1",
+  "id": "kuril-trench",
+  "name": "千島海溝",
+  "width": 798,
+  "height": 647,
+  "lon0": 144.0,
+  "lat0": 49.00328537970132,
+  "dx": 0.01760018036386449,
+  "dy": -0.01242010419517211,
+  "nodata": -32768,
+  "file": "kuril-trench-gmrt-4.5.0.bin",
+  "bytes": 1097151,
+  "sha256": "b0e36bde48d4a7ca298a7d30e87a30c6e0565ca1ebb1cd866fa36ed4eb5ff6f1",
+  "sourceSha256": "0a0b45b1a47b0c59716e4324d57aa34dec7e40125830a4ca3d3d461771763a4c",
+  "maskSourceSha256": "3aaee5b40b2fb2fbd8021eb1b2514dcb250b0ad69569dbf6f54426662c0de42f",
+  "sourceVersion": "GMRT v4.5.0 (2026年6月)",
+  "baseSource": "GEBCO 2026 and regional higher-resolution contributions as described by GMRT",
+  "retrievedAt": "2026-10-10T10:27:20.974791+00:00",
+  "requestedBounds": {
+    "west": 144.0,
+    "east": 158.0,
+    "south": 41.0,
+    "north": 49.0
+  },
+  "actualRasterBounds": [
+    143.99119990981808,
+    40.97368801752255,
+    158.03614384018195,
+    49.009495431798904
+  ],
+  "requestedSpacingMeters": 3500,
+  "actualSpacingMeters": [
+    1385.4004304821603,
+    1382.6059990065594
+  ],
+  "depthScaleMax": 10000,
+  "quantizationMeters": 1,
+  "license": "CC BY 4.0",
+  "sourceUrl": "https://www.gmrt.org/services/GridServer?west=144.0&east=158.0&south=41.0&north=49.0&layer=topo&format=geotiff&mresolution=3500",
+  "maskSourceUrl": "https://www.gmrt.org/services/GridServer?west=144.0&east=158.0&south=41.0&north=49.0&layer=topo-mask&format=geotiff&mresolution=3500",
+  "termsUrl": "https://www.gmrt.org/about/terms_of_use.php",
+  "citation": "Ryan et al. (2009), doi:10.1029/2008GC002332; GMRT data doi:10.1594/IEDA.100001",
+  "minimum": -9630.103515625,
+  "maximum": 1429.0059814453125,
+  "seaMinimum": -9630.103515625,
+  "seaMaximum": -0.009873511269688606,
+  "missingCount": 1596,
+  "highResolutionContributionCount": 5232,
+  "requests": [
+    {
+      "layer": "topo",
+      "status": 200,
+      "bytes": 2068182,
+      "seconds": 2.67,
+      "sha256": "0a0b45b1a47b0c59716e4324d57aa34dec7e40125830a4ca3d3d461771763a4c",
+      "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+    },
+    {
+      "layer": "topo-mask",
+      "status": 200,
+      "bytes": 2068182,
+      "seconds": 1.97,
+      "sha256": "3aaee5b40b2fb2fbd8021eb1b2514dcb250b0ad69569dbf6f54426662c0de42f",
+      "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+    }
+  ]
+}

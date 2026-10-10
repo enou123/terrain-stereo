@@ -1,4 +1,4 @@
-import { contourInterval } from './contours.js?v=0.36.0';
+import { contourInterval } from './contours.js?v=0.37.0';
 const MODES = new Set(['mono', 'parallel', 'cross', 'anaglyph']);
 const QUALITIES = new Set(['standard', 'high', 'ultra']);
 const SURFACES = new Set(['elevation', 'shading', 'map', 'photo', 'geology']);
@@ -17,7 +17,7 @@ export function readSharedView(search) {
     location: {
       latitude: number(params, 'lat', 33.767, 20, 46),
       longitude: number(params, 'lon', 133.115, 122, 154),
-      zoom: number(params, 'z', 12, 4, 14)
+      zoom: number(params, 'z', 12, 5, 14)
     },
     camera: {
       yaw: number(params, 'yaw', .38, -1000, 1000),

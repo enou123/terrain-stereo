@@ -3,7 +3,8 @@ export const LOCATION = Object.freeze({ latitude: 33.767, longitude: 133.115, zo
 export const GRID_SIZE = 193;
 const TILE_SIZE = 256;
 const STEP = 2;
-export const MIN_TERRAIN_ZOOM = 6;
+export const MIN_TERRAIN_ZOOM = 5;
+const MIN_DEM_ZOOM = 6;
 export const MAX_TERRAIN_ZOOM = 14;
 export function terrainZoom(mapZoom) {
   return Math.max(MIN_TERRAIN_ZOOM, Math.min(MAX_TERRAIN_ZOOM, mapZoom + 1));
@@ -35,7 +36,10 @@ export function parseTile(text) {
 export function qualitySampling(zoom, quality = 'standard') {
   const levels = { standard: 0, high: 1, ultra: 2 };
   if (!Object.hasOwn(levels, quality)) throw new Error('対応する画質を選んでください。');
-  const sourceZoom = Math.min(MAX_TERRAIN_ZOOM, zoom + levels[quality]);
+  // GSI has no useful DEM below z6. A z5 viewing window samples z6 values
+  // every second pixel, preserving the larger geographic footprint without
+  // pretending the source data is finer.
+  const sourceZoom = Math.max(MIN_DEM_ZOOM, Math.min(MAX_TERRAIN_ZOOM, zoom + levels[quality]));
   const scale = 2 ** (sourceZoom - zoom);
   const step = quality === 'standard' || sourceZoom === zoom + levels[quality] ? 2 : 1;
   return { sourceZoom, step, size: (GRID_SIZE - 1) * STEP * scale / step + 1, scale };
@@ -57,7 +61,7 @@ async function elevationTile(zoom, x, y) {
     if (response.ok) result = { values: parseTile(await response.text()), fallback: false };
     else if (response.status === 404) {
       const values = new Float32Array(TILE_SIZE * TILE_SIZE).fill(NaN);
-      if (zoom > MIN_TERRAIN_ZOOM) {
+      if (zoom > MIN_DEM_ZOOM) {
         const parent = await elevationTile(zoom - 1, Math.floor(x / 2), Math.floor(y / 2));
         const offsetX = (x % 2) * 128, offsetY = (y % 2) * 128;
         for (let row = 0; row < TILE_SIZE; row++) for (let col = 0; col < TILE_SIZE; col++) {

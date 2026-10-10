@@ -89,8 +89,8 @@ with sync_playwright() as pw:
    assert page.evaluate('bathyTest.location(32.459,139.65,14)')
    assert page.evaluate('bathyTest.data.bathymetry.seaCount')>30000
   # Outside supported range: report explicitly, no bathymetry network.
-  assert page.evaluate('bathyTest.location(33.767,133.115,12)');assert not page.evaluate('!!bathyTest.data.bathymetry')
-  assert '未対応' in page.locator('#bathymetry-status').inner_text();assert len(requests)==(4 if not touch else 2)
+  page.evaluate('bathyTest.location(45.5,142.0,12)');page.wait_for_function('!bathyTest.busy');assert not page.evaluate('!!bathyTest.data.bathymetry')
+  status_text=page.locator('#bathymetry-status').inner_text();assert '交差する海底データはまだありません' in status_text,status_text;assert len(requests)==(4 if not touch else 2)
   assert not errors,errors
   results.append(dict(viewport=[w,h],offInitialSeconds=off_time,onSeconds=on_time,off=before,on=stats,requests=len(requests),errors=errors))
   print('PASS',w,h,json.dumps({'on':stats['sea']['stats'],'offSeconds':off_time,'onSeconds':on_time,'landPreserved':True},ensure_ascii=False),flush=True)

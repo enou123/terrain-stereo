@@ -1,0 +1,93 @@
+{
+  "source": "GMRT official GridServer",
+  "sourceVersion": "GMRT v4.5.0 (2026-06)",
+  "regionGroup": "remaining",
+  "retrievedAt": "2026-10-10T10:57:00.123814+00:00",
+  "regions": [
+    {
+      "id": "izu-north-north",
+      "name": "伊豆諸島北部・北側",
+      "requestedBounds": {
+        "west": 136.5,
+        "east": 143.7,
+        "south": 32.1,
+        "north": 36.4
+      },
+      "mresolution": 1750,
+      "status": "ok",
+      "width": 821,
+      "height": 595,
+      "cells": 488495,
+      "bytes": 1038052,
+      "spacingMeters": [
+        809.7203801202895,
+        809.7571616936361
+      ],
+      "seaMinimum": -9522.7734375,
+      "seaMaximum": -0.0006056810379959643,
+      "contributionCount": 17259,
+      "sha256": "081e1d53bae65c3e7a59612c4ab07bc5752cf58ff5d4eb725ae46f4620547e74",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 1956730,
+          "seconds": 2.43,
+          "sha256": "ee22130e53f2d9978313883475bd09e4525866440d13eac26d50654a60abcaa7",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 1956730,
+          "seconds": 2.1,
+          "sha256": "502d9d94e238ba5018924ae14dd1a2338ade19f8caa520eb5434d976b71f8beb",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "izu-north-south",
+      "name": "伊豆諸島北部・南側",
+      "requestedBounds": {
+        "west": 136.5,
+        "east": 143.7,
+        "south": 28.0,
+        "north": 32.3
+      },
+      "mresolution": 1750,
+      "status": "ok",
+      "width": 821,
+      "height": 569,
+      "cells": 467149,
+      "bytes": 992692,
+      "spacingMeters": [
+        847.0660282110107,
+        847.2039539303202
+      ],
+      "seaMinimum": -9838.947265625,
+      "seaMaximum": -2.2784745693206787,
+      "contributionCount": 14258,
+      "sha256": "bc93f76dc835ce83f8b8be473b19a8205a215bd8819c76d978607dca4234c106",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 1871242,
+          "seconds": 2.17,
+          "sha256": "e1e57ff1b035a86354235e5a9b43fb64612d07f4bed67d8edfd21356022318e3",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 1871242,
+          "seconds": 2.11,
+          "sha256": "8c1b7eeaaebff241e62117a612fde6f8521057ddd9d7434e1f61b92d491c4fef",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    }
+  ],
+  "packedBytes": 2030744
+}

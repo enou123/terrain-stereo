@@ -1,0 +1,65 @@
+{
+  "source": "GMRT official GridServer",
+  "sourceVersion": "GMRT v4.5.0 (2026-06)",
+  "regionGroup": "remaining",
+  "retrievedAt": "2026-10-10T10:48:12.029863+00:00",
+  "regions": [
+    {
+      "id": "izu-north",
+      "name": "伊豆諸島北部",
+      "requestedBounds": {
+        "west": 136.5,
+        "east": 143.7,
+        "south": 28.0,
+        "north": 36.4
+      },
+      "mresolution": 1750,
+      "status": "failed",
+      "error": "grid outside safe limit: 821x1134 (931014 cells; approx spacing 828.9m x 827.3m; requested mresolution=1750)",
+      "trace": "Traceback (most recent call last):\n  File \"<stdin>\", line 48, in <module>\nAssertionError: grid outside safe limit: 821x1134 (931014 cells; approx spacing 828.9m x 827.3m; requested mresolution=1750)\n"
+    },
+    {
+      "id": "suruga-sagami",
+      "name": "駿河湾・相模トラフ",
+      "requestedBounds": {
+        "west": 136.5,
+        "east": 141.8,
+        "south": 32.5,
+        "north": 37.0
+      },
+      "mresolution": 1000,
+      "status": "ok",
+      "width": 604,
+      "height": 625,
+      "cells": 377500,
+      "bytes": 802188,
+      "spacingMeters": [
+        805.231244571477,
+        804.7731720853626
+      ],
+      "seaMinimum": -8906.95703125,
+      "seaMaximum": -0.001247853389941156,
+      "contributionCount": 8872,
+      "sha256": "bf9ed6b95d73e260c3992fd362d5838417b9208b7a2f8a047fd889f89b090656",
+      "requests": [
+        {
+          "layer": "topo",
+          "status": 200,
+          "bytes": 1512038,
+          "seconds": 1.5,
+          "sha256": "195fa344e5ad267f669f854f85d47d8cca417e74126677fa682800ec7e1f3ea3",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+        },
+        {
+          "layer": "topo-mask",
+          "status": 200,
+          "bytes": 1512038,
+          "seconds": 1.61,
+          "sha256": "cb9f8d32d2cea9a5787292d620d4661af9bf01ef123bcfa1af6c2a966827d1b8",
+          "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+        }
+      ]
+    }
+  ],
+  "packedBytes": 802188
+}

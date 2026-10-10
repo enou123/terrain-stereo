@@ -17,9 +17,21 @@ test('map coordinates round trip across Japan and constrain navigation at its ed
 
 test('map zoom changes terrain extent by powers of two within supported limits', () => {
   assert.equal(terrainZoom(11),12);
-  assert.equal(terrainZoom(4),6);
+  assert.equal(terrainZoom(4),5);
   assert.equal(terrainZoom(15),14);
   assert.equal(terrainExtent(33.767,8),terrainExtent(33.767,12)*16);
+});
+
+test('z5 wide viewing uses z6 GSI DEM samples while keeping its larger extent', async()=>{
+  const original=globalThis.fetch,requests=[];
+  const tile=Array.from({length:256},()=>Array(256).fill('250').join(',')).join('\n');
+  globalThis.fetch=async url=>{requests.push(String(url));return {ok:true,status:200,text:async()=>tile};};
+  try{
+    const wide=await loadElevation(()=>{},{latitude:31.0,longitude:141.3,zoom:5});
+    assert.equal(wide.location.zoom,5);assert.equal(wide.sourceZoom,6);assert.equal(wide.size,385);
+    assert.ok(wide.tileCount<=16);assert.ok(requests.length&&requests.every(url=>url.includes('/dem/6/')));
+    assert.ok(Math.abs(wide.spacing-terrainExtent(31.0,6)/384*2)<.001); // source resolution stays at native z6
+  }finally{globalThis.fetch=original;}
 });
 
 test('selected location changes DEM tiles and scale, reuses cache, and allows retry after failures', async () => {
@@ -39,7 +51,7 @@ test('selected location changes DEM tiles and scale, reuses cache, and allows re
     const wide=await loadElevation(()=>{},{...fuji,zoom:8});
     assert.equal(wide.spacing,first.spacing*16);
     assert.equal(wide.size,first.size);
-    assert.ok(wide.tileCount<=9);
+    assert.ok(wide.tileCount<=16);
     assert.ok(requests.some(url=>url.includes('/dem/8/')));
     await assert.rejects(loadElevation(()=>{},{...fuji,zoom:15}),/縮尺/);
     await assert.rejects(loadElevation(()=>{},{...fuji,zoom:8.5}),/縮尺/);

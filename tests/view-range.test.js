@@ -10,7 +10,7 @@ test('pan commits world east/south displacement at fitted mesh scale',()=>{
  assert.ok(Math.abs(b[0]-a[0]-96)<.001);assert.ok(Math.abs(b[1]-a[1]+96)<.001);assert.equal(result.zoom,12);
 });
 test('zoom uses distance ratio, preserves loaded center, rounds and clamps map steps',()=>{
- for(const [distance,zoom] of [[10,13],[40,11],[19,12],[1,14],[10000,6]]){
+ for(const [distance,zoom] of [[10,13],[40,11],[19,12],[1,14],[10000,5]]){
  const result=scaledRange(location,base,{distance,target:[10,1,10]});assert.deepEqual(result,{...location,zoom});
  }
 });

@@ -1,0 +1,68 @@
+{
+  "format": "gmrt-int16-mask-v1",
+  "id": "tokara-amami",
+  "name": "トカラ・奄美",
+  "width": 740,
+  "height": 985,
+  "lon0": 126.0,
+  "lat0": 33.504759069226075,
+  "dx": 0.008800955683355887,
+  "dy": -0.007629277591111766,
+  "nodata": -32768,
+  "file": "tokara-amami-gmrt-4.5.0.bin",
+  "bytes": 1548913,
+  "sha256": "a091928203ab3153acc16d429bf76ccb753e31b9df90ead724f4565c28ab7462",
+  "sourceSha256": "b5aa3007145394738cf3e24862a8ac595b86dc7860063ab26eab4f21ec77a12a",
+  "maskSourceSha256": "46bec324a842547881135e9997d32409c3af6fd6b0c0856658f38b15fc4e62e3",
+  "sourceVersion": "GMRT v4.5.0 (2026年6月)",
+  "baseSource": "GEBCO 2026 and regional higher-resolution contributions as described by GMRT",
+  "retrievedAt": "2026-10-10T10:27:20.974791+00:00",
+  "requestedBounds": {
+    "west": 126.0,
+    "east": 132.5,
+    "south": 26.0,
+    "north": 33.5
+  },
+  "actualRasterBounds": [
+    125.99559952215832,
+    25.99373528077654,
+    132.50830672784167,
+    33.50857370802163
+  ],
+  "requestedSpacingMeters": 1250,
+  "actualSpacingMeters": [
+    850.5938146363892,
+    849.2911814425618
+  ],
+  "depthScaleMax": 5000,
+  "quantizationMeters": 1,
+  "license": "CC BY 4.0",
+  "sourceUrl": "https://www.gmrt.org/services/GridServer?west=126.0&east=132.5&south=26.0&north=33.5&layer=topo&format=geotiff&mresolution=1250",
+  "maskSourceUrl": "https://www.gmrt.org/services/GridServer?west=126.0&east=132.5&south=26.0&north=33.5&layer=topo-mask&format=geotiff&mresolution=1250",
+  "termsUrl": "https://www.gmrt.org/about/terms_of_use.php",
+  "citation": "Ryan et al. (2009), doi:10.1029/2008GC002332; GMRT data doi:10.1594/IEDA.100001",
+  "minimum": -6962.103515625,
+  "maximum": 1763.4547119140625,
+  "seaMinimum": -6962.103515625,
+  "seaMaximum": -0.001625214470550418,
+  "missingCount": 2220,
+  "highResolutionContributionCount": 694,
+  "requests": [
+    {
+      "layer": "topo",
+      "status": 200,
+      "bytes": 2919910,
+      "seconds": 2.36,
+      "sha256": "b5aa3007145394738cf3e24862a8ac595b86dc7860063ab26eab4f21ec77a12a",
+      "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+    },
+    {
+      "layer": "topo-mask",
+      "status": 200,
+      "bytes": 2919910,
+      "seconds": 2.13,
+      "sha256": "46bec324a842547881135e9997d32409c3af6fd6b0c0856658f38b15fc4e62e3",
+      "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+    }
+  ]
+}

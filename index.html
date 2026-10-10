@@ -15,8 +15,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/terrain-tanbo-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.36.0">
-  <script type="module" src="js/app.js?v=0.36.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.37.0">
+  <script type="module" src="js/app.js?v=0.37.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span><span class="brand-subtitle">｜地形探訪</span></a><span class="edition">JAPAN TERRAIN EXPLORER</span></header>
@@ -79,7 +79,7 @@
         <p id="surface-guide" class="hint">色は標高、陰影は斜面の向きを表します。</p>
         <section id="bathymetry-settings" class="bathymetry-settings" aria-label="海底地形">
           <label class="contour-toggle"><input id="bathymetry" type="checkbox" aria-describedby="bathymetry-guide">海底地形を表示</label>
-          <p id="bathymetry-guide" class="hint">青ヶ島周辺または八丈島〜青ヶ島の陸地と海底を一緒に観察できます。OFFの間は海底データを取得しません。</p>
+          <p id="bathymetry-guide" class="hint">各地域の名所を選ぶと、表示範囲に必要な海底データを読み込みます。地図や3D画面から範囲を変えた場合も、該当する地域データを選びます。OFFの間は海底データを取得しません。</p>
           <button id="bathymetry-aogashima" type="button">青ヶ島と周囲の海底を見る</button>
           <button id="bathymetry-archipelago" type="button">八丈島〜青ヶ島の海底を広域表示</button>
           <p id="bathymetry-archipelago-note" class="hint" hidden>北の八丈島と南の青ヶ島の位置、島間・周辺の海底起伏を一緒に観察します。海底の高まりから、地下で島々がつながっているとは判断できません。火山活動の解説は<a href="https://www.data.jma.go.jp/vois/data/tokyo/321_Hachijojima/321_index.html" target="_blank" rel="noopener noreferrer">気象庁・八丈島</a>と<a href="https://www.data.jma.go.jp/vois/data/tokyo/322_Aogashima/322_index.html" target="_blank" rel="noopener noreferrer">青ヶ島</a>を参照してください。</p>
@@ -87,7 +87,7 @@
           <p id="bathymetry-status" class="hint" role="status" aria-live="polite" hidden></p>
           <button id="bathymetry-retry" type="button" hidden>海底データを再読み込み</button>
           <div id="bathymetry-info" hidden>
-            <p class="depth-legend-note">水深は海底標高の絶対値です（例：水深500m＝標高−500m）。色は照明前の基準色です。実際の3D表示では陰影により暗く見えることがあります。</p>
+            <p class="depth-legend-note">水深は海底標高の絶対値です（例：水深500m＝標高−500m）。色は照明前の基準色です。実際の3D表示では陰影により暗く見えることがあります。色の尺度は地域ごとに自動調整されるため、名所間で比べるときは凡例の上限も確認してください。</p>
             <div id="bathymetry-colorbar" class="depth-legend" role="img" aria-label="水深0mから2,000m以上。浅い水色から深い濃青に変化。2,000mより深い水深は最濃色で表示。"></div>
             <div class="depth-ticks"><span>0m</span><span>約667m</span><span>約1,333m</span><span>2,000m以上</span></div>
             <p id="bathymetry-depth" class="hint"></p>

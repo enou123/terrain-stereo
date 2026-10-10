@@ -1,0 +1,68 @@
+{
+  "format": "gmrt-int16-mask-v1",
+  "id": "daito",
+  "name": "大東諸島",
+  "width": 572,
+  "height": 509,
+  "lon0": 128.98828125,
+  "lat0": 28.0099216627859,
+  "dx": 0.008804454903677759,
+  "dy": -0.007912704906940148,
+  "nodata": -32768,
+  "file": "daito-gmrt-4.5.0.bin",
+  "bytes": 618690,
+  "sha256": "040dd3f9ff47523c023d9034b7be41adb59c2ee749a092f5dccedfd318bb6878",
+  "sourceSha256": "86bb4d06a6a1ef8bf1491a52369c82e7ee6ebc643f220c4a61c10a48b5ec2cd0",
+  "maskSourceSha256": "cd701ccc7f03efa77edff257ec577f52effeb78ae32dc935e5dce2a1271ce68a",
+  "sourceVersion": "GMRT v4.5.0 (2026年6月)",
+  "baseSource": "GEBCO 2026 and regional higher-resolution contributions as described by GMRT",
+  "retrievedAt": "2026-10-10T10:27:20.974791+00:00",
+  "requestedBounds": {
+    "west": 129.0,
+    "east": 134.0,
+    "south": 24.0,
+    "north": 28.0
+  },
+  "actualRasterBounds": [
+    128.98387902254817,
+    23.986311217606836,
+    134.02002722745183,
+    28.01387801523937
+  ],
+  "requestedSpacingMeters": 1000,
+  "actualSpacingMeters": [
+    880.9187582926606,
+    880.8423102405773
+  ],
+  "depthScaleMax": 5000,
+  "quantizationMeters": 1,
+  "license": "CC BY 4.0",
+  "sourceUrl": "https://www.gmrt.org/services/GridServer?west=129.0&east=134.0&south=24.0&north=28.0&layer=topo&format=geotiff&mresolution=1000",
+  "maskSourceUrl": "https://www.gmrt.org/services/GridServer?west=129.0&east=134.0&south=24.0&north=28.0&layer=topo-mask&format=geotiff&mresolution=1000",
+  "termsUrl": "https://www.gmrt.org/about/terms_of_use.php",
+  "citation": "Ryan et al. (2009), doi:10.1029/2008GC002332; GMRT data doi:10.1594/IEDA.100001",
+  "minimum": -7338.9892578125,
+  "maximum": 478.0103454589844,
+  "seaMinimum": -7338.9892578125,
+  "seaMaximum": -0.10987436771392822,
+  "missingCount": 1144,
+  "highResolutionContributionCount": 6867,
+  "requests": [
+    {
+      "layer": "topo",
+      "status": 200,
+      "bytes": 1166318,
+      "seconds": 1.96,
+      "sha256": "86bb4d06a6a1ef8bf1491a52369c82e7ee6ebc643f220c4a61c10a48b5ec2cd0",
+      "filename": "attachment; filename=GMRTv4_5_0_20261010topo.tif"
+    },
+    {
+      "layer": "topo-mask",
+      "status": 200,
+      "bytes": 1166318,
+      "seconds": 1.98,
+      "sha256": "cd701ccc7f03efa77edff257ec577f52effeb78ae32dc935e5dce2a1271ce68a",
+      "filename": "attachment; filename=GMRTv4_5_0_20261010topo-mask.tif"
+    }
+  ]
+}

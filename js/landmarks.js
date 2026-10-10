@@ -1,5 +1,6 @@
 // Editorial data only. Map/DEM zooms are integer production zooms, not metres.
 // Centers are viewing centers (WGS84), not necessarily summit coordinates.
+import { BATHYMETRY_SPOTS } from './bathymetry-spots.js?v=0.37.0';
 const jma = (area, volcano) => `https://www.data.jma.go.jp/vois/data/${area}/${volcano}/${volcano.split('_')[0]}_index.html`;
 const source = (title, url) => ({title, url, checked:'2026-10-09'});
 const entry = (id, name, prefecture, region, categories, latitude, longitude, zoom, height, pitch, summary, terrain, geology, rocks, age, points, geologyPoints, limitations, reference, coordinateNote, coverage) => ({
@@ -11,8 +12,8 @@ const entry = (id, name, prefecture, region, categories, latitude, longitude, zo
   coordinateNote, coverage,
 });
 
-export const CATEGORIES = Object.freeze({volcano:'火山・カルデラ',mountain:'山岳・峡谷',karst:'カルスト・台地',island:'島・海岸',structure:'断層・地質構造'});
-export const REGIONS = Object.freeze(['北海道','関東・伊豆諸島','中部','中国・四国','九州・南西諸島']);
+export const CATEGORIES = Object.freeze({volcano:'火山・カルデラ',mountain:'山岳・峡谷',karst:'カルスト・台地',island:'島・海岸',structure:'断層・地質構造',marineVolcano:'海底火山・火山島',trench:'海溝・トラフ',underseaRelief:'海底山脈・海底の高まり',coastalSeabed:'島々とその周辺海底',regionalSeabed:'広域の海底地形'});
+export const REGIONS = Object.freeze(['北海道','関東・伊豆諸島','中部','中国・四国','九州・南西諸島','伊豆・小笠原諸島','トカラ・奄美','沖縄・先島諸島','海溝・トラフ']);
 export const LANDMARKS = [
   entry('ishizuchi','石鎚山','愛媛県','中国・四国',['mountain'],33.767,133.115,12,1.5,.82,
     '鋭い岩稜と深い谷が連なる、西日本を代表する山岳地形。',
@@ -152,6 +153,12 @@ export const LANDMARKS = [
     ['数十mの起伏のため高さを強調しています。地下洞窟や海底は表示しません。低い起伏には10 m等高線がおすすめです。'],source('南大東村・島の紹介','https://www.vill.minamidaito.okinawa.jp/site/iju/377.html'),
     '南大東村が示す島の中央の北緯25度50分・東経131度14分を採用。',[131.20,25.80,131.275,25.875]),
 ];
+
+LANDMARKS.push(...BATHYMETRY_SPOTS);
+for(const [id,datasetIds] of [['aogashima',['aogashima','hachijo-aogashima']],['hachijojima',['hachijo-aogashima']]]){
+  const island=LANDMARKS.find(place=>place.id===id);
+  if(island)island.bathymetry={depthScaleMax:2000,datasetIds};
+}
 
 for(const place of LANDMARKS){
   const interval=['kikaijima','minamidaito'].includes(place.id)?10:place.id==='akiyoshidai'?20:['fuji','kurobe'].includes(place.id)?200:100;
