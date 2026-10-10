@@ -1,0 +1,103 @@
+name: Acquire Japanese GMRT marine grids
+on:
+  workflow_dispatch:
+    inputs:
+      region_group:
+        description: Download only the needed bounded region group
+        type: choice
+        required: true
+        default: all
+        options:
+          - all
+          - izu
+          - southwest
+          - okinawa
+          - trenches
+permissions:
+  contents: read
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      REGION_GROUP: ${{ inputs.region_group }}
+    steps:
+      - name: Install bounded GeoTIFF readers
+        run: python -m pip install --disable-pip-version-check 'rasterio==1.4.3' 'numpy==2.2.6'
+      - name: Download official GMRT tiles and create compact artifacts
+        run: |
+          mkdir -p output
+          python - <<'PY'
+          import urllib.request, urllib.parse, hashlib, json, pathlib, datetime, time, traceback, os, sys
+          import numpy as np, rasterio
+          from rasterio.io import MemoryFile
+          from rasterio.transform import array_bounds
+          out=pathlib.Path('output')
+          regions=[
+            dict(id='izu-north',group='izu',name='伊豆諸島北部',west=136.5,east=143.7,south=28.0,north=36.4,mresolution=1500,depthScaleMax=5000),
+            dict(id='izu-south',group='izu',name='伊豆・小笠原諸島南部',west=138.0,east=151.0,south=22.0,north=30.5,mresolution=2500,depthScaleMax=10000),
+            dict(id='nankai-west',group='southwest',name='南海トラフ西部〜紀伊半島沖',west=128.0,east=139.0,south=28.5,north=35.5,mresolution=2000,depthScaleMax=8000),
+            dict(id='tokara-amami',group='southwest',name='トカラ・奄美',west=126.0,east=132.5,south=26.5,north=33.5,mresolution=1250,depthScaleMax=5000),
+            dict(id='okinawa-islands',group='okinawa',name='沖縄諸島',west=125.0,east=132.0,south=24.5,north=28.5,mresolution=1000,depthScaleMax=5000),
+            dict(id='yaeyama',group='okinawa',name='宮古・八重山',west=121.0,east=127.0,south=22.0,north=26.0,mresolution=1250,depthScaleMax=5000),
+            dict(id='ryukyu-trench-trough',group='okinawa',name='琉球海溝・沖縄トラフ',west=121.0,east=135.0,south=21.0,north=31.0,mresolution=2500,depthScaleMax=10000),
+            dict(id='daito',group='southwest',name='大東諸島',west=129.0,east=134.0,south=24.0,north=28.0,mresolution=1000,depthScaleMax=5000),
+            dict(id='suruga-sagami',group='trenches',name='駿河湾・相模トラフ',west=136.5,east=141.8,south=32.5,north=37.0,mresolution=750,depthScaleMax=5000),
+            dict(id='japan-trench',group='trenches',name='日本海溝',west=140.0,east=149.0,south=34.0,north=43.0,mresolution=2500,depthScaleMax=10000),
+            dict(id='kuril-trench',group='trenches',name='千島海溝',west=144.0,east=158.0,south=41.0,north=49.0,mresolution=3500,depthScaleMax=10000),
+          ]
+          selected=os.environ.get('REGION_GROUP','all')
+          chosen=regions if selected in ('','all') else [r for r in regions if r['group']==selected]
+          report={'source':'GMRT official GridServer','sourceVersion':'GMRT v4.5.0 (2026-06)','regionGroup':selected,'retrievedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'regions':[]}
+          for cfg in chosen:
+              row={'id':cfg['id'],'name':cfg['name'],'requestedBounds':{k:cfg[k] for k in ['west','east','south','north']},'mresolution':cfg['mresolution']}
+              try:
+                  rasters={};requests=[]
+                  for layer in ['topo','topo-mask']:
+                      bounds=row['requestedBounds']
+                      params={**bounds,'layer':layer,'format':'geotiff','mresolution':cfg['mresolution']}
+                      url='https://www.gmrt.org/services/GridServer?'+urllib.parse.urlencode(params)
+                      req=urllib.request.Request(url,headers={'User-Agent':'terrain-stereo-bathymetry/1.0'})
+                      started=time.monotonic()
+                      with urllib.request.urlopen(req,timeout=90) as response:
+                          body=response.read(25*1024*1024+1)
+                          assert response.status==200 and len(body)<=25*1024*1024
+                          requests.append({'layer':layer,'status':response.status,'bytes':len(body),'seconds':round(time.monotonic()-started,2),'sha256':hashlib.sha256(body).hexdigest(),'filename':response.headers.get('Content-Disposition')})
+                      with MemoryFile(body) as mem:
+                          with mem.open() as src:
+                              assert src.crs.to_epsg()==4326 and src.count==1
+                              assert 4<=src.width*src.height<=900000, f"grid outside safe limit: {src.width}x{src.height}"
+                              arr=src.read(1,masked=True).filled(np.nan).astype(np.float32)
+                              rasters[layer]=(src.transform,arr,src.bounds,src.width,src.height)
+                      time.sleep(1.2)
+                  transform,values,bounds,width,height=rasters['topo']
+                  mask_transform,mask_values,_,mask_width,mask_height=rasters['topo-mask']
+                  assert values.shape==mask_values.shape and transform==mask_transform
+                  valid=np.isfinite(values);water=valid&(values<0)
+                  assert valid.sum()>100 and water.sum()>100 and np.nanmax(np.abs(values))<32000
+                  dx=transform.a;dy=-transform.e;west=transform.c;north=transform.f
+                  assert dx>0 and dy>0
+                  encoded=np.full(values.shape,-32768,dtype='<i2');encoded[valid]=np.rint(values[valid]).astype('<i2')
+                  coverage=np.packbits(np.isfinite(mask_values).ravel(),bitorder='little')
+                  packed=encoded.tobytes()+coverage.tobytes();filename=cfg['id']+'-gmrt-4.5.0.bin'
+                  (out/filename).write_bytes(packed)
+                  center=(cfg['south']+cfg['north'])/2
+                  spacing=[float(dx*111320*np.cos(np.deg2rad(center))),float(dy*111320)]
+                  metadata=dict(format='gmrt-int16-mask-v1',id=cfg['id'],name=cfg['name'],width=width,height=height,lon0=west+dx/2,lat0=north-dy/2,dx=dx,dy=-dy,nodata=-32768,file=filename,bytes=len(packed),sha256=hashlib.sha256(packed).hexdigest(),sourceSha256=requests[0]['sha256'],maskSourceSha256=requests[1]['sha256'],sourceVersion='GMRT v4.5.0 (2026年6月)',baseSource='GEBCO 2026 and regional higher-resolution contributions as described by GMRT',retrievedAt=report['retrievedAt'],requestedBounds=row['requestedBounds'],actualRasterBounds=list(array_bounds(height,width,transform)),requestedSpacingMeters=cfg['mresolution'],actualSpacingMeters=spacing,depthScaleMax=cfg['depthScaleMax'],quantizationMeters=1,license='CC BY 4.0',sourceUrl='https://www.gmrt.org/services/GridServer?'+urllib.parse.urlencode({**row['requestedBounds'],'layer':'topo','format':'geotiff','mresolution':cfg['mresolution']}),maskSourceUrl='https://www.gmrt.org/services/GridServer?'+urllib.parse.urlencode({**row['requestedBounds'],'layer':'topo-mask','format':'geotiff','mresolution':cfg['mresolution']}),termsUrl='https://www.gmrt.org/about/terms_of_use.php',citation='Ryan et al. (2009), doi:10.1029/2008GC002332; GMRT data doi:10.1594/IEDA.100001',minimum=float(np.nanmin(values)),maximum=float(np.nanmax(values)),seaMinimum=float(np.nanmin(values[water])),seaMaximum=float(np.nanmax(values[water])),missingCount=int((~valid).sum()),highResolutionContributionCount=int(np.isfinite(mask_values).sum()),requests=requests)
+                  (out/(cfg['id']+'.json')).write_text(json.dumps(metadata,ensure_ascii=False,indent=2)+'\n')
+                  row.update(status='ok',width=width,height=height,cells=int(values.size),bytes=len(packed),spacingMeters=spacing,seaMinimum=metadata['seaMinimum'],seaMaximum=metadata['seaMaximum'],contributionCount=metadata['highResolutionContributionCount'],sha256=metadata['sha256'],requests=requests)
+              except Exception as exc:
+                  row.update(status='failed',error=str(exc),trace=traceback.format_exc(limit=2))
+              report['regions'].append(row);print(json.dumps(row,ensure_ascii=False),flush=True)
+          report['packedBytes']=sum(r.get('bytes',0) for r in report['regions'])
+          (out/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps({'artifactBytes':report['packedBytes'],'ok':sum(r['status']=='ok' for r in report['regions']),'failed':sum(r['status']=='failed' for r in report['regions'])},ensure_ascii=False))
+          if not any(r['status']=='ok' for r in report['regions']):sys.exit(1)
+          PY
+      - name: Upload compact grids and acquisition report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gmrt-japan-${{ inputs.region_group }}
+          path: output/
+          retention-days: 3
+          if-no-files-found: error
