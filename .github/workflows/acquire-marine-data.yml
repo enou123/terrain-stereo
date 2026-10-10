@@ -74,7 +74,9 @@ jobs:
                               cells=src.width*src.height
                               if cells>900000:
                                   dx=src.transform.a;dy=-src.transform.e
-                                  raise AssertionError(f"grid outside safe limit: {src.width}x{src.height} ({cells} cells; approx spacing {dx*111320:.1f}m lon, {dy*111320:.1f}m lat; requested mresolution={cfg['mresolution']})")
+                                  center=(cfg['south']+cfg['north'])/2
+                                  approx_spacing_x=dx*111320*np.cos(np.deg2rad(center));approx_spacing_y=dy*111320
+                                  raise AssertionError(f"grid outside safe limit: {src.width}x{src.height} ({cells} cells; approx spacing {approx_spacing_x:.1f}m x {approx_spacing_y:.1f}m; requested mresolution={cfg['mresolution']})")
                               assert cells>=4, f"grid too small: {src.width}x{src.height}"
                               arr=src.read(1,masked=True).filled(np.nan).astype(np.float32)
                               rasters[layer]=(src.transform,arr,src.bounds,src.width,src.height)
