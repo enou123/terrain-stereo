@@ -9,6 +9,7 @@ on:
         default: all
         options:
           - all
+          - remaining
           - izu
           - southwest
           - okinawa
@@ -34,7 +35,9 @@ jobs:
           from rasterio.transform import array_bounds
           out=pathlib.Path('output')
           regions=[
-            dict(id='izu-north',group='izu',name='伊豆諸島北部',west=136.5,east=143.7,south=28.0,north=36.4,mresolution=1500,depthScaleMax=5000),
+            # The first all-region run returned 821x1134 cells at 1500m.
+            # 1750m brings this regional raster safely below the 900k-cell cap.
+            dict(id='izu-north',group='izu',name='伊豆諸島北部',west=136.5,east=143.7,south=28.0,north=36.4,mresolution=1750,depthScaleMax=5000),
             dict(id='izu-south',group='izu',name='伊豆・小笠原諸島南部',west=137.0,east=151.0,south=22.0,north=35.5,mresolution=2500,depthScaleMax=10000),
             dict(id='nankai-west',group='southwest',name='南海トラフ西部〜紀伊半島沖',west=128.0,east=140.0,south=28.5,north=37.0,mresolution=2000,depthScaleMax=8000),
             dict(id='tokara-amami',group='southwest',name='トカラ・奄美',west=126.0,east=132.5,south=26.0,north=33.5,mresolution=1250,depthScaleMax=5000),
@@ -42,12 +45,14 @@ jobs:
             dict(id='yaeyama',group='okinawa',name='宮古・八重山',west=121.0,east=127.0,south=22.0,north=26.0,mresolution=1250,depthScaleMax=5000),
             dict(id='ryukyu-trench-trough',group='okinawa',name='琉球海溝・沖縄トラフ',west=121.0,east=135.0,south=20.5,north=31.0,mresolution=2500,depthScaleMax=10000),
             dict(id='daito',group='southwest',name='大東諸島',west=129.0,east=134.0,south=24.0,north=28.0,mresolution=1000,depthScaleMax=5000),
-            dict(id='suruga-sagami',group='trenches',name='駿河湾・相模トラフ',west=136.5,east=141.8,south=32.5,north=37.0,mresolution=750,depthScaleMax=5000),
+            # The first all-region run returned 1208x1250 cells at 750m.
+            # 1000m retains useful sub-kilometre detail while staying under cap.
+            dict(id='suruga-sagami',group='trenches',name='駿河湾・相模トラフ',west=136.5,east=141.8,south=32.5,north=37.0,mresolution=1000,depthScaleMax=5000),
             dict(id='japan-trench',group='trenches',name='日本海溝',west=140.0,east=149.0,south=34.0,north=43.0,mresolution=2500,depthScaleMax=10000),
             dict(id='kuril-trench',group='trenches',name='千島海溝',west=144.0,east=158.0,south=41.0,north=49.0,mresolution=3500,depthScaleMax=10000),
           ]
           selected=os.environ.get('REGION_GROUP','all')
-          chosen=regions if selected in ('','all') else [r for r in regions if r['group']==selected]
+          chosen=regions if selected in ('','all') else ([r for r in regions if r['id'] in ('izu-north','suruga-sagami')] if selected=='remaining' else [r for r in regions if r['group']==selected])
           report={'source':'GMRT official GridServer','sourceVersion':'GMRT v4.5.0 (2026-06)','regionGroup':selected,'retrievedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'regions':[]}
           for cfg in chosen:
               row={'id':cfg['id'],'name':cfg['name'],'requestedBounds':{k:cfg[k] for k in ['west','east','south','north']},'mresolution':cfg['mresolution']}
@@ -66,7 +71,11 @@ jobs:
                       with MemoryFile(body) as mem:
                           with mem.open() as src:
                               assert src.crs.to_epsg()==4326 and src.count==1
-                              assert 4<=src.width*src.height<=900000, f"grid outside safe limit: {src.width}x{src.height}"
+                              cells=src.width*src.height
+                              if cells>900000:
+                                  dx=src.transform.a;dy=-src.transform.e
+                                  raise AssertionError(f"grid outside safe limit: {src.width}x{src.height} ({cells} cells; approx spacing {dx*111320:.1f}m lon, {dy*111320:.1f}m lat; requested mresolution={cfg['mresolution']})")
+                              assert cells>=4, f"grid too small: {src.width}x{src.height}"
                               arr=src.read(1,masked=True).filled(np.nan).astype(np.float32)
                               rasters[layer]=(src.transform,arr,src.bounds,src.width,src.height)
                       time.sleep(1.2)
