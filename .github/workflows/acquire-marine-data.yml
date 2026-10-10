@@ -35,9 +35,11 @@ jobs:
           from rasterio.transform import array_bounds
           out=pathlib.Path('output')
           regions=[
-            # The first all-region run returned 821x1134 cells at 1500m.
-            # 1750m brings this regional raster safely below the 900k-cell cap.
-            dict(id='izu-north',group='izu',name='伊豆諸島北部',west=136.5,east=143.7,south=28.0,north=36.4,mresolution=1750,depthScaleMax=5000),
+            # GMRT returned the same 821x1134 (~829m) raster at requested
+            # 1500m and 1750m. Split north/south with overlap to preserve detail
+            # while keeping each downloadable raster under the 900k-cell cap.
+            dict(id='izu-north-north',group='izu',name='伊豆諸島北部・北側',west=136.5,east=143.7,south=32.1,north=36.4,mresolution=1750,depthScaleMax=5000),
+            dict(id='izu-north-south',group='izu',name='伊豆諸島北部・南側',west=136.5,east=143.7,south=28.0,north=32.3,mresolution=1750,depthScaleMax=5000),
             dict(id='izu-south',group='izu',name='伊豆・小笠原諸島南部',west=137.0,east=151.0,south=22.0,north=35.5,mresolution=2500,depthScaleMax=10000),
             dict(id='nankai-west',group='southwest',name='南海トラフ西部〜紀伊半島沖',west=128.0,east=140.0,south=28.5,north=37.0,mresolution=2000,depthScaleMax=8000),
             dict(id='tokara-amami',group='southwest',name='トカラ・奄美',west=126.0,east=132.5,south=26.0,north=33.5,mresolution=1250,depthScaleMax=5000),
@@ -52,7 +54,7 @@ jobs:
             dict(id='kuril-trench',group='trenches',name='千島海溝',west=144.0,east=158.0,south=41.0,north=49.0,mresolution=3500,depthScaleMax=10000),
           ]
           selected=os.environ.get('REGION_GROUP','all')
-          chosen=regions if selected in ('','all') else ([r for r in regions if r['id'] in ('izu-north','suruga-sagami')] if selected=='remaining' else [r for r in regions if r['group']==selected])
+          chosen=regions if selected in ('','all') else ([r for r in regions if r['id'].startswith('izu-north-')] if selected=='remaining' else [r for r in regions if r['group']==selected])
           report={'source':'GMRT official GridServer','sourceVersion':'GMRT v4.5.0 (2026-06)','regionGroup':selected,'retrievedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'regions':[]}
           for cfg in chosen:
               row={'id':cfg['id'],'name':cfg['name'],'requestedBounds':{k:cfg[k] for k in ['west','east','south','north']},'mresolution':cfg['mresolution']}
