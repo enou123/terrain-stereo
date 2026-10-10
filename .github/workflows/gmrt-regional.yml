@@ -1,0 +1,69 @@
+name: Acquire Hachijo to Aogashima bathymetry
+on:
+  push:
+    branches: ['codex/bathymetry-gmrt-probe']
+    paths: ['.github/workflows/gmrt-regional.yml']
+permissions:
+  contents: read
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install bounded raster readers
+        run: python -m pip install --disable-pip-version-check 'rasterio==1.4.3' 'numpy==2.2.6'
+      - name: Download, inspect and compact regional grids
+        run: |
+          mkdir -p output
+          python - <<'PY'
+          import urllib.request, urllib.parse, hashlib, json, pathlib, datetime, time
+          import numpy as np, rasterio
+          from rasterio.transform import rowcol
+          out=pathlib.Path('output')
+          bounds=dict(west=138.65,east=140.95,south=31.9,north=33.65)
+          report={'requestedBounds':bounds,'retrievedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'requests':[]}
+          rasters={}
+          for name,layer in [('topo','topo'),('topo-mask','topo-mask')]:
+              params={**bounds,'layer':layer,'format':'geotiff','mresolution':500}
+              url='https://www.gmrt.org/services/GridServer?'+urllib.parse.urlencode(params)
+              started=time.monotonic()
+              req=urllib.request.Request(url,headers={'User-Agent':'terrain-stereo-bathymetry/1.0'})
+              with urllib.request.urlopen(req,timeout=75) as response:
+                  body=response.read(25*1024*1024+1)
+                  assert response.status==200 and len(body)<=25*1024*1024
+                  (out/(name+'.tif')).write_bytes(body)
+                  report['requests'].append({'layer':layer,'status':response.status,'bytes':len(body),'seconds':round(time.monotonic()-started,2),'sha256':hashlib.sha256(body).hexdigest(),'filename':response.headers.get('Content-Disposition')})
+              with rasterio.open(out/(name+'.tif')) as src:
+                  assert src.crs.to_epsg()==4326 and src.count==1 and src.width*src.height<=2000000
+                  a=src.read(1,masked=True).filled(np.nan).astype(np.float32)
+                  rasters[name]=(src.transform,a,src.nodata)
+                  print(layer,src.width,src.height,src.bounds,src.transform)
+          transform,values,nodata=rasters['topo']
+          mask_transform,mask_values,_=rasters['topo-mask']
+          assert values.shape==mask_values.shape and transform==mask_transform
+          valid=np.isfinite(values);sea=values[valid & (values<0)]
+          assert len(sea)>1000
+          samples={}
+          for label,lon,lat in [('Hachijojima',139.78,33.1),('Aogashima',139.76,32.46),('between-islands',139.78,32.8),('west-flank',139.3,32.8),('east-flank',140.3,32.8)]:
+              row,col=rowcol(transform,lon,lat);v=float(values[row,col]);samples[label]=v if np.isfinite(v) else None
+          assert samples['Hachijojima'] is not None and samples['Aogashima'] is not None
+          assert samples['Hachijojima']>0 and samples['Aogashima']>0
+          dx=transform.a;dy=-transform.e;west=transform.c;north=transform.f
+          meters=[float(dx*111320*np.cos(np.deg2rad(32.8))),float(dy*111320)]
+          encoded=np.full(values.shape,-32768,dtype='<i2');encoded[valid]=np.rint(values[valid]).astype('<i2')
+          coverage=np.packbits(np.isfinite(mask_values).ravel(),bitorder='little')
+          packed=encoded.tobytes()+coverage.tobytes()
+          filename='hachijo-aogashima-gmrt-4.5.0.bin';(out/filename).write_bytes(packed)
+          metadata=dict(format='gmrt-int16-mask-v1',id='hachijo-aogashima',name='八丈島〜青ヶ島周辺',width=values.shape[1],height=values.shape[0],lon0=west+dx/2,lat0=north-dy/2,dx=dx,dy=-dy,nodata=-32768,file=filename,bytes=len(packed),sha256=hashlib.sha256(packed).hexdigest(),sourceSha256=report['requests'][0]['sha256'],maskSourceSha256=report['requests'][1]['sha256'],sourceVersion='GMRT v4.5.0 (2026年6月)',source='GMRT GridServer topo / topo-mask; GEBCO 2026 and regional higher-resolution contributions as described by GMRT',retrievedAt=report['retrievedAt'],requestedBounds=bounds,actualRasterBounds=list(rasterio.transform.array_bounds(values.shape[0],values.shape[1],transform)),requestedSpacingMeters=500,actualSpacingMeters=meters,quantizationMeters=1,license='CC BY 4.0',sourceUrl='https://www.gmrt.org/services/gridserverinfo.php',termsUrl='https://www.gmrt.org/about/terms_of_use.php',citation='Ryan et al. (2009), doi:10.1029/2008GC002332; GMRT data doi:10.1594/IEDA.100001',minimum=float(np.nanmin(values)),maximum=float(np.nanmax(values)),missingCount=int((~valid).sum()),highResolutionContributionCount=int(np.isfinite(mask_values).sum()),samples=samples)
+          (out/'hachijo-aogashima-gmrt-4.5.0.json').write_text(json.dumps(metadata,ensure_ascii=False,indent=2)+'\n')
+          report.update(width=values.shape[1],height=values.shape[0],cells=values.size,bytes=len(packed),actualSpacingMeters=meters,finiteCount=int(valid.sum()),seaCount=int(len(sea)),seaMinimum=float(sea.min()),seaMaximum=float(sea.max()),samples=samples,binarySha256=metadata['sha256'])
+          (out/'report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          PY
+      - name: Store only bounded output grid for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: gmrt-hachijo-aogashima-grid
+          path: output/
+          retention-days: 3
+          if-no-files-found: error
