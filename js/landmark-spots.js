@@ -1,4 +1,4 @@
-import { worldPixel } from './elevation.js?v=0.32.0';
+import { worldPixel } from './elevation.js?v=0.33.0';
 // Viewing centers, not surveying points. Extents contain the named feature;
 // focus boxes frame that feature inside a newly loaded production DEM footprint.
 const spot=(id,name,lat,lon,zoom,height,pitch,interval,coverage,description,limit,reference)=>({

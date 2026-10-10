@@ -1,4 +1,4 @@
-import { contourInterval } from './contours.js?v=0.32.0';
+import { contourInterval } from './contours.js?v=0.33.0';
 const MODES = new Set(['mono', 'parallel', 'cross', 'anaglyph']);
 const QUALITIES = new Set(['standard', 'high', 'ultra']);
 const SURFACES = new Set(['elevation', 'shading', 'map', 'photo', 'geology']);

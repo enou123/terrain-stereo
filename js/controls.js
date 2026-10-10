@@ -33,10 +33,24 @@ export function centeredOrbitPose(base, progress) {
   return {yaw:base.yaw-angle,pitch:base.pitch,distance:base.distance,target:base.target.slice()};
 }
 
+export function rebaseFlightTour(base, current, progress, pose=flightTourPose) {
+  const expected=pose(base,progress);
+  const rebased={
+    yaw:base.yaw+current.yaw-expected.yaw,
+    pitch:Math.max(.12,Math.min(Math.PI/2,base.pitch+current.pitch-expected.pitch)),
+    distance:Math.max(4,Math.min(45,base.distance*current.distance/expected.distance)),
+    target:base.target.slice()
+  };
+  const offset=pose(rebased,progress).target.map((value,index)=>value-base.target[index]);
+  rebased.target=current.target.map((value,index)=>value-offset[index]);
+  return rebased;
+}
+
 export class OrbitControls {
   constructor(canvas, redraw) {
     this.canvas = canvas;
     this.redraw = redraw;
+    this.onchange = null;
     this.pointers = new Map();
     this.reset();
     canvas.addEventListener('pointerdown', e => {
@@ -65,14 +79,14 @@ export class OrbitControls {
         if (previous.pan || e.shiftKey) this.pan(dx,dy);
         else { this.yaw -= dx * 0.007; this.pitch += dy * 0.007; }
       }
-      this.clamp(); this.redraw();
+      this.clamp(); this.onchange?.(); this.redraw();
     });
     for (const event of ['pointerup','pointercancel','lostpointercapture']) canvas.addEventListener(event, e=>this.pointers.delete(e.pointerId));
     canvas.addEventListener('wheel', e => {
       e.preventDefault();
       const pixels=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?canvas.clientHeight:1);
       this.zoom(Math.exp(Math.max(-200, Math.min(200,pixels))*0.0015));
-      this.redraw();
+      this.onchange?.(); this.redraw();
     }, { passive: false });
     canvas.addEventListener('keydown', e => {
       switch(e.key) {
@@ -91,7 +105,7 @@ export class OrbitControls {
         case 'r': case 'R': this.reset(); break;
         default: return;
       }
-      e.preventDefault(); this.clamp(); this.redraw();
+      e.preventDefault(); this.clamp(); this.onchange?.(); this.redraw();
     });
   }
   reset() { this.yaw=0.38; this.pitch=0.75; this.distance=19; this.target=[0,1.1,0]; }

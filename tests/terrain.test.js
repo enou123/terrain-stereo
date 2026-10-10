@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { parseTile, worldPixel } from '../js/elevation.js';
 import { createMesh, fitMeshPositions } from '../js/mesh.js';
 import { perspective, lookAt } from '../js/math.js';
-import { OrbitControls, flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle } from '../js/controls.js';
+import { OrbitControls, flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle, rebaseFlightTour } from '../js/controls.js';
 
 test('GSI text parser preserves positive, negative, zero and missing elevations',()=>{
   const rows=Array.from({length:256},()=>Array(256).fill('100'));
@@ -150,8 +150,15 @@ test('centered orbit circles the starting screen-center pivot with fixed pitch, 
 
 
 test('flight speed and lap selections control independent duration, wrapping and stopping',()=>{
+  const base={yaw:.38,pitch:.75,distance:19,target:[2,1.5,-3]};
   assert.equal(flightLapDuration(.5),64000);assert.equal(flightLapDuration(1),32000);assert.equal(flightLapDuration(2),16000);
   assert.deepEqual(flightCycle(64000,32000,3,false),{progress:0,finished:false,lap:3});
   assert.deepEqual(flightCycle(96000,32000,3,false),{progress:1,finished:true,lap:3});
   assert.deepEqual(flightCycle(80500,32000,Infinity,true),{progress:.515625,finished:false,lap:3});
+  for(const pose of [flightTourPose,centeredOrbitPose]){
+    const currentPose=pose(base,.37),manual={yaw:currentPose.yaw+.22,pitch:currentPose.pitch+.08,distance:currentPose.distance*.83,target:currentPose.target.map((v,i)=>v+[.4,.3,-.2][i])};
+    const rebased=rebaseFlightTour(base,manual,.37,pose),resumed=pose(rebased,.37);
+    assert.ok(Math.abs(resumed.yaw-manual.yaw)<1e-9);assert.ok(Math.abs(resumed.pitch-manual.pitch)<1e-9);
+    assert.ok(Math.abs(resumed.distance-manual.distance)<1e-9);assert.ok(resumed.target.every((v,i)=>Math.abs(v-manual.target[i])<1e-9));
+  }
 });

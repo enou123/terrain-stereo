@@ -47,6 +47,22 @@ for lat,lon in [(33.767,133.115),(35.3606,138.7274)]:
             for tx in range(math.floor(x)-4,math.floor(x)+5)
             for ty in range(math.floor(y)-4,math.floor(y)+5))
 with ThreadPoolExecutor(max_workers=12) as executor:list(executor.map(real,map_urls))
+def drag_canvas(page,touch,box,dx=30,dy=18,shift=False):
+    x=box['x']+box['width']*.58;y=box['y']+box['height']*.55
+    if touch:
+        session=page.context.new_cdp_session(page)
+        session.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':y,'id':1}]})
+        session.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x+dx,'y':y+dy,'id':1}]})
+        session.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});session.detach()
+    else:
+        if shift:page.keyboard.down('Shift')
+        page.mouse.move(x,y);page.mouse.down();page.mouse.move(x+dx,y+dy,steps=5);page.mouse.up()
+        if shift:page.keyboard.up('Shift')
+def pinch_pan_canvas(page,box):
+    x=box['x']+box['width']*.58;y=box['y']+box['height']*.55;session=page.context.new_cdp_session(page)
+    session.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x-24,'y':y,'id':1},{'x':x+24,'y':y,'id':2}]})
+    session.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x-36,'y':y+14,'id':1},{'x':x+36,'y':y+14,'id':2}]})
+    session.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]});session.detach()
 class QuietHandler(SimpleHTTPRequestHandler):
     def log_message(self,*args):pass
 server=ThreadingHTTPServer(('127.0.0.1',0),partial(QuietHandler,directory=str(ROOT)))
@@ -72,7 +88,7 @@ with sync_playwright() as p:
         page.route('https://cyberjapandata.gsi.go.jp/**',route)
         page.route('https://gbank.gsj.jp/**',lambda r:r.fulfill(status=200,body=json.dumps([{'value':'7f9b72','title':'新生代 第四紀, 火山岩','group_ja':'火成岩','formationAge_ja':'新生代 第四紀','lithology_ja':'火山岩'}]),content_type='application/json',headers={'Access-Control-Allow-Origin':'*'}) if 'legend.json' in r.request.url else r.fulfill(status=200,body=geology_fixture(),content_type='image/png',headers={'Access-Control-Allow-Origin':'*'}))
         # Expose existing objects only inside this test to verify view/data preservation.
-        page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.uiTest={get renderer(){return renderer},get data(){return data},get map(){return map},get flightDuration(){return tourDuration}};",content_type='text/javascript'))
+        page.route('**/js/app.js*',lambda r:r.fulfill(body=(ROOT/'js/app.js').read_text()+"\nwindow.uiTest={get renderer(){return renderer},get data(){return data},get map(){return map},get flightDuration(){return tourDuration},get flightBase(){return tourBase&&({...tourBase,target:tourBase.target.slice()})}};",content_type='text/javascript'))
         page.goto(url)
         page.wait_for_function("window.uiTest && !document.querySelector('#quality').disabled",timeout=120000)
         assert page.locator('#message').is_hidden(),page.locator('#status').inner_text()
@@ -190,8 +206,10 @@ with sync_playwright() as p:
             assert tour_pose['target']!=start_flight['target'] and tour_pose['yaw']!=start_flight['yaw']
             page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-tour.png'))
             terrain_box=page.locator('#terrain').bounding_box()
-            stop_x=terrain_box['x']+80;stop_y=terrain_box['y']+80
-            (page.touchscreen.tap if touch else page.mouse.click)(stop_x,stop_y)
+            before_input=state();before_base=page.evaluate('uiTest.flightBase');drag_canvas(page,touch,terrain_box);page.wait_for_timeout(250);after_drag=state();after_base=page.evaluate('uiTest.flightBase')
+            assert abs(after_base['pitch']-before_base['pitch'])>.06,(before_input,after_drag,before_base,after_base)
+            assert page.locator('#flight-toggle').inner_text().startswith('遊覧中') and page.locator('#flight-pad').is_hidden()
+            page.click('#flight-toggle')
             assert page.locator('#flight-toggle').inner_text()=='閉じる'
             assert page.locator('#flight-pad').is_visible()
             assert page.locator('[data-flight]').count()==0
@@ -205,7 +223,19 @@ with sync_playwright() as p:
             page.wait_for_timeout(800);orbit=state()
             assert orbit['target']==pivot['target'] and orbit['pitch']==pivot['pitch'] and orbit['distance']==pivot['distance']
             assert orbit['yaw']!=pivot['yaw']
-            (page.touchscreen.tap if touch else page.mouse.click)(stop_x,stop_y)
+            centered_box=page.locator('#terrain').bounding_box();drag_canvas(page,touch,centered_box);after_rotate=state()
+            assert abs(after_rotate['pitch']-orbit['pitch'])>.05
+            if touch:pinch_pan_canvas(page,centered_box)
+            else:
+                drag_canvas(page,touch,centered_box,24,12,shift=True)
+                page.mouse.move(centered_box['x']+centered_box['width']*.58,centered_box['y']+centered_box['height']*.55);page.mouse.wheel(0,-100)
+            after_gesture=state();page.wait_for_timeout(250);resumed=state()
+            assert after_gesture['target']!=pivot['target'] and after_gesture['distance']!=pivot['distance']
+            assert resumed['target']==after_gesture['target'] and abs(resumed['distance']-after_gesture['distance'])<1e-8
+            assert abs(resumed['pitch']-after_rotate['pitch'])<.02,(after_rotate,after_gesture,resumed)
+            assert abs(resumed['yaw']-after_gesture['yaw'])>1e-4,(after_rotate,after_gesture,resumed,page.locator('#flight-toggle').inner_text())
+            assert page.locator('#flight-pad').is_hidden() and '2周' in page.locator('#flight-toggle').inner_text()
+            page.click('#flight-toggle')
             assert page.locator('#flight-toggle').inner_text()=='閉じる'
             page.click('#tour-toggle');page.locator('#flight-speed').evaluate("e=>{e.value='2';e.dispatchEvent(new Event('input',{bubbles:true}))}");page.click('[data-flight-laps="infinite"]')
             page.wait_for_timeout(500);assert '連続遊覧中' in page.locator('#flight-toggle').inner_text() and page.evaluate('uiTest.flightDuration')==16000

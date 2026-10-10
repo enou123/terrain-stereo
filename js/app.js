@@ -1,19 +1,19 @@
-import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.32.0';
-import { contourInterval } from './contours.js?v=0.32.0';
-import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.32.0';
-import { loadMapTexture, textureKey } from './texture.js?v=0.32.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.32.0';
-import { LocationMap } from './map.js?v=0.32.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.32.0';
-import { createMesh } from './mesh.js?v=0.32.0';
-import { TerrainRenderer } from './renderer.js?v=0.32.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.32.0';
-import { flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle } from './controls.js?v=0.32.0';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.32.0';
-import { setupAppTour } from './tour.js?v=0.32.0';
-import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.32.0';
-import { setupLandmarkGuide } from './landmark-guide.js?v=0.32.0';
-import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.32.0';
+import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.33.0';
+import { contourInterval } from './contours.js?v=0.33.0';
+import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.33.0';
+import { loadMapTexture, textureKey } from './texture.js?v=0.33.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.33.0';
+import { LocationMap } from './map.js?v=0.33.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.33.0';
+import { createMesh } from './mesh.js?v=0.33.0';
+import { TerrainRenderer } from './renderer.js?v=0.33.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.33.0';
+import { flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle, rebaseFlightTour } from './controls.js?v=0.33.0';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.33.0';
+import { setupAppTour } from './tour.js?v=0.33.0';
+import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.33.0';
+import { setupLandmarkGuide } from './landmark-guide.js?v=0.33.0';
+import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.33.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -130,7 +130,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.32.0');
+  const {pickSurface}=await import('./profile.js?v=0.33.0');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -333,7 +333,7 @@ async function visitLandmark(place,mode='terrain',spotId=null){
 }
 async function switchLandmarkMode(place,mode){
   if(loading||appTour.active)return;
-  landmarkGuide.setBusy(true);stopFlightTour();
+  landmarkGuide.setBusy(true);
   landmarkGuide.show(place,mode,landmarkGuide.spot);landmarkGuide.status('表示を切り替えています…');
   // Only the surface changes. Never reapply the preset camera, zoom, height,
   // contours or quality over the user's current choices.
@@ -357,6 +357,7 @@ async function load() {
     if (!renderer) {
       renderer=new TerrainRenderer(document.querySelector('#terrain'),showError);
       renderer.controls.setFlightMode(false);
+      renderer.controls.onchange=preserveFlightInput;
       if(sharedView){Object.assign(renderer.controls,{yaw:sharedView.camera.yaw,pitch:sharedView.camera.pitch,distance:sharedView.camera.distance,target:[...sharedView.camera.target]});}
     }
     if (!renderer.uintIndices) {
@@ -403,12 +404,12 @@ slider.addEventListener('input',()=>{
   factor.textContent=`${value.toFixed(1)}×`;
   if (data && renderer && !renderer.lost) renderer.setMesh(createMesh(data,value));
 });
-document.querySelector('#reset').addEventListener('click',()=>{stopFlightTour();renderer?.reset();if(renderer)viewRangeBase=cameraPose();updateRangePanel();});
+document.querySelector('#reset').addEventListener('click',()=>{renderer?.reset();if(renderer){preserveFlightInput();viewRangeBase=cameraPose();}updateRangePanel();});
 const flightToggle=document.querySelector('#flight-toggle'), flightPad=document.querySelector('#flight-pad');
 const tourToggle=document.querySelector('#tour-toggle'),tourOptions=document.querySelector('#flight-options');
 const flightPath=document.querySelector('#flight-path'),flightSpeed=document.querySelector('#flight-speed'),flightSpeedValue=document.querySelector('#flight-speed-value'),flightSummary=document.querySelector('#flight-summary');
 let selectedFlightLaps='1';
-let tourFrame=null,tourStarted=0,tourBase=null,tourDuration=32000,tourPaused=false,tourPausedAt=null,tourInfinite=false,tourLapCount=1,tourPose=centeredOrbitPose;
+let tourFrame=null,tourStarted=0,tourBase=null,tourDuration=32000,tourPaused=false,tourPausedAt=null,tourInfinite=false,tourLapCount=1,tourProgress=0,tourPose=centeredOrbitPose;
 function updateFlightSummary(){
   const speed=Number(flightSpeed.value),laps=selectedFlightLaps==='infinite'?Infinity:Number(selectedFlightLaps),perLap=flightLapDuration(speed)/1000;
   flightSpeedValue.textContent=`${speed.toFixed(1)}×`;
@@ -437,6 +438,7 @@ function animateFlightTour(now){
   if(tourPausedAt!==null){tourStarted+=now-tourPausedAt;tourPausedAt=null;}
   const cycle=flightCycle(now-tourStarted,tourDuration,tourLapCount,tourInfinite);
   const {finished,progress,lap}=cycle;
+  tourProgress=progress;
   const pose=tourPose(tourBase,progress);
   Object.assign(renderer.controls,{yaw:pose.yaw,pitch:pose.pitch,distance:pose.distance,target:pose.target});renderer.requestDraw();
   if(finished){stopFlightTour();return;}
@@ -451,9 +453,14 @@ function startFlightTour(duration=null,config=null){
   tourDuration=duration??flightLapDuration(choice.speed);
   if(!flightMode){flightMode=true;flightToggle.setAttribute('aria-pressed','true');flightToggle.textContent='閉じる';flightToggle.setAttribute('aria-label','範囲・遊覧パネルを閉じる');flightPad.hidden=false;}
   const c=renderer.controls;tourBase={yaw:c.yaw,pitch:c.pitch,distance:c.distance,target:c.target.slice()};
-  tourStarted=performance.now();flightToggle.textContent=tourInfinite?'連続遊覧中 · 停止':`遊覧中 · 1/${tourLapCount}周 · 停止`;flightToggle.setAttribute('aria-label','遊覧を停止して設定を表示');flightToggle.title=flightToggle.getAttribute('aria-label');
+  tourStarted=performance.now();tourProgress=0;flightToggle.textContent=tourInfinite?'連続遊覧中 · 停止':`遊覧中 · 1/${tourLapCount}周 · 停止`;flightToggle.setAttribute('aria-label','遊覧を停止して設定を表示');flightToggle.title=flightToggle.getAttribute('aria-label');
   tourOptions.hidden=true;tourToggle.setAttribute('aria-expanded','false');flightPad.hidden=true;
   document.querySelector('#terrain').focus({preventScroll:true});tourFrame=requestAnimationFrame(animateFlightTour);return true;
+}
+function preserveFlightInput(){
+  if(tourFrame===null||!tourBase||!renderer)return;
+  const controls=renderer.controls;
+  tourBase=rebaseFlightTour(tourBase,{yaw:controls.yaw,pitch:controls.pitch,distance:controls.distance,target:controls.target.slice()},tourProgress,tourPose);
 }
 tourToggle.addEventListener('click',()=>{const open=tourOptions.hidden;tourOptions.hidden=!open;tourToggle.setAttribute('aria-expanded',String(open));tourToggle.textContent=open?'遊覧の設定を閉じる ▴':'遊覧飛行を選ぶ ▾';});
 updateFlightSummary();
@@ -465,13 +472,12 @@ flightToggle.addEventListener('click',()=>{
   if(flightMode)document.querySelector('#terrain').focus({preventScroll:true});
 });
 const terrainCanvas=document.querySelector('#terrain');
-terrainCanvas.addEventListener('pointerdown',stopFlightTour);
 document.querySelector('#observation-overlay').addEventListener('terrain-north-view',()=>{
   if(!renderer||!data||loading||rangeBusy||renderer.lost||!renderer.mesh?.indices.length||appTour.active)return;
-  stopFlightTour();
   const paired=renderer.mode==='parallel'||renderer.mode==='cross';
   const aspect=terrainCanvas.clientWidth/(paired?2:1)/terrainCanvas.clientHeight;
   setTourCamera(northTopCamera(renderer.mesh,aspect));
+  preserveFlightInput();
   viewRangeBase=cameraPose();updateRangePanel();
 });
 const rangeMove=document.querySelector('#range-move'),rangeScale=document.querySelector('#range-scale'),rangeStatus=document.querySelector('#range-status');
@@ -533,15 +539,13 @@ terrainCanvas.addEventListener('pointerup',event=>{
 });
 for(const type of ['pointercancel','lostpointercapture'])terrainCanvas.addEventListener(type,event=>{geologyTap=null;geologyPointers.delete(event.pointerId);});
 
-terrainCanvas.addEventListener('wheel',stopFlightTour,{passive:true});
-terrainCanvas.addEventListener('keydown',event=>{if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','+','=','-','w','W','a','A','s','S','d','D','q','Q','e','E','r','R'].includes(event.key))stopFlightTour();});
 retry.addEventListener('click',load);
 load();
 
 // Load section calculations/UI only when explicitly requested.
 async function getProfileTool(){
   if(!data||loading||renderer?.lost)throw new Error('地形が読み込み中です。');
-  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.32.0');profile=new SectionTool(renderer,viewerUI);}
+  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.33.0');profile=new SectionTool(renderer,viewerUI);}
   profile.setData(data);return profile;
 }
 document.querySelector('#profile-start').addEventListener('click',async()=>{
@@ -720,7 +724,7 @@ async function demoContours(api,signal){
 async function demoProfile(api,signal){
   applySelect(modeSelect,'mono');contoursToggle.checked=false;contoursToggle.dispatchEvent(new Event('change',{bubbles:true}));viewerUI.setSettingsOpen(true);
   const tool=await getProfileTool();tool.clear();await api.wait(2000);tool.start();api.focus('#terrain');await api.wait(700);
-  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.32.0');
+  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.33.0');
   if(signal.aborted)throw new DOMException('Stopped','AbortError');
   renderer.draw();const rect=terrainCanvas.getBoundingClientRect(),camera=renderer.cameras(undefined,undefined,true)[0];
   const candidates=[];
