@@ -24,7 +24,7 @@ with sync_playwright() as p:
   failure['on']=False
   # Resolve a stale photo even after cancellation; it must never replace the map.
   page.evaluate('''window.savedFetch=fetch;window.releasePhotos=[];window.fetch=(u,o)=>String(u).includes('/seamlessphoto/')?new Promise(resolve=>releasePhotos.push(()=>savedFetch(u).then(resolve))):savedFetch(u,o);''')
-  page.select_option('#surface','photo');page.wait_for_function('releasePhotos.length===4')
+  page.select_option('#surface','photo');page.wait_for_function('releasePhotos.length===8')
   assert page.evaluate('uiTest.renderer.surface')=='elevation'
   page.select_option('#surface','map');page.evaluate('releasePhotos.forEach(f=>f())')
   page.wait_for_timeout(500);assert page.evaluate('uiTest.renderer.surface')=='map'

@@ -81,7 +81,7 @@ with sync_playwright() as p:
               if(!String(u).includes('/ATLAS_SOURCE/13/'))return savedFetch(u,o);
               pendingImages++;return new Promise((resolve,reject)=>o.signal.addEventListener('abort',()=>{pendingImages--;reject(new DOMException('Aborted','AbortError'))},{once:true}));
             };""".replace("ATLAS_SOURCE",SOURCE))
-            page.select_option('#surface',SURFACE);page.wait_for_function('pendingImages===4')
+            page.select_option('#surface',SURFACE);page.wait_for_function(f'pendingImages==={8 if SURFACE=="photo" else 4}')
             page.select_option('#surface','shading');page.wait_for_function('pendingImages===0')
             assert page.locator('#texture-retry').is_hidden() and page.evaluate('uiTest.renderer.surface')=='shading'
             page.evaluate('window.savedTimeout=window.setTimeout;window.setTimeout=(f,t,...a)=>savedTimeout(f,t===25000?50:t,...a)')
