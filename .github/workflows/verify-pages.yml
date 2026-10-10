@@ -1,0 +1,59 @@
+name: Verify published terrain app
+on:
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - styles.css
+      - js/**
+      - data/bathymetry/**
+      - .github/workflows/verify-pages.yml
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify published release and GMRT assets
+        run: |
+          python - <<'PY'
+          import hashlib, json, re, time, urllib.request
+          base = 'https://enou123.github.io/terrain-stereo/'
+          def fetch(path, limit=2_000_000):
+              with urllib.request.urlopen(base + path, timeout=30) as response:
+                  assert response.status == 200
+                  data = response.read(limit + 1)
+                  assert len(data) <= limit
+                  return data
+          for attempt in range(36):
+              html = fetch('index.html').decode()
+              if 'bathymetry-archipelago' in html and 'v=0.36.0' in html:
+                  break
+              time.sleep(5)
+          else:
+              raise AssertionError('GitHub Pages did not serve release 0.36.0')
+          queue = ['js/app.js?v=0.36.0']
+          seen = set()
+          while queue:
+              path = queue.pop()
+              if path in seen:
+                  continue
+              seen.add(path)
+              source = fetch(path).decode()
+              queue.extend('js/' + p[2:] for p in re.findall(r"from\s+['\"](\./[^'\"]+)['\"]", source))
+          assert 'seabedColorAtDepth' in fetch('js/mesh.js?v=0.36.0').decode()
+          outputs = []
+          for name, expected_size, expected_sha in [
+              ('aogashima-gmrt-4.5.0', 522680, '776fbcdd1c56b901da0e7164a39a21b7bbe245d701748106c792facec1566c39'),
+              ('hachijo-aogashima-gmrt-4.5.0', 528913, '5fb21245acafc97d3b2c439acfd5609176142b04f234422df89afd00adddd6ed'),
+          ]:
+              manifest = json.loads(fetch('data/bathymetry/' + name + '.json', 16384))
+              binary = fetch('data/bathymetry/' + manifest['file'])
+              digest = hashlib.sha256(binary).hexdigest()
+              assert len(binary) == manifest['bytes'] == expected_size
+              assert digest == manifest['sha256'] == expected_sha
+              assert manifest['license'] == 'CC BY 4.0'
+              outputs.append({'name': name, 'bytes': len(binary), 'sha256': digest, 'spacingMeters': manifest['actualSpacingMeters']})
+          print(json.dumps({'release': '0.36.0', 'publicUrl': base, 'http': 200, 'moduleCount': len(seen), 'bathymetry': outputs}, indent=2))
+          PY
