@@ -15,8 +15,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/terrain-tanbo-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.34.0">
-  <script type="module" src="js/app.js?v=0.34.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.35.0">
+  <script type="module" src="js/app.js?v=0.35.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span><span class="brand-subtitle">｜地形探訪</span></a><span class="edition">JAPAN TERRAIN EXPLORER</span></header>
@@ -77,6 +77,19 @@
         <label class="setting-label" for="surface">地形表面</label>
         <select id="surface" aria-describedby="surface-guide"><option value="elevation">標高の色</option><option value="shading">陰影のみ</option><option value="map">地理院地図</option><option value="photo">航空写真</option><option value="geology">地質図</option></select>
         <p id="surface-guide" class="hint">色は標高、陰影は斜面の向きを表します。</p>
+        <section id="bathymetry-settings" class="bathymetry-settings" aria-label="海底地形">
+          <label class="contour-toggle"><input id="bathymetry" type="checkbox" aria-describedby="bathymetry-guide">海底地形を表示</label>
+          <p id="bathymetry-guide" class="hint">青ヶ島周辺の陸地と海底を一緒に観察できます。OFFの間は海底データを取得しません。</p>
+          <button id="bathymetry-aogashima" type="button">青ヶ島と周囲の海底を見る</button>
+          <p id="bathymetry-status" class="hint" role="status" aria-live="polite" hidden></p>
+          <button id="bathymetry-retry" type="button" hidden>海底データを再読み込み</button>
+          <div id="bathymetry-info" hidden>
+            <div class="depth-legend" aria-hidden="true"></div><div class="range-labels"><span>海面 0 m</span><span>深さ 2,000 m以上</span></div>
+            <p id="bathymetry-depth" class="hint"></p>
+            <p class="hint">GMRT v4.5.0（2026年）・GEBCO 2026などを統合。配信格子は約207 m間隔ですが、基礎資料の細かさ・精度は場所により異なります。画質を上げても海底の測量精度は増えません。陸地と水深には同じ高さ強調倍率を適用します。海洋測量・航行安全の判断には使えません。</p>
+            <a href="https://www.gmrt.org/about/terms_of_use.php" target="_blank" rel="noopener noreferrer">出典：GMRT（CC BY 4.0・加工して作成） ↗</a>
+          </div>
+        </section>
         <section id="geology-legend" class="geology-legend" hidden aria-label="表示範囲の地質凡例">
           <button id="geology-legend-open" type="button" aria-expanded="false" aria-controls="geology-legend-panel">この場所の地質を見てみる <span aria-hidden="true">＋</span></button>
           <div id="geology-legend-panel" class="geology-legend-panel" hidden>

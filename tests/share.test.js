@@ -6,7 +6,7 @@ const view = {
   location: { latitude: 35.3606, longitude: 138.7274, zoom: 12 },
   camera: { yaw: -1.2173, pitch: 1.1, distance: 13.25, target: [3.4, 2.1, -4.5] },
   exaggeration: 2.3, mode: 'cross', quality: 'high', surface: 'photo', strength: 1.4,
-  contours: true, contourInterval:20, sunAzimuth: 250, sunAltitude: 48
+  bathymetry:false, contours: true, contourInterval:20, sunAzimuth: 250, sunAltitude: 48
 };
 
 test('shared view URL round trips location, camera, and display settings', () => {
