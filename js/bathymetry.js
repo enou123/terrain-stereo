@@ -1,9 +1,11 @@
-import { worldPixel } from './elevation.js?v=0.35.0';
+import { worldPixel } from './elevation.js?v=0.36.0';
 
 // Numeric regional snapshots served from Pages. No external bathymetry request
 // and no grid fetch at all until the user enables this feature.
 const REGIONS = [{id:'aogashima', west:139.2,east:140.3,south:32.0,north:32.9,
-  manifest:new URL('../data/bathymetry/aogashima-gmrt-4.5.0.json',import.meta.url)}];
+  manifest:new URL('../data/bathymetry/aogashima-gmrt-4.5.0.json',import.meta.url)},
+  {id:'hachijo-aogashima',west:138.6452,east:140.9525,south:31.8943,north:33.6531,
+  manifest:new URL('../data/bathymetry/hachijo-aogashima-gmrt-4.5.0.json',import.meta.url)}];
 const cache=new Map();
 export function pixelCoordinate(x,y,zoom){
   const scale=256*2**zoom;
@@ -13,7 +15,7 @@ export function bathymetryRegion(location){
   const [x,y]=worldPixel(location.latitude,location.longitude,location.zoom);
   const nw=pixelCoordinate(Math.floor(x)-192,Math.floor(y)-192,location.zoom);
   const se=pixelCoordinate(Math.floor(x)+192,Math.floor(y)+192,location.zoom);
-  return REGIONS.find(r=>nw.longitude>=r.west&&se.longitude<=r.east&&nw.latitude<=r.north&&se.latitude>=r.south)||null;
+  return REGIONS.filter(r=>nw.longitude>=r.west&&se.longitude<=r.east&&nw.latitude<=r.north&&se.latitude>=r.south).sort((a,b)=>(a.east-a.west)*(a.north-a.south)-(b.east-b.west)*(b.north-b.south))[0]||null;
 }
 export function decodeBathymetry(metadata,buffer){
   const n=metadata.width*metadata.height;
@@ -24,9 +26,12 @@ export function decodeBathymetry(metadata,buffer){
 }
 export async function loadBathymetry(location,signal){
   const region=bathymetryRegion(location);
-  if(!region)throw new Error('海底データは現在、青ヶ島周辺（東経139.2〜140.3度・北緯32.0〜32.9度）の範囲内に対応しています。表示範囲全体を対応域に収めてください。');
+  if(!region)throw new Error('海底数値データは青ヶ島の狭域と八丈島〜青ヶ島の広域で利用できます。表示範囲全体を収録範囲に収めてください。');
   const start=performance.now();
-  if(cache.has(region.id))return {...cache.get(region.id),stats:{cached:true,bytes:0,requests:0,elapsedMs:performance.now()-start}};
+  if(cache.has(region.id)){
+    const cached=cache.get(region.id);cache.delete(region.id);cache.set(region.id,cached);
+    return {...cached,stats:{cached:true,bytes:0,requests:0,elapsedMs:performance.now()-start}};
+  }
   const response=await fetch(region.manifest,{signal});
   if(!response.ok)throw new Error(`海底データの情報を取得できませんでした（HTTP ${response.status}）。`);
   const text=await response.text();if(text.length>16384)throw new Error('海底データの情報が大きすぎます。');
@@ -40,7 +45,8 @@ export async function loadBathymetry(location,signal){
   const hash=Array.from(new Uint8Array(digest),n=>n.toString(16).padStart(2,'0')).join('');
   if(hash!==metadata.sha256)throw new Error('海底データの検証に失敗しました。');
   signal?.throwIfAborted();
-  const grid=decodeBathymetry(metadata,buffer);cache.clear();cache.set(region.id,grid);
+  const grid=decodeBathymetry(metadata,buffer);cache.set(region.id,grid);
+  while(cache.size>3)cache.delete(cache.keys().next().value);
   return {...grid,stats:{cached:false,bytes:buffer.byteLength+new TextEncoder().encode(text).length,requests:2,elapsedMs:performance.now()-start}};
 }
 export function sampleBathymetry(grid,latitude,longitude){

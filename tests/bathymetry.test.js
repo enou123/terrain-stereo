@@ -38,3 +38,23 @@ test('old shared views remain sea-off and new views preserve sea-on',()=>{
  const state=readSharedView('?lat=32.45&lon=139.76&sea=1');
  assert.equal(readSharedView(new URL(createShareUrl('https://example.com/',state)).search).bathymetry,true);
 });
+
+test('seabed depth palette has shared exact stops and clamps at 2000m',async()=>{
+ const {SEABED_COLOR_STOPS,seabedColorAtDepth}=await import('../js/mesh.js');
+ assert.equal(SEABED_COLOR_STOPS.length,4);
+ assert.deepEqual(seabedColorAtDepth(0),SEABED_COLOR_STOPS[0]);
+ assert.deepEqual(seabedColorAtDepth(2000).map(v=>Math.round(v*255)),[26,56,112]);
+ assert.deepEqual(seabedColorAtDepth(8000),seabedColorAtDepth(2000));
+ assert.deepEqual(seabedColorAtDepth(2000).map(v=>Math.round(v*255)),[26,56,112]);
+});
+test('wide GMRT snapshot covers both island centers and bathymetryRegion chooses narrow Aogashima grid when possible',()=>{
+ const wide=JSON.parse(readFileSync(new URL('../data/bathymetry/hachijo-aogashima-gmrt-4.5.0.json',import.meta.url)));
+ const wideBytes=readFileSync(new URL('../data/bathymetry/hachijo-aogashima-gmrt-4.5.0.bin',import.meta.url));
+ const wideGrid=decodeBathymetry(wide,wideBytes.buffer.slice(wideBytes.byteOffset,wideBytes.byteOffset+wideBytes.byteLength));
+ assert.equal(wide.width,524);assert.equal(wide.height,475);assert.ok(wide.bytes<600000);
+ assert.ok(sampleBathymetry(wideGrid,33.1,139.78).height>0);
+ assert.ok(sampleBathymetry(wideGrid,32.46,139.76).height>0);
+ assert.ok(sampleBathymetry(wideGrid,32.8,139.78).height<-400);
+ assert.equal(bathymetryRegion({latitude:32.78,longitude:139.78,zoom:9}).id,'hachijo-aogashima');
+ assert.equal(bathymetryRegion({latitude:32.457,longitude:139.762,zoom:12}).id,'aogashima');
+});

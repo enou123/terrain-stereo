@@ -1,0 +1,54 @@
+{
+  "format": "gmrt-int16-mask-v1",
+  "id": "hachijo-aogashima",
+  "name": "八丈島〜青ヶ島周辺",
+  "width": 524,
+  "height": 475,
+  "lon0": 138.6474609375,
+  "lat0": 33.65120829920497,
+  "dx": 0.00440293379541109,
+  "dy": -0.0037025186410412237,
+  "nodata": -32768,
+  "file": "hachijo-aogashima-gmrt-4.5.0.bin",
+  "bytes": 528913,
+  "sha256": "5fb21245acafc97d3b2c439acfd5609176142b04f234422df89afd00adddd6ed",
+  "sourceSha256": "66db0434e42bbf8125ae1cde996f1c3e7698eb5715d9a12c7767f706f1761bdc",
+  "maskSourceSha256": "b9e16cd7e56660168be96711e08ed524da9d704265a3625692842dee06461c48",
+  "sourceVersion": "GMRT v4.5.0 (2026年6月)",
+  "source": "GMRT GridServer topo / topo-mask; GEBCO 2026 and regional higher-resolution contributions as described by GMRT",
+  "retrievedAt": "2026-10-10T09:07:22.114928+00:00",
+  "requestedBounds": {
+    "west": 138.65,
+    "east": 140.95,
+    "south": 31.9,
+    "north": 33.65
+  },
+  "actualRasterBounds": [
+    138.6452594706023,
+    31.894363204030903,
+    140.9523967793977,
+    33.653059558525484
+  ],
+  "requestedSpacingMeters": 500,
+  "actualSpacingMeters": [
+    411.9907676604459,
+    412.164375120709
+  ],
+  "quantizationMeters": 1,
+  "license": "CC BY 4.0",
+  "sourceUrl": "https://www.gmrt.org/services/GridServer?west=138.65&east=140.95&south=31.9&north=33.65&layer=topo&format=geotiff&mresolution=500",
+  "termsUrl": "https://www.gmrt.org/about/terms_of_use.php",
+  "citation": "Ryan et al. (2009), doi:10.1029/2008GC002332; GMRT data doi:10.1594/IEDA.100001",
+  "minimum": -3653.038330078125,
+  "maximum": 784.2206420898438,
+  "missingCount": 1048,
+  "highResolutionContributionCount": 16991,
+  "samples": {
+    "Hachijojima": 13.71414852142334,
+    "Aogashima": 190.76651000976562,
+    "between-islands": -534.009521484375,
+    "west-flank": -753.9627075195312,
+    "east-flank": -1185.41064453125
+  },
+  "maskSourceUrl": "https://www.gmrt.org/services/GridServer?west=138.65&east=140.95&south=31.9&north=33.65&layer=topo-mask&format=geotiff&mresolution=500"
+}
