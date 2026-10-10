@@ -23,10 +23,10 @@ jobs:
                   return b
           for attempt in range(24):
               html=fetch('index.html').decode()
-              if 'bathymetry-aogashima' in html and 'v=0.35.0' in html: break
+              if 'bathymetry-archipelago' in html and 'v=0.36.0' in html: break
               time.sleep(5)
           else: raise AssertionError('Expected release not yet served')
-          queue=['js/app.js?v=0.35.0'];seen=set()
+          queue=['js/app.js?v=0.36.0'];seen=set()
           while queue:
               path=queue.pop()
               if path in seen:continue
@@ -37,5 +37,12 @@ jobs:
           assert len(b)==meta['bytes']==522680
           assert hashlib.sha256(b).hexdigest()==meta['sha256']=='776fbcdd1c56b901da0e7164a39a21b7bbe245d701748106c792facec1566c39'
           assert meta['format']=='gmrt-int16-mask-v1' and meta['license']=='CC BY 4.0'
-          print(json.dumps({'release':'0.35.0','http':200,'moduleCount':len(seen),'source':meta['sourceVersion'],'bytes':len(b),'sha256':meta['sha256'],'spacingMeters':meta['actualSpacingMeters'],'publicURL':base},indent=2))
+          wide=json.loads(fetch('data/bathymetry/hachijo-aogashima-gmrt-4.5.0.json',16384))
+          wide_bytes=fetch('data/bathymetry/'+wide['file'])
+          assert len(wide_bytes)==wide['bytes']==528913
+          assert hashlib.sha256(wide_bytes).hexdigest()==wide['sha256']=='5fb21245acafc97d3b2c439acfd5609176142b04f234422df89afd00adddd6ed'
+          assert wide['actualSpacingMeters'][0]>400 and wide['actualSpacingMeters'][0]<420
+          assert wide['actualRasterBounds'][0]<139.2 and wide['actualRasterBounds'][2]>140.3
+          assert wide['actualRasterBounds'][1]<32.45 and wide['actualRasterBounds'][3]>33.1
+          print(json.dumps({'release':'0.36.0','http':200,'moduleCount':len(seen),'source':wide['sourceVersion'],'legacyBytes':len(b),'wideBytes':len(wide_bytes),'wideSha256':wide['sha256'],'wideSpacingMeters':wide['actualSpacingMeters'],'bounds':wide['actualRasterBounds'],'publicURL':base},indent=2))
           PY
