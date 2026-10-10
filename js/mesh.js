@@ -1,5 +1,5 @@
 // Coordinates: X east, Y elevation, Z south, all in kilometres.
-export const SEABED_COLOR_STOPS = Object.freeze([[.48,.82,.88],[.22,.62,.78],[.12,.37,.62],[.10,.22,.44]].map(Object.freeze));
+export const SEABED_COLOR_STOPS = Object.freeze([[.35,.67,.74],[.18,.48,.64],[.105,.30,.52],[.08,.17,.35]].map(Object.freeze));
 export function seabedColorAtDepth(depthMetres,scaleMaximumMetres=2000) {
   const t=Math.min(SEABED_COLOR_STOPS.length-1.001,Math.max(0,depthMetres/scaleMaximumMetres*(SEABED_COLOR_STOPS.length-1)));
   const i=Math.floor(t),fraction=t-i,a=SEABED_COLOR_STOPS[i],b=SEABED_COLOR_STOPS[i+1];

@@ -1,6 +1,6 @@
 // Editorial data only. Map/DEM zooms are integer production zooms, not metres.
 // Centers are viewing centers (WGS84), not necessarily summit coordinates.
-import { BATHYMETRY_SPOTS } from './bathymetry-spots.js?v=0.37.0';
+import { BATHYMETRY_SPOTS } from './bathymetry-spots.js?v=0.38.0';
 const jma = (area, volcano) => `https://www.data.jma.go.jp/vois/data/${area}/${volcano}/${volcano.split('_')[0]}_index.html`;
 const source = (title, url) => ({title, url, checked:'2026-10-09'});
 const entry = (id, name, prefecture, region, categories, latitude, longitude, zoom, height, pitch, summary, terrain, geology, rocks, age, points, geologyPoints, limitations, reference, coordinateNote, coverage) => ({

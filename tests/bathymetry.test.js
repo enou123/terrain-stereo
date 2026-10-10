@@ -44,9 +44,9 @@ test('seabed depth palette has shared exact stops and clamps at 2000m',async()=>
  const {SEABED_COLOR_STOPS,seabedColorAtDepth}=await import('../js/mesh.js');
  assert.equal(SEABED_COLOR_STOPS.length,4);
  assert.deepEqual(seabedColorAtDepth(0),SEABED_COLOR_STOPS[0]);
- assert.deepEqual(seabedColorAtDepth(2000).map(v=>Math.round(v*255)),[26,56,112]);
+ assert.deepEqual(seabedColorAtDepth(2000).map(v=>Math.round(v*255)),[20,43,89]);
  assert.notDeepEqual(seabedColorAtDepth(8000,10000),seabedColorAtDepth(2000,10000));
- assert.deepEqual(seabedColorAtDepth(2000).map(v=>Math.round(v*255)),[26,56,112]);
+ assert.deepEqual(seabedColorAtDepth(2000).map(v=>Math.round(v*255)),[20,43,89]);
 });
 test('wide GMRT snapshot covers both island centers and bathymetryRegion chooses narrow Aogashima grid when possible',()=>{
  const wide=JSON.parse(readFileSync(new URL('../data/bathymetry/hachijo-aogashima-gmrt-4.5.0.json',import.meta.url)));

@@ -1,7 +1,7 @@
-import { spotsFor, findSpot } from './landmark-spots.js?v=0.37.0';
-import { LANDMARKS, CATEGORIES, REGIONS, findLandmark, filterLandmarks } from './landmarks.js?v=0.37.0';
-import { terrainExtent } from './elevation.js?v=0.37.0';
-import { learningTourFor } from './learning-tour.js?v=0.37.0';
+import { spotsFor, findSpot } from './landmark-spots.js?v=0.38.0';
+import { LANDMARKS, CATEGORIES, REGIONS, findLandmark, filterLandmarks } from './landmarks.js?v=0.38.0';
+import { terrainExtent } from './elevation.js?v=0.38.0';
+import { learningTourFor } from './learning-tour.js?v=0.38.0';
 
 // UI owns no renderer state. Explicit visit/switch actions are supplied by app.js.
 export function setupLandmarkGuide(actions){

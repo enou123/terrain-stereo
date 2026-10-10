@@ -1,5 +1,5 @@
-import { worldPixel } from './elevation.js?v=0.37.0';
-import { pixelLocation } from './map.js?v=0.37.0';
+import { worldPixel } from './elevation.js?v=0.38.0';
+import { pixelLocation } from './map.js?v=0.38.0';
 const API='https://gbank.gsj.jp/seamless/v2/api/1.3.1/legend.json';
 const cache=new Map();
 export async function fetchGeologyLegend(location,extentKm,signal){
