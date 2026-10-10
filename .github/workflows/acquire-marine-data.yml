@@ -35,12 +35,12 @@ jobs:
           out=pathlib.Path('output')
           regions=[
             dict(id='izu-north',group='izu',name='伊豆諸島北部',west=136.5,east=143.7,south=28.0,north=36.4,mresolution=1500,depthScaleMax=5000),
-            dict(id='izu-south',group='izu',name='伊豆・小笠原諸島南部',west=138.0,east=151.0,south=22.0,north=30.5,mresolution=2500,depthScaleMax=10000),
-            dict(id='nankai-west',group='southwest',name='南海トラフ西部〜紀伊半島沖',west=128.0,east=139.0,south=28.5,north=35.5,mresolution=2000,depthScaleMax=8000),
-            dict(id='tokara-amami',group='southwest',name='トカラ・奄美',west=126.0,east=132.5,south=26.5,north=33.5,mresolution=1250,depthScaleMax=5000),
+            dict(id='izu-south',group='izu',name='伊豆・小笠原諸島南部',west=137.0,east=151.0,south=22.0,north=35.5,mresolution=2500,depthScaleMax=10000),
+            dict(id='nankai-west',group='southwest',name='南海トラフ西部〜紀伊半島沖',west=128.0,east=140.0,south=28.5,north=37.0,mresolution=2000,depthScaleMax=8000),
+            dict(id='tokara-amami',group='southwest',name='トカラ・奄美',west=126.0,east=132.5,south=26.0,north=33.5,mresolution=1250,depthScaleMax=5000),
             dict(id='okinawa-islands',group='okinawa',name='沖縄諸島',west=125.0,east=132.0,south=24.5,north=28.5,mresolution=1000,depthScaleMax=5000),
             dict(id='yaeyama',group='okinawa',name='宮古・八重山',west=121.0,east=127.0,south=22.0,north=26.0,mresolution=1250,depthScaleMax=5000),
-            dict(id='ryukyu-trench-trough',group='okinawa',name='琉球海溝・沖縄トラフ',west=121.0,east=135.0,south=21.0,north=31.0,mresolution=2500,depthScaleMax=10000),
+            dict(id='ryukyu-trench-trough',group='okinawa',name='琉球海溝・沖縄トラフ',west=121.0,east=135.0,south=20.5,north=31.0,mresolution=2500,depthScaleMax=10000),
             dict(id='daito',group='southwest',name='大東諸島',west=129.0,east=134.0,south=24.0,north=28.0,mresolution=1000,depthScaleMax=5000),
             dict(id='suruga-sagami',group='trenches',name='駿河湾・相模トラフ',west=136.5,east=141.8,south=32.5,north=37.0,mresolution=750,depthScaleMax=5000),
             dict(id='japan-trench',group='trenches',name='日本海溝',west=140.0,east=149.0,south=34.0,north=43.0,mresolution=2500,depthScaleMax=10000),
