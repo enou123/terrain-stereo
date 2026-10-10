@@ -1,0 +1,41 @@
+name: Verify published bathymetry assets
+on:
+  push:
+    branches: [codex/bathymetry-gmrt-probe]
+    paths: [.github/workflows/pages-bathymetry-check.yml]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Verify actual Pages HTTP responses and numerical checksum
+        run: |
+          python - <<'PY'
+          import urllib.request, json, hashlib, re, time
+          base='https://enou123.github.io/terrain-stereo/'
+          def fetch(path,limit=2000000):
+              with urllib.request.urlopen(base+path,timeout=30) as r:
+                  assert r.status==200
+                  b=r.read(limit+1)
+                  assert len(b)<=limit
+                  return b
+          for attempt in range(24):
+              html=fetch('index.html').decode()
+              if 'bathymetry-aogashima' in html and 'v=0.35.0' in html: break
+              time.sleep(5)
+          else: raise AssertionError('Expected release not yet served')
+          queue=['js/app.js?v=0.35.0'];seen=set()
+          while queue:
+              path=queue.pop()
+              if path in seen:continue
+              seen.add(path);text=fetch(path).decode()
+              queue += ['js/'+p[2:] for p in re.findall(r"from\s+['\"](\./[^'\"]+)['\"]",text)]
+          meta=json.loads(fetch('data/bathymetry/aogashima-gmrt-4.5.0.json',16384))
+          b=fetch('data/bathymetry/'+meta['file'])
+          assert len(b)==meta['bytes']==522680
+          assert hashlib.sha256(b).hexdigest()==meta['sha256']=='776fbcdd1c56b901da0e7164a39a21b7bbe245d701748106c792facec1566c39'
+          assert meta['format']=='gmrt-int16-mask-v1' and meta['license']=='CC BY 4.0'
+          print(json.dumps({'release':'0.35.0','http':200,'moduleCount':len(seen),'source':meta['sourceVersion'],'bytes':len(b),'sha256':meta['sha256'],'spacingMeters':meta['actualSpacingMeters'],'publicURL':base},indent=2))
+          PY
