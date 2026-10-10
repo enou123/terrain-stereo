@@ -18,22 +18,26 @@ jobs:
       - name: Verify published release and GMRT assets
         run: |
           python - <<'PY'
-          import hashlib, json, re, time, urllib.request
+          import hashlib, json, re, time, urllib.parse, urllib.request
           base = 'https://enou123.github.io/terrain-stereo/'
+          cache_key = str(time.time_ns())
           def fetch(path, limit=2_000_000):
-              with urllib.request.urlopen(base + path, timeout=30) as response:
+              separator = '&' if '?' in path else '?'
+              with urllib.request.urlopen(base + path + separator + 'verify=' + cache_key, timeout=30) as response:
                   assert response.status == 200
                   data = response.read(limit + 1)
                   assert len(data) <= limit
                   return data
           for attempt in range(36):
               html = fetch('index.html').decode()
-              if 'bathymetry-archipelago' in html and 'v=0.36.0' in html:
+              app_match = re.search(r'<script\b[^>]*\bsrc=["\'](?:\./)?js/app\.js\?v=([^"\']+)', html)
+              if 'bathymetry-archipelago' in html and app_match:
                   break
               time.sleep(5)
           else:
-              raise AssertionError('GitHub Pages did not serve release 0.36.0')
-          queue = ['js/app.js?v=0.36.0']
+              raise AssertionError('GitHub Pages did not serve the terrain app entry point')
+          release = app_match.group(1)
+          queue = ['js/app.js?v=' + release]
           seen = set()
           while queue:
               path = queue.pop()
@@ -41,19 +45,32 @@ jobs:
                   continue
               seen.add(path)
               source = fetch(path).decode()
-              queue.extend('js/' + p[2:] for p in re.findall(r"from\s+['\"](\./[^'\"]+)['\"]", source))
-          assert 'seabedColorAtDepth' in fetch('js/mesh.js?v=0.36.0').decode()
+              imports = re.findall(r"(?:from\s*|import\s*\(\s*)['\"](\./[^'\"]+)['\"]", source)
+              for specifier in imports:
+                  version = urllib.parse.parse_qs(urllib.parse.urlsplit(specifier).query).get('v', [None])[0]
+                  assert version == release, f'{path} imports {specifier} but page advertises {release}'
+                  queue.append('js/' + specifier[2:])
+          mesh = fetch('js/mesh.js?v=' + release).decode()
+          assert 'seabedColorAtDepth' in mesh and 'SEABED_COLOR_STOPS' in mesh
+          region_source = fetch('js/bathymetry-regions.js?v=' + release).decode()
+          regions = re.findall(r"\{id:'([^']+)'[^}]*?manifest:'([^']+)'", region_source)
+          assert regions, 'No bathymetry regions found in the published regional index'
+          assert len({region_id for region_id, _ in regions}) == len(regions), 'Duplicate region IDs'
+          assert len({manifest for _, manifest in regions}) == len(regions), 'Duplicate region manifests'
           outputs = []
-          for name, expected_size, expected_sha in [
-              ('aogashima-gmrt-4.5.0', 522680, '776fbcdd1c56b901da0e7164a39a21b7bbe245d701748106c792facec1566c39'),
-              ('hachijo-aogashima-gmrt-4.5.0', 528913, '5fb21245acafc97d3b2c439acfd5609176142b04f234422df89afd00adddd6ed'),
-          ]:
-              manifest = json.loads(fetch('data/bathymetry/' + name + '.json', 16384))
-              binary = fetch('data/bathymetry/' + manifest['file'])
+          for region_id, manifest_name in regions:
+              assert re.fullmatch(r'[A-Za-z0-9._-]+\.json', manifest_name), f'Invalid manifest path: {manifest_name}'
+              manifest = json.loads(fetch('data/bathymetry/' + manifest_name, 16384))
+              assert manifest['id'] == region_id, f'{manifest_name} belongs to {manifest.get("id")}, expected {region_id}'
+              filename = manifest['file']
+              assert re.fullmatch(r'[A-Za-z0-9._-]+\.bin', filename), f'Invalid grid path: {filename}'
+              size = manifest['bytes']
+              assert isinstance(size, int) and 0 < size <= 16_000_000, f'Unsafe grid size for {region_id}: {size}'
+              binary = fetch('data/bathymetry/' + filename, size)
               digest = hashlib.sha256(binary).hexdigest()
-              assert len(binary) == manifest['bytes'] == expected_size
-              assert digest == manifest['sha256'] == expected_sha
+              assert len(binary) == size, f'{region_id}: manifest says {size} bytes, got {len(binary)}'
+              assert digest == manifest['sha256'], f'{region_id}: SHA-256 mismatch'
               assert manifest['license'] == 'CC BY 4.0'
-              outputs.append({'name': name, 'bytes': len(binary), 'sha256': digest, 'spacingMeters': manifest['actualSpacingMeters']})
-          print(json.dumps({'release': '0.36.0', 'publicUrl': base, 'http': 200, 'moduleCount': len(seen), 'bathymetry': outputs}, indent=2))
+              outputs.append({'id': region_id, 'manifest': manifest_name, 'bytes': len(binary), 'sha256': digest, 'spacingMeters': manifest['actualSpacingMeters']})
+          print(json.dumps({'release': release, 'publicUrl': base, 'http': 200, 'moduleCount': len(seen), 'regionCount': len(outputs), 'bathymetry': outputs}, indent=2))
           PY
