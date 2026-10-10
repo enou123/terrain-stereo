@@ -73,7 +73,7 @@ async function elevationTile(zoom, x, y) {
   pendingTiles.set(url, pending);
   try { return await pending; } finally { pendingTiles.delete(url); }
 }
-export async function loadElevation(onProgress = () => {}, location = LOCATION, quality = 'standard') {
+export async function loadElevation(onProgress = () => {}, location = LOCATION, quality = 'standard', options = {}) {
   const { latitude, longitude, zoom = 12 } = location;
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < 20 || latitude > 46 || longitude < 122 || longitude > 154 || !Number.isInteger(zoom) || zoom < MIN_TERRAIN_ZOOM || zoom > MAX_TERRAIN_ZOOM) {
     throw new Error('日本周辺の緯度・経度と対応する縮尺を指定してください。');
@@ -119,7 +119,8 @@ export async function loadElevation(onProgress = () => {}, location = LOCATION, 
     heights[row * size + col] = value;
     if (Number.isFinite(value)) { validCount++; min = Math.min(min, value); max = Math.max(max, value); }
   }
-  if (!validCount) throw new Error('この範囲には有効な標高データがありません。');
+  if (!validCount && !options.allowEmpty) throw new Error('この範囲には有効な標高データがありません。');
+  if(!validCount)min=max=0;
   const spacing = 40075016.6856 * Math.cos(latitude * Math.PI / 180) / (TILE_SIZE * 2 ** sourceZoom) * step / 1000;
   return { heights, size, spacing, min, max, tileCount: jobs.length, fallbackTileCount, validCount, quality, sourceZoom, location: { latitude, longitude, zoom } };
 }

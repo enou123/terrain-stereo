@@ -605,6 +605,11 @@ body.view-focused { overflow:hidden; }
 }
 @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
 
+.bathymetry-settings{margin:16px 0;padding:12px;border:1px solid #cdd9d0;border-radius:8px;background:#f1f6f3;}
+.bathymetry-settings .contour-toggle{margin:0;}
+.bathymetry-settings button{width:100%;min-height:44px;margin:4px 0;padding:8px;font:inherit;cursor:pointer;border:1px solid #cdd9d0;border-radius:6px;background:#fff;color:#244438;}
+.bathymetry-settings a{font-size:12px;line-height:1.7;}
+.depth-legend{height:10px;margin-top:12px;border-radius:4px;background:linear-gradient(90deg,#7bd1e0,#389ec7,#1f5e9e,#1a3870);}
 /* Observation aids share the renderer's eye viewports; only the compass accepts input. */
 .observation-overlay,.observation-pane { position:absolute; inset:0; pointer-events:none; }
 .compass-control { position:absolute; right:10px; bottom:38px; width:64px; height:64px; padding:0; border:0; border-radius:50%; background:transparent; pointer-events:auto; cursor:pointer; touch-action:manipulation; }

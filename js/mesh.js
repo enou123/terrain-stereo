@@ -6,14 +6,17 @@ export function createMesh(data, exaggeration) {
   const normals = new Float32Array(positions.length);
   const colors = new Float32Array(positions.length);
   const stops = [[0.20,0.30,0.23],[0.39,0.53,0.35],[0.65,0.68,0.47],[0.88,0.84,0.68]];
+  const seaStops=[[.48,.82,.88],[.22,.62,.78],[.12,.37,.62],[.10,.22,.44]];
   for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
     const i = r * size + c, p = i * 3;
     // Unscaled metres: independent of exaggeration and display fitting.
     elevations[i] = Number.isFinite(heights[i]) ? heights[i] : 0;
     positions.set([(c - (size - 1) / 2) * spacing, Number.isFinite(heights[i]) ? heights[i] / 1000 * exaggeration : 0, (r - (size - 1) / 2) * spacing], p);
-    const t = Math.min(2.999, Math.max(0, heights[i] / 2100 * 3));
+    const sea=data.seaMask?.[i]===1;
+    const palette=sea ? seaStops : stops;
+    const t = Math.min(2.999, Math.max(0, (sea ? -heights[i]/2000 : heights[i]/2100) * 3));
     const a = Math.floor(t), f = t - a;
-    for (let k = 0; k < 3; k++) colors[p + k] = Number.isFinite(t) ? stops[a][k] * (1 - f) + stops[a + 1][k] * f : 0;
+    for (let k = 0; k < 3; k++) colors[p + k] = Number.isFinite(t) ? palette[a][k] * (1 - f) + palette[a + 1][k] * f : 0;
   }
   const indices = [];
   function triangle(a,b,c) {
@@ -31,7 +34,7 @@ export function createMesh(data, exaggeration) {
     const length=Math.hypot(normals[i],normals[i+1],normals[i+2]) || 1;
     for(let k=0;k<3;k++) normals[i+k]/=length;
   }
-  return { positions, normals, colors, elevations, indices: new (size * size > 65536 ? Uint32Array : Uint16Array)(indices) };
+  return { positions, normals, colors, elevations, seabed:data.seaMask, fitHeightRange:data.fitHeightRange?.map(h=>Math.fround(h/1000*exaggeration)), indices: new (size * size > 65536 ? Uint32Array : Uint16Array)(indices) };
 }
 
 // Keep height/distance ratios while fitting wide regions and elevated mountain patches.
@@ -44,6 +47,7 @@ export function fitMeshPositions(mesh) {
     minHeight=Math.min(minHeight,height); maxHeight=Math.max(maxHeight,height);
   }
   if(!Number.isFinite(minHeight)) minHeight=maxHeight=0;
+  if(mesh.fitHeightRange)[minHeight,maxHeight]=mesh.fitHeightRange;
   const scale=12.2/Math.max(.001,maxX-minX,(maxHeight-minHeight)*1.5);
   return mesh.positions.map((value,index)=>(value-(index%3===1 ? minHeight : 0))*scale);
 }

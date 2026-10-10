@@ -1,5 +1,5 @@
-import { worldPixel, MIN_TERRAIN_ZOOM, MAX_TERRAIN_ZOOM, terrainExtent } from './elevation.js?v=0.34.0';
-import { pixelLocation } from './map.js?v=0.34.0';
+import { worldPixel, MIN_TERRAIN_ZOOM, MAX_TERRAIN_ZOOM, terrainExtent } from './elevation.js?v=0.35.0';
+import { pixelLocation } from './map.js?v=0.35.0';
 
 // Mesh fitting scales all axes uniformly; convert the orbit target back into
 // geographic pixels rather than treating screen pixels as north/east movement.

@@ -1,4 +1,4 @@
-import { contourInterval } from './contours.js?v=0.34.0';
+import { contourInterval } from './contours.js?v=0.35.0';
 const MODES = new Set(['mono', 'parallel', 'cross', 'anaglyph']);
 const QUALITIES = new Set(['standard', 'high', 'ultra']);
 const SURFACES = new Set(['elevation', 'shading', 'map', 'photo', 'geology']);
@@ -10,7 +10,7 @@ function number(params, key, fallback, min, max) {
 
 export function readSharedView(search) {
   const params = new URLSearchParams(search);
-  if (!['lat', 'lon', 'z', 'yaw', 'pitch', 'dist', 'tx', 'ty', 'tz', 'h', 'mode', 'quality', 'surface', 'strength', 'contours', 'ci', 'sun', 'alt'].some(key => params.has(key))) return null;
+  if (!['lat', 'lon', 'z', 'yaw', 'pitch', 'dist', 'tx', 'ty', 'tz', 'h', 'mode', 'quality', 'surface', 'strength', 'contours', 'ci', 'sun', 'alt', 'sea'].some(key => params.has(key))) return null;
   const mode = params.get('mode'), quality = params.get('quality'), surface = params.get('surface');
   const sun = params.get('sun'), altitude = params.get('alt');
   return {
@@ -31,6 +31,7 @@ export function readSharedView(search) {
     surface: SURFACES.has(surface) ? surface : 'elevation',
     strength: number(params, 'strength', 1, 0, 2),
     contours: params.get('contours') === '1',
+    bathymetry:params.get('sea')==='1',
     contourInterval: contourInterval(params.get('ci')),
     sunAzimuth: number(params, 'sun', 315, 0, 359),
     sunAltitude: number(params, 'alt', 35, 5, 85)
@@ -46,6 +47,7 @@ export function createShareUrl(base, state) {
   add('tx', state.camera.target[0], 3); add('ty', state.camera.target[1], 3); add('tz', state.camera.target[2], 3);
   add('h', state.exaggeration, 1); params.set('mode', state.mode); params.set('quality', state.quality);
   params.set('surface', state.surface); add('strength', state.strength, 1);
+  if(state.bathymetry)params.set('sea','1');
   params.set('contours', state.contours ? '1' : '0'); params.set('ci', String(contourInterval(state.contourInterval))); add('sun', state.sunAzimuth, 0); add('alt', state.sunAltitude, 0);
   url.search = params.toString();
   url.hash = '';

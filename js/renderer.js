@@ -1,14 +1,15 @@
-import { contourInterval } from './contours.js?v=0.34.0';
-import { lookAt } from './math.js?v=0.34.0';
-import { ObservationOverlay } from './observation.js?v=0.34.0';
-import { fitMeshPositions } from './mesh.js?v=0.34.0';
-import { stereoCamera } from './stereo.js?v=0.34.0';
-import { OrbitControls } from './controls.js?v=0.34.0';
+import { contourInterval } from './contours.js?v=0.35.0';
+import { lookAt } from './math.js?v=0.35.0';
+import { ObservationOverlay } from './observation.js?v=0.35.0';
+import { fitMeshPositions } from './mesh.js?v=0.35.0';
+import { stereoCamera } from './stereo.js?v=0.35.0';
+import { OrbitControls } from './controls.js?v=0.35.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
 attribute vec3 aColor;
 attribute float aElevation;
+attribute float aSeabed;
 attribute vec2 aUV;
 uniform mat4 uProjection;
 uniform mat4 uView;
@@ -16,11 +17,13 @@ varying vec2 vUV;
 varying vec3 vColor;
 varying vec3 vNormal;
 varying float vContourHeight;
+varying float vSeabed;
 void main() {
   vUV = aUV;
   vNormal = aNormal;
   vColor = aColor;
   vContourHeight = aElevation;
+  vSeabed = aSeabed;
   gl_Position = uProjection * uView * vec4(aPosition, 1.0);
 }`;
 const fragmentSource = `
@@ -41,10 +44,12 @@ varying vec2 vUV;
 varying vec3 vColor;
 varying vec3 vNormal;
 varying float vContourHeight;
+varying float vSeabed;
 void main() {
   float light = max(dot(normalize(vNormal), normalize(uSunDirection)), 0.0);
   vec3 color = mix(vColor, vec3(0.68), uShading) * (0.38 + 0.78 * light);
-  if (uTextureEnabled > 0.5) {
+  if (vSeabed > 0.5) color = vColor * (0.55 + 0.65 * light);
+  if (uTextureEnabled > 0.5 && vSeabed <= 0.5) {
     vec4 texel = texture2D(uTexture, vUV);
     color = mix(color, texel.rgb * (0.65 + 0.35 * light), texel.a);
   }
@@ -99,6 +104,7 @@ export class TerrainRenderer {
     gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,1,1,0,gl.RGBA,gl.UNSIGNED_BYTE,new Uint8Array([255,255,255,255]));
     gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
     this.indexBuffer = gl.createBuffer();
+    this.seabedBuffer=null;this.seabedLocation=gl.getAttribLocation(this.program,'aSeabed');
     this.projectionLocation = gl.getUniformLocation(this.program,'uProjection');
     this.viewLocation = gl.getUniformLocation(this.program,'uView');
     this.monochromeLocation = gl.getUniformLocation(this.program,'uMonochrome');
@@ -126,6 +132,10 @@ export class TerrainRenderer {
     if (mesh.indices instanceof Uint32Array && !this.uintIndices) throw new Error('この端末では高精細の描画に対応していません。標準を選んでください。');
     this.indexType=mesh.indices instanceof Uint32Array ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT;
     const fittedPositions=fitMeshPositions(mesh);
+    if(mesh.seabed){
+      if(!this.seabedBuffer)this.seabedBuffer=gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER,this.seabedBuffer);gl.bufferData(gl.ARRAY_BUFFER,mesh.seabed,gl.STATIC_DRAW);
+    }else if(this.seabedBuffer){gl.deleteBuffer(this.seabedBuffer);this.seabedBuffer=null;}
     const side=Math.sqrt(mesh.positions.length/3), uv=new Float32Array(side*side*2);
     for(let row=0;row<side;row++) for(let col=0;col<side;col++) uv.set([col/(side-1),row/(side-1)],(row*side+col)*2);
     gl.bindBuffer(gl.ARRAY_BUFFER,this.uvBuffer);gl.bufferData(gl.ARRAY_BUFFER,uv,gl.STATIC_DRAW);
@@ -137,6 +147,7 @@ export class TerrainRenderer {
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,mesh.indices,gl.STATIC_DRAW);
     this.mesh={positions:fittedPositions,indices:mesh.indices,size:side};
     this.count=mesh.indices.length;
+    if(!this.count){gl.colorMask(true,true,true,true);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);}
     this.requestDraw();
   }
   setContours(enabled) {
@@ -210,6 +221,10 @@ export class TerrainRenderer {
       gl.vertexAttribPointer(location,size,gl.FLOAT,false,0,0);
     }
     gl.bindBuffer(gl.ARRAY_BUFFER,this.uvBuffer);gl.enableVertexAttribArray(this.uvLocation);
+    if(this.seabedBuffer){
+      gl.bindBuffer(gl.ARRAY_BUFFER,this.seabedBuffer);gl.enableVertexAttribArray(this.seabedLocation);gl.vertexAttribPointer(this.seabedLocation,1,gl.FLOAT,false,0,0);
+    }else{gl.disableVertexAttribArray(this.seabedLocation);gl.vertexAttrib1f(this.seabedLocation,0);}
+    gl.bindBuffer(gl.ARRAY_BUFFER,this.uvBuffer);
     gl.vertexAttribPointer(this.uvLocation,2,gl.FLOAT,false,0,0);
     gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,this.texture || this.emptyTexture);
     gl.uniform1i(this.textureLocation,0);

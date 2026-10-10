@@ -229,7 +229,9 @@ with sync_playwright() as p:
             else:
                 drag_canvas(page,touch,centered_box,24,12,shift=True)
                 page.mouse.move(centered_box['x']+centered_box['width']*.58,centered_box['y']+centered_box['height']*.55);page.mouse.wheel(0,-100)
-            after_gesture=state();page.wait_for_timeout(250);resumed=state()
+            after_gesture=state()
+            page.wait_for_function('(yaw)=>Math.abs(uiTest.renderer.controls.yaw-yaw)>1e-4',arg=after_gesture['yaw'],timeout=5000)
+            resumed=state()
             assert after_gesture['target']!=pivot['target'] and after_gesture['distance']!=pivot['distance']
             assert resumed['target']==after_gesture['target'] and abs(resumed['distance']-after_gesture['distance'])<1e-8
             assert abs(resumed['pitch']-after_rotate['pitch'])<.02,(after_rotate,after_gesture,resumed)
@@ -253,7 +255,7 @@ with sync_playwright() as p:
             assert page.locator(button).bounding_box()['height']>=44
         if page.locator('#view-settings').is_hidden():page.click('#toggle-settings')
         assert not page.locator('#contours').is_checked() and not state()['contours']
-        assert page.locator('.contour-toggle').bounding_box()['height']>=44
+        assert page.locator('.contour-toggle:has(#contours)').bounding_box()['height']>=44
         # OFF -> ON -> OFF is reversible and does not fetch DEM.
         page.click('#toggle-settings');stable()
         def pixels():return page.evaluate("(()=>{const r=uiTest.renderer;r.draw();const a=new Uint8Array(r.canvas.width*r.canvas.height*4);r.gl.readPixels(0,0,r.canvas.width,r.canvas.height,r.gl.RGBA,r.gl.UNSIGNED_BYTE,a);let h=0;for(const v of a)h=(Math.imul(h,31)+v)|0;return [r.canvas.width,r.canvas.height,h]})()")
