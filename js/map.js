@@ -1,4 +1,6 @@
-import { worldPixel, terrainZoom } from './elevation.js?v=0.43.0';
+import { worldPixel, terrainZoom } from './elevation.js?v=0.44.0';
+
+export const MAP_LOCATION_BOUNDS=Object.freeze({south:20,north:46,west:122,east:154});
 
 export function pixelLocation(x, y, zoom) {
   const scale = 256 * 2 ** zoom;
@@ -6,8 +8,8 @@ export function pixelLocation(x, y, zoom) {
     longitude: x / scale * 360 - 180, zoom: 12 };
 }
 export function constrainLocation(location) {
-  return { latitude: Math.max(20, Math.min(46, location.latitude)),
-    longitude: Math.max(122, Math.min(154, location.longitude)), zoom: 12 };
+  return { latitude: Math.max(MAP_LOCATION_BOUNDS.south, Math.min(MAP_LOCATION_BOUNDS.north, location.latitude)),
+    longitude: Math.max(MAP_LOCATION_BOUNDS.west, Math.min(MAP_LOCATION_BOUNDS.east, location.longitude)), zoom: 12 };
 }
 
 // Small slippy map using GSI standard tiles; terrain is fetched only on explicit selection.

@@ -22,5 +22,5 @@ test('stylesheet and complete browser module graph share the release version', a
     }
   }
   for (const reference of references) await check(reference, root);
-  assert.equal(visited.size, 27, 'All browser modules, including the regional bathymetry registry and sea-floor guide, must share the release version');
+  assert.equal(visited.size, 28, 'All browser modules, including location search, the regional bathymetry registry and sea-floor guide, must share the release version');
 });

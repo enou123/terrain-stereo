@@ -1,20 +1,21 @@
-import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.43.0';
-import { contourInterval } from './contours.js?v=0.43.0';
-import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.43.0';
-import { loadMapTexture, textureKey, texturePlan, textureResolution } from './texture.js?v=0.43.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.43.0';
-import { LocationMap } from './map.js?v=0.43.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.43.0';
-import { createMesh, SEABED_COLOR_STOPS } from './mesh.js?v=0.43.0';
-import { bathymetryRegion, bathymetryRegions, loadBathymetry, mergeBathymetry } from './bathymetry.js?v=0.43.0';
-import { TerrainRenderer } from './renderer.js?v=0.43.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.43.0';
-import { flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle, rebaseFlightTour } from './controls.js?v=0.43.0';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.43.0';
-import { setupAppTour } from './tour.js?v=0.43.0';
-import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.43.0';
-import { setupLandmarkGuide } from './landmark-guide.js?v=0.43.0';
-import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.43.0';
+import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.44.0';
+import { contourInterval } from './contours.js?v=0.44.0';
+import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.44.0';
+import { loadMapTexture, textureKey, texturePlan, textureResolution } from './texture.js?v=0.44.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.44.0';
+import { LocationMap } from './map.js?v=0.44.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.44.0';
+import { createMesh, SEABED_COLOR_STOPS } from './mesh.js?v=0.44.0';
+import { bathymetryRegion, bathymetryRegions, loadBathymetry, mergeBathymetry } from './bathymetry.js?v=0.44.0';
+import { TerrainRenderer } from './renderer.js?v=0.44.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.44.0';
+import { flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle, rebaseFlightTour } from './controls.js?v=0.44.0';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.44.0';
+import { setupAppTour } from './tour.js?v=0.44.0';
+import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.44.0';
+import { setupLandmarkGuide } from './landmark-guide.js?v=0.44.0';
+import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.44.0';
+import { catalogMatches, parseLocationInput, searchCSIS, validateSearchCoordinate } from './location-search.js?v=0.44.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -140,7 +141,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.43.0');
+  const {pickSurface}=await import('./profile.js?v=0.44.0');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -283,11 +284,16 @@ const locationName=location=>{
   const name=Object.keys(places).find(key=>Math.abs(places[key].latitude-location.latitude)<.0001 && Math.abs(places[key].longitude-location.longitude)<.0001);
   return name ? LANDMARKS.find(p=>p.id===name).name+'周辺' : coordinates(location);
 };
+let searchLabel='',searchLabelPoint=null;
 const map=new LocationMap(document.querySelector('#location-map'),sharedView?.location ?? LOCATION,location=>{
   selectedLocation=location;
   document.querySelector('#selected-extent').textContent=`表示範囲：約${terrainExtent(location.latitude,location.mapZoom+1).toFixed(1)} km四方（地図の縮尺と連動）`;
   document.querySelector('#selected-location').textContent=coordinates(location);
-  document.querySelector('#map-place').value=matchingLandmark(location)?.id||'';
+  const selectedMatches=searchLabelPoint&&Math.abs(searchLabelPoint.latitude-location.latitude)<1e-8&&Math.abs(searchLabelPoint.longitude-location.longitude)<1e-8;
+  if(!selectedMatches){searchLabel='';searchLabelPoint=null;}
+  const matching=matchingLandmark(location);
+  document.querySelector('#selected-place-label').textContent=selectedMatches?searchLabel:matching?.name||'地図中央';
+  document.querySelector('#map-place').value=matching?.id||'';
   landmarkGuide?.preview(document.querySelector('#map-place').value);
 });
 document.querySelector('#map-zoom-in').addEventListener('click',()=>map.setZoom(map.zoom+0.5));
@@ -296,6 +302,53 @@ landmarkGuide=setupLandmarkGuide({
   select:place=>{if(place)map.setView(place.center,place.settings.terrain.zoom-1);},
   visit:visitLandmark,switchMode:switchLandmarkMode,
   legend:(options={})=>{viewerUI.setSettingsOpen(true);setGeologyLegendOpen(true);loadGeologyLegend();if(options.scroll!==false)geologyLegendButton.scrollIntoView({block:'center'});},
+});
+const searchForm=document.querySelector('#location-search-form'),searchInput=document.querySelector('#location-search-input');
+const searchStatus=document.querySelector('#location-search-status'),searchResults=document.querySelector('#location-search-results'),searchSubmit=document.querySelector('#location-search-submit');
+let searchController=null;
+function setSearchStatus(text,error=false){searchStatus.textContent=text;searchStatus.dataset.error=String(error);}
+function chooseSearchResult(result){
+  const validation=validateSearchCoordinate(result.point);
+  if(!validation.ok){setSearchStatus(validation.reason,true);return;}
+  const point=validation.point;
+  searchLabel=result.name;searchLabelPoint=point;
+  map.setView({...point,zoom:12},result.mapZoom??10.5);
+  if(result.source==='名所ガイド登録地'&&result.id)landmarkGuide.ensureOption(result.id);
+  document.querySelector('#selected-place-label').textContent=result.name;
+  setSearchStatus(`「${result.name}」${result.source?`（${result.source}）`:''}を地図中央に合わせました。緯度 ${point.latitude.toFixed(5)}°、経度 ${point.longitude.toFixed(5)}°。3D表示は「ここを立体表示」を押してください。`);
+  searchResults.hidden=true;
+}
+function showSearchResults(results){
+  searchResults.replaceChildren();
+  for(const result of results){
+    const button=document.createElement('button');button.type='button';button.className='location-search-result';
+    const name=document.createElement('strong'),detail=document.createElement('small');name.textContent=result.name;detail.textContent=`${result.detail} · ${result.point.latitude.toFixed(5)}, ${result.point.longitude.toFixed(5)}`;
+    button.append(name,detail);button.addEventListener('click',()=>chooseSearchResult(result));searchResults.append(button);
+  }
+  searchResults.hidden=results.length===0;
+  if(results.length===1)chooseSearchResult(results[0]);
+  else setSearchStatus(results.length?`候補が${results.length}件あります。地図へ移動する地点を選んでください。`:'該当する場所が見つかりません。地図を動かして選ぶか、住所・座標を入力してください。',!results.length);
+}
+searchForm.addEventListener('submit',async event=>{
+  event.preventDefault();if(searchSubmit.disabled)return;
+  searchController?.abort();searchController=new AbortController();
+  searchResults.replaceChildren();searchResults.hidden=true;
+  const parsed=parseLocationInput(searchInput.value);
+  if(parsed.kind==='empty'){setSearchStatus('地名・住所・座標・GoogleマップURLを入力してください。',true);return;}
+  if(parsed.kind==='short'||parsed.kind==='invalid'||parsed.kind==='unknown'){setSearchStatus(parsed.message,true);return;}
+  if(parsed.kind==='coordinate'){
+    const validation=validateSearchCoordinate(parsed.point);
+    if(!validation.ok){setSearchStatus(validation.reason,true);return;}
+    chooseSearchResult({name:parsed.source,detail:parsed.source,point:validation.point});return;
+  }
+  const catalog=catalogMatches(parsed.query);
+  if(catalog.length){showSearchResults(catalog);return;}
+  searchSubmit.disabled=true;searchSubmit.textContent='検索中…';setSearchStatus('地名を検索しています…');
+  try{
+    const results=await searchCSIS(parsed.query,{signal:searchController.signal});
+    showSearchResults(results);
+  }catch(error){setSearchStatus(error.message||'通信に失敗しました。もう一度お試しください。',true);}
+  finally{searchSubmit.disabled=false;searchSubmit.textContent='検索';searchController=null;}
 });
 showTerrain.addEventListener('click',()=>{
   if(loading) return;
@@ -651,7 +704,7 @@ load(sharedView?.depthScaleMax??null);
 // Load section calculations/UI only when explicitly requested.
 async function getProfileTool(){
   if(!data||loading||renderer?.lost)throw new Error('地形が読み込み中です。');
-  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.43.0');profile=new SectionTool(renderer,viewerUI);}
+  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.44.0');profile=new SectionTool(renderer,viewerUI);}
   profile.setData(data);return profile;
 }
 document.querySelector('#profile-start').addEventListener('click',async()=>{
@@ -833,7 +886,7 @@ async function demoContours(api,signal){
 async function demoProfile(api,signal){
   applySelect(modeSelect,'mono');contoursToggle.checked=false;contoursToggle.dispatchEvent(new Event('change',{bubbles:true}));viewerUI.setSettingsOpen(true);
   const tool=await getProfileTool();tool.clear();await api.wait(2000);tool.start();api.focus('#terrain');await api.wait(700);
-  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.43.0');
+  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.44.0');
   if(signal.aborted)throw new DOMException('Stopped','AbortError');
   renderer.draw();const rect=terrainCanvas.getBoundingClientRect(),camera=renderer.cameras(undefined,undefined,true)[0];
   const candidates=[];

@@ -15,8 +15,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/terrain-tanbo-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.43.0">
-  <script type="module" src="js/app.js?v=0.43.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.44.0">
+  <script type="module" src="js/app.js?v=0.44.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span><span class="brand-subtitle">｜地形探訪</span></a><span class="edition">JAPAN TERRAIN EXPLORER</span></header>
@@ -25,6 +25,14 @@
     <section id="place-picker" class="location-picker" aria-labelledby="map-heading" tabindex="-1">
       <div class="map-heading"><div><p class="eyebrow">FIND A PLACE</p><h2 id="map-heading">見たい場所を探す</h2></div><a href="#workspace" class="viewer-link">立体表示へ ↓</a></div>
       <p class="map-help">地図を動かして中央の＋を見たい場所に合わせ、「ここを立体表示」を押してください。枠が表示範囲です。ホイールやピンチでなめらかに縮尺を変えられます。</p>
+      <form id="location-search-form" class="location-search" role="search">
+        <label for="location-search-input">地名やGoogleマップから場所を検索</label>
+        <div class="location-search-row"><input id="location-search-input" type="search" maxlength="240" autocomplete="off" placeholder="地名・住所・緯度経度・GoogleマップURL" aria-describedby="location-search-note location-search-status"><button id="location-search-submit" type="submit">検索</button></div>
+        <p id="location-search-note" class="search-note">座標は「緯度, 経度」の順です。地名検索はCSISへ送信されます。CSISはIPアドレス、アクセス時刻、変換件数・成功件数・処理時間を統計のために収集します。<a href="https://geocode.csis.u-tokyo.ac.jp/home/simple-geocoding/simple-geocoding-tems-of-use/" target="_blank" rel="noopener noreferrer">利用条件</a></p>
+        <p class="search-attribution"><a href="https://geocode.csis.u-tokyo.ac.jp/" target="_blank" rel="noopener noreferrer">CSISシンプルジオコーディング実験を利用</a></p>
+        <p id="location-search-status" class="search-status" role="status" aria-live="polite"></p>
+        <div id="location-search-results" class="location-search-results" aria-label="検索候補" hidden></div>
+      </form>
       <div class="map-shell">
         <div id="location-map" class="location-map" tabindex="0" role="region" aria-label="場所を選ぶ日本地図。ドラッグで移動、ピンチまたはプラス・マイナスで拡大縮小、矢印キーで移動。">
           <div class="map-tiles" aria-hidden="true"></div><div class="map-footprint" aria-hidden="true"></div><span class="map-crosshair" aria-hidden="true">＋</span><p class="map-notice" role="status" hidden></p>
@@ -33,7 +41,7 @@
         <a class="map-attribution" href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener noreferrer">地図：国土地理院</a>
       </div>
       <div class="landmark-filters"><div><label for="landmark-category">地形の種類</label><select id="landmark-category"><option value="">すべての名所</option></select></div><div><label for="landmark-region">地域別</label><select id="landmark-region"><option value="">全国</option></select></div><span id="landmark-count"></span></div>
-      <div class="map-actions"><div class="landmark-select"><label for="map-place" class="setting-label">地形・地質の名所を探す</label><select id="map-place"><option value="">地図で自由に選択</option></select></div><div class="selection"><span>選択地点</span><output id="selected-location"></output><small id="selected-extent"></small></div><button id="show-terrain" class="show-terrain">ここを立体表示</button></div>
+      <div class="map-actions"><div class="landmark-select"><label for="map-place" class="setting-label">地形・地質の名所を探す</label><select id="map-place"><option value="">地図で自由に選択</option></select></div><div class="selection"><span>選択地点</span><strong id="selected-place-label">地図中央</strong><output id="selected-location"></output><small id="selected-extent"></small></div><button id="show-terrain" class="show-terrain">ここを立体表示</button></div>
       <article id="landmark-preview" class="landmark-preview" hidden aria-labelledby="landmark-preview-title"><div><p id="landmark-preview-meta" class="landmark-meta"></p><h3 id="landmark-preview-title"></h3><p id="landmark-preview-copy"></p><p id="landmark-preview-setting" class="landmark-meta"></p></div><div class="landmark-visit"><label for="landmark-visit-mode">おすすめの観察方法</label><select id="landmark-visit-mode"><option value="terrain">地形を楽しむ</option><option value="geology">地質を学ぶ</option></select><button id="visit-landmark" type="button">この場所を見る</button></div></article>
     </section>
     <section id="workspace" class="workspace" aria-label="3D地形ビューア">
