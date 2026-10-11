@@ -1,20 +1,20 @@
-import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.39.0';
-import { contourInterval } from './contours.js?v=0.39.0';
-import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.39.0';
-import { loadMapTexture, textureKey, texturePlan, textureResolution } from './texture.js?v=0.39.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.39.0';
-import { LocationMap } from './map.js?v=0.39.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.39.0';
-import { createMesh, SEABED_COLOR_STOPS } from './mesh.js?v=0.39.0';
-import { bathymetryRegion, bathymetryRegions, loadBathymetry, mergeBathymetry } from './bathymetry.js?v=0.39.0';
-import { TerrainRenderer } from './renderer.js?v=0.39.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.39.0';
-import { flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle, rebaseFlightTour } from './controls.js?v=0.39.0';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.39.0';
-import { setupAppTour } from './tour.js?v=0.39.0';
-import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.39.0';
-import { setupLandmarkGuide } from './landmark-guide.js?v=0.39.0';
-import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.39.0';
+import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.40.0';
+import { contourInterval } from './contours.js?v=0.40.0';
+import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.40.0';
+import { loadMapTexture, textureKey, texturePlan, textureResolution } from './texture.js?v=0.40.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.40.0';
+import { LocationMap } from './map.js?v=0.40.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.40.0';
+import { createMesh, SEABED_COLOR_STOPS } from './mesh.js?v=0.40.0';
+import { bathymetryRegion, bathymetryRegions, loadBathymetry, mergeBathymetry } from './bathymetry.js?v=0.40.0';
+import { TerrainRenderer } from './renderer.js?v=0.40.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.40.0';
+import { flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle, rebaseFlightTour } from './controls.js?v=0.40.0';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.40.0';
+import { setupAppTour } from './tour.js?v=0.40.0';
+import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.40.0';
+import { setupLandmarkGuide } from './landmark-guide.js?v=0.40.0';
+import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.40.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -140,7 +140,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.39.0');
+  const {pickSurface}=await import('./profile.js?v=0.40.0');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -229,7 +229,8 @@ async function bathymetryForLand(base,depthScaleMaxOverride=null){
     const next=mergeBathymetry(base,grid,depthScaleMaxOverride);
     next.bathymetry.stats={...grid.stats,totalElapsedMs:performance.now()-start};
     console.info('[海底地形]',next.bathymetry);
-    bathymetryStatus.textContent=next.bathymetry.seaCount?`${next.bathymetry.grids.length}地域の水深データを表示しています。`:'この範囲では海底の有効な数値データを表示できません。陸地の表示を続けます。';
+    const fallbackNotice=next.bathymetry.stats.unavailableRegions?.length?'狭域データを取得できなかったため、利用可能な広域データで表示しています。':'';
+    bathymetryStatus.textContent=next.bathymetry.seaCount?fallbackNotice||`${next.bathymetry.grids.length}地域の水深データを表示しています。`:'この範囲では海底の有効な数値データを表示できません。陸地の表示を続けます。';
     return next.bathymetry.seaCount?next:base;
   }catch(error){
     if(request===bathymetryRequest&&bathymetryToggle.checked){bathymetryStatus.textContent=`海底データを取得できませんでした。${controller.signal.aborted?'通信がタイムアウトしました。':error.message} 陸地の表示を続けます。`;bathymetryRetry.hidden=false;}
@@ -648,7 +649,7 @@ load(sharedView?.depthScaleMax??null);
 // Load section calculations/UI only when explicitly requested.
 async function getProfileTool(){
   if(!data||loading||renderer?.lost)throw new Error('地形が読み込み中です。');
-  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.39.0');profile=new SectionTool(renderer,viewerUI);}
+  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.40.0');profile=new SectionTool(renderer,viewerUI);}
   profile.setData(data);return profile;
 }
 document.querySelector('#profile-start').addEventListener('click',async()=>{
@@ -830,7 +831,7 @@ async function demoContours(api,signal){
 async function demoProfile(api,signal){
   applySelect(modeSelect,'mono');contoursToggle.checked=false;contoursToggle.dispatchEvent(new Event('change',{bubbles:true}));viewerUI.setSettingsOpen(true);
   const tool=await getProfileTool();tool.clear();await api.wait(2000);tool.start();api.focus('#terrain');await api.wait(700);
-  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.39.0');
+  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.40.0');
   if(signal.aborted)throw new DOMException('Stopped','AbortError');
   renderer.draw();const rect=terrainCanvas.getBoundingClientRect(),camera=renderer.cameras(undefined,undefined,true)[0];
   const candidates=[];

@@ -1,0 +1,31 @@
+name: Acquire Kikai and priority island comparison grids
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/acquire-kikai-priority-grids.yml
+      - tools/acquire-kikai-priority-grids.py
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: kikai-priority-gmrt-grids
+  cancel-in-progress: false
+jobs:
+  acquire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install bounded GeoTIFF readers
+        run: python -m pip install --disable-pip-version-check 'rasterio==1.4.3' 'numpy==2.2.6'
+      - name: Acquire eight target areas and compare with existing regional data
+        run: python tools/acquire-kikai-priority-grids.py
+      - name: Retain source rasters, masks, candidates and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kikai-priority-gmrt-comparisons
+          path: output/
+          retention-days: 30
+          if-no-files-found: error

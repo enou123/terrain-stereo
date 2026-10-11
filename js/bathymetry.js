@@ -1,5 +1,5 @@
-import { worldPixel } from './elevation.js?v=0.39.0';
-import { BATHYMETRY_REGIONS } from './bathymetry-regions.js?v=0.39.0';
+import { worldPixel } from './elevation.js?v=0.40.0';
+import { BATHYMETRY_REGIONS } from './bathymetry-regions.js?v=0.40.0';
 
 const REGION_CACHE_MAX_BYTES=8*1024*1024;
 const REGION_CACHE_MAX_COUNT=8;
@@ -20,11 +20,29 @@ export function viewBounds(location){
 const contains=(region,b)=>b.west>=region.west&&b.east<=region.east&&b.south>=region.south&&b.north<=region.north;
 const intersects=(region,b)=>b.east>region.west&&b.west<region.east&&b.north>region.south&&b.south<region.north;
 const area=r=>(r.east-r.west)*(r.north-r.south);
+function projectedOverlayCells(region,location){
+  const scale=256*2**location.zoom;
+  const longitudePixels=(region.east-region.west)/360*scale;
+  const [,north]=worldPixel(region.north,(region.west+region.east)/2,location.zoom);
+  const [,south]=worldPixel(region.south,(region.west+region.east)/2,location.zoom);
+  return Math.min(longitudePixels,Math.abs(south-north))*((193-1)/384);
+}
+function containingAlternatives(location,excluded){
+  const box=viewBounds(location);
+  return BATHYMETRY_REGIONS.filter(r=>!excluded.has(r.id)&&contains(r,box))
+    .sort((a,b)=>area(a)-area(b)||b.spacing-a.spacing);
+}
 export function bathymetryRegions(location){
   const box=viewBounds(location);
   const covering=BATHYMETRY_REGIONS.filter(r=>contains(r,box));
-  if(covering.length)return [covering.sort((a,b)=>area(a)-area(b)||a.spacing-b.spacing)[0]];
-  return BATHYMETRY_REGIONS.filter(r=>intersects(r,box))
+  if(covering.length){
+    const primary=covering.sort((a,b)=>area(a)-area(b)||a.spacing-b.spacing)[0];
+    // Use a narrow raster as a local overlay while enough of it is visible on
+    // the 193-vertex mesh. Tiny slivers in country-scale views are not fetched.
+    const overlays=BATHYMETRY_REGIONS.filter(r=>r.narrow&&r.id!==primary.id&&intersects(r,box)&&projectedOverlayCells(r,location)>=8);
+    return [primary,...overlays.sort((a,b)=>a.spacing-b.spacing||area(a)-area(b))];
+  }
+  return BATHYMETRY_REGIONS.filter(r=>intersects(r,box)&&(!r.narrow||projectedOverlayCells(r,location)>=8))
     // The registry is deliberately bounded (currently 13 regions). Keep every
     // intersecting region for broad views so an arbitrary region-count cap
     // cannot leave an unrequested strip at the edge of the display.
@@ -78,10 +96,28 @@ async function loadRegion(region,signal){
 export async function loadBathymetry(location,signal){
   const regions=bathymetryRegions(location);
   if(!regions.length)throw new Error('この表示範囲の海底数値データはまだ登録されていません。');
-  const start=performance.now(),loaded=[];
+  const start=performance.now(),loaded=[],unavailable=[];
   for(const region of regions){
-    const result=await loadRegion(region,signal);loaded.push(result);
+    try{loaded.push(await loadRegion(region,signal));}
+    catch(error){
+      if(signal?.aborted)throw signal.reason||error;
+      unavailable.push({id:region.id,error:error.message});
+    }
   }
+  // A small high-density grid is an optional overlay. If it fails, retry the
+  // smallest wider registered grid that contains the complete displayed area.
+  // This avoids both a blank seabed and a request for every overlapping region.
+  if(unavailable.length){
+    const loadedIds=new Set([...loaded.map(result=>result.grid.metadata.id),...unavailable.map(item=>item.id)]);
+    for(const alternative of containingAlternatives(location,loadedIds)){
+      try{loaded.push(await loadRegion(alternative,signal));break;}
+      catch(error){
+        if(signal?.aborted)throw signal.reason||error;
+        unavailable.push({id:alternative.id,error:error.message});
+      }
+    }
+  }
+  if(!loaded.length)throw new Error(unavailable[0]?.error||'海底データを読み込めませんでした。');
   const grids=loaded.map(x=>x.grid);
   const spacing=grid=>Math.max(...grid.metadata.actualSpacingMeters);
   grids.sort((a,b)=>spacing(a)-spacing(b));
@@ -89,7 +125,7 @@ export async function loadBathymetry(location,signal){
   const bytes=loaded.reduce((n,x)=>n+x.bytes,0),requests=loaded.reduce((n,x)=>n+x.requests,0);
   return {
     grids,metadata:grids.length===1?grids[0].metadata:{id:grids.map(g=>g.metadata.id).join('+'),name:grids.map(g=>g.metadata.name).join('・'),actualSpacingMeters:grids.map(g=>g.metadata.actualSpacingMeters),depthScaleMax},depthScaleMax,
-    stats:{bytes,requests,cached:requests===0,regions:grids.map(g=>g.metadata.id),elapsedMs:performance.now()-start},
+    stats:{bytes,requests,cached:requests===0,regions:grids.map(g=>g.metadata.id),unavailableRegions:unavailable,elapsedMs:performance.now()-start},
   };
 }
 

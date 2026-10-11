@@ -2,6 +2,9 @@
 // downloaded manifest carries the returned raster bounds and actual spacing.
 // Narrow observations keep their existing higher-resolution snapshots.
 export const BATHYMETRY_REGIONS=Object.freeze([
+  // Kikai is a small grid overlay inside the retained Okinawa/Tokara broad grids.
+  // Its cell spacing describes returned samples, not sounding accuracy.
+  {id:'kikaijima-narrow',west:129.78,east:130.14,south:28.18,north:28.46,spacing:54,depthScaleMax:1000,narrow:true,manifest:'kikaijima-narrow.json'},
   {id:'aogashima',west:139.2,east:140.3,south:32,north:32.9,spacing:500,depthScaleMax:2000,manifest:'aogashima-gmrt-4.5.0.json'},
   {id:'hachijo-aogashima',west:138.6452,east:140.9525,south:31.8943,north:33.6531,spacing:500,depthScaleMax:2000,manifest:'hachijo-aogashima-gmrt-4.5.0.json'},
   {id:'izu-north-north',west:136.5,east:143.7,south:32.1,north:36.4,spacing:810,depthScaleMax:5000,manifest:'izu-north-north.json'},

@@ -1,0 +1,84 @@
+{
+  "format": "gmrt-int16-mask-v1",
+  "id": "kikaijima-narrow",
+  "name": "喜界島・狭域高密度格子",
+  "width": 658,
+  "height": 583,
+  "lon0": 129.779296875,
+  "lat0": 28.46096474586237,
+  "dx": 0.0005501525042808219,
+  "dy": -0.0004843998041498185,
+  "nodata": -32768,
+  "file": "kikaijima-narrow-gmrt-4.5.0.bin",
+  "bytes": 815180,
+  "sha256": "bd1bb772b1ca52e206009c2cc0b43b31090450c4edcbb5b571eb8b4e9823a4a4",
+  "sourceSha256": "eeff2397455cc779f9f2233d594950deba72f011ede146fc62d4851515372da8",
+  "maskSourceSha256": "2324226739b8eb624dba1dc1ca033bc5a5c6de5fed302246dc6e58ae844a8a3d",
+  "sourceVersion": "GMRT v4.5.0 (response filename dated 2026-10-11)",
+  "baseSource": "GMRT GridServer topo product. Its specification page includes legacy GEBCO_08 wording and does not identify the background dataset edition for this retrieval; topo-mask had zero high-resolution marine contribution here.",
+  "retrievedAt": "2026-10-11T04:27:10.866358+00:00",
+  "requestedBounds": {
+    "west": 129.78,
+    "east": 130.14,
+    "south": 28.18,
+    "north": 28.46
+  },
+  "actualRasterBounds": [
+    129.77902179874786,
+    28.1788018599451,
+    130.14102214656464,
+    28.461206945764445
+  ],
+  "requestedSpacingMeters": 100,
+  "actualSpacingMeters": [
+    53.912913617692354,
+    53.9233861979578
+  ],
+  "depthScaleMax": 5000,
+  "quantizationMeters": 1,
+  "license": "CC BY 4.0",
+  "sourceUrl": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo&format=geotiff&mresolution=100",
+  "maskSourceUrl": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo-mask&format=geotiff&mresolution=100",
+  "termsUrl": "https://www.gmrt.org/about/terms_of_use.php",
+  "citation": "Ryan et al. (2009), doi:10.1029/2008GC002332; GMRT data doi:10.1594/IEDA.100001",
+  "minimum": -1107.0936279296875,
+  "maximum": 0,
+  "seaMinimum": -1107.0936279296875,
+  "seaMaximum": -0.009500453248620033,
+  "missingCount": 1316,
+  "highResolutionContributionCount": 0,
+  "requests": [
+    {
+      "url": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo&format=geotiff&mresolution=100",
+      "status": 200,
+      "bytes": 1536382,
+      "sha256": "eeff2397455cc779f9f2233d594950deba72f011ede146fc62d4851515372da8",
+      "seconds": 1.09,
+      "contentType": "application/octet-stream",
+      "contentDisposition": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+    },
+    {
+      "url": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo-mask&format=geotiff&mresolution=100",
+      "status": 200,
+      "bytes": 1536382,
+      "sha256": "2324226739b8eb624dba1dc1ca033bc5a5c6de5fed302246dc6e58ae844a8a3d",
+      "seconds": 0.829,
+      "contentType": "application/octet-stream",
+      "contentDisposition": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+    }
+  ],
+  "marineHighResolutionContributionCount": 0,
+  "comparisonReference": {
+    "id": "okinawa-islands",
+    "actualSpacingMeters": [
+      876.7010038683464,
+      877.018504569885
+    ],
+    "sha256": "bdd972bf60d9f9efbf04ae865ac6a322e11e9d68cdb02c83dbf24facd212f73d",
+    "rmseMeters": 33.19206184593693,
+    "absoluteMedianDifferenceMeters": 16.14613993481555,
+    "absoluteP95DifferenceMeters": 71.10806502543291,
+    "maximumDifferenceMeters": 224.02009739483947
+  },
+  "changes": "取得GeoTIFF値を1m整数化し、GMRTの値へ双線形補間。追加平滑化・標高値の創作なし。返却格子間隔は測深精度ではない。"
+}

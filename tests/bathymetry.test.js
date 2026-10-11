@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
-import {bathymetryRegion,bathymetryRegions,decodeBathymetry,sampleBathymetry,mergeBathymetry} from '../js/bathymetry.js';
+import {bathymetryRegion,bathymetryRegions,decodeBathymetry,sampleBathymetry,mergeBathymetry,loadBathymetry,clearBathymetryCache,bathymetryCacheStats} from '../js/bathymetry.js';
 import {createMesh,fitMeshPositions} from '../js/mesh.js';
 import {readSharedView,createShareUrl} from '../js/share.js';
 const metadata=JSON.parse(readFileSync(new URL('../data/bathymetry/aogashima-gmrt-4.5.0.json',import.meta.url)));
@@ -60,7 +60,7 @@ test('recommended depth color scale changes only display coloring, never the mea
  assert.notDeepEqual(recommendedColor,baseColor);
 });
 test('Kikai selects the overlapping Okinawa grid at about 877m, with no flagged high-resolution contribution',()=>{
- const selected=bathymetryRegion({latitude:28.323,longitude:129.971,zoom:11});assert.equal(selected.id,'okinawa-islands');
+ const selected=bathymetryRegion({latitude:28.323,longitude:129.971,zoom:11});assert.equal(selected.id,'kikaijima-narrow');
  const metadata=JSON.parse(readFileSync(new URL('../data/bathymetry/okinawa-islands.json',import.meta.url)));
  const bytes=readFileSync(new URL(`../data/bathymetry/${metadata.file}`,import.meta.url));
  const grid=decodeBathymetry(metadata,bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength));
@@ -75,6 +75,42 @@ test('Kikai selects the overlapping Okinawa grid at about 877m, with no flagged 
   }
  }
  assert.ok(validWater>1000);assert.equal(highResolution,0);
+});
+
+test('Kikai narrow GMRT grid keeps its source spacing distinct from mesh spacing and preserves source provenance',()=>{
+ const metadata=JSON.parse(readFileSync(new URL('../data/bathymetry/kikaijima-narrow.json',import.meta.url)));
+ const bytes=readFileSync(new URL(`../data/bathymetry/${metadata.file}`,import.meta.url));
+ assert.equal(metadata.id,'kikaijima-narrow');assert.equal(metadata.license,'CC BY 4.0');assert.equal(bytes.length,metadata.bytes);
+ assert.equal(createHash('sha256').update(bytes).digest('hex'),metadata.sha256);
+ assert.ok(metadata.actualSpacingMeters.every(v=>v>53&&v<55));assert.equal(metadata.highResolutionContributionCount,0);
+ const grid=decodeBathymetry(metadata,bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength));
+ assert.ok(sampleBathymetry(grid,28.4067119678,129.97625147).height<-500);
+ assert.equal(bathymetryRegion({latitude:28.323,longitude:129.971,zoom:8}).id,'tokara-amami');
+ const local=bathymetryRegions({latitude:28.323,longitude:129.971,zoom:11});assert.deepEqual(local.map(x=>x.id),['kikaijima-narrow']);
+ const localWithBase=bathymetryRegions({latitude:28.323,longitude:129.971,zoom:9});
+ assert.ok(localWithBase.some(x=>x.id==='tokara-amami'||x.id==='okinawa-islands'));
+ assert.ok(localWithBase.some(x=>x.id==='kikaijima-narrow'));
+ const country=bathymetryRegions({latitude:31,longitude:141,zoom:5});assert.ok(country.every(x=>!x.narrow));
+});
+
+test('Kikai narrow-grid request failure falls back to a containing broad grid',async()=>{
+ const narrow=JSON.parse(readFileSync(new URL('../data/bathymetry/kikaijima-narrow.json',import.meta.url)));
+ const wide=JSON.parse(readFileSync(new URL('../data/bathymetry/okinawa-islands.json',import.meta.url)));
+ const wideBytes=readFileSync(new URL(`../data/bathymetry/${wide.file}`,import.meta.url));
+ const originalFetch=globalThis.fetch;clearBathymetryCache();
+ globalThis.fetch=async input=>{
+  const url=String(input);
+  if(url.endsWith('/kikaijima-narrow.json'))return new Response('unavailable',{status:503});
+  if(url.endsWith('/okinawa-islands.json'))return new Response(JSON.stringify(wide),{status:200});
+  if(url.endsWith(`/${wide.file}`))return new Response(wideBytes,{status:200});
+  return new Response('unexpected '+url,{status:404});
+ };
+ try{
+  const result=await loadBathymetry({latitude:28.323,longitude:129.971,zoom:11});
+  assert.deepEqual(result.grids.map(g=>g.metadata.id),['okinawa-islands']);
+  assert.deepEqual(result.stats.unavailableRegions.map(r=>r.id),['kikaijima-narrow']);
+  assert.ok(result.stats.requests===2);assert.ok(bathymetryCacheStats().bytes<=8*1024*1024);
+ }finally{globalThis.fetch=originalFetch;clearBathymetryCache();}
 });
 test('wide GMRT snapshot covers both island centers and bathymetryRegion chooses narrow Aogashima grid when possible',()=>{
  const wide=JSON.parse(readFileSync(new URL('../data/bathymetry/hachijo-aogashima-gmrt-4.5.0.json',import.meta.url)));
