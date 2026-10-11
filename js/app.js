@@ -183,6 +183,15 @@ let profile, renderer, data, loading=false, flightMode=false, selectedLocation={
 let landData=null,bathymetryRequest=0,bathymetryController=null;
 const bathymetryToggle=document.querySelector('#bathymetry'),bathymetryStatus=document.querySelector('#bathymetry-status'),bathymetryRetry=document.querySelector('#bathymetry-retry'),bathymetryInfo=document.querySelector('#bathymetry-info');
 bathymetryToggle.checked=Boolean(sharedView?.bathymetry);
+function updateQualityGuide(){
+  if(!data)return;
+  const guide=document.querySelector('#quality-guide');
+  const fallback=sharedQualityFallback?'この端末では共有リンクの画質設定に対応していないため、標準画質で表示しています。 ':'';
+  guide.textContent=fallback+`${qualityNames[data.quality]}：約${Math.round(data.spacing*1000)} m間隔で標高メッシュを表示。`+(data.sourceZoom===14?'標高DEMはこの縮尺で細かさの上限に達しています。':'高い画質ほど通信量と描画の負荷が増えます。');
+  if(data.fallbackTileCount)guide.textContent+=' 一部の範囲は細かな標高データがないため、広域のデータで補完しています。補完部分の細かさは上記の間隔と異なります。';
+  const marineSpacing=data.bathymetry?.grids?.flatMap(grid=>grid.spacing||[]).filter(Number.isFinite)||[];
+  if(marineSpacing.length)guide.textContent+=` 海底は約${Math.round(Math.min(...marineSpacing))}〜${Math.round(Math.max(...marineSpacing))}m間隔の配信格子をこのメッシュへ双線形補間しています。上記の標高メッシュ間隔は海底測深の細かさではなく、補間で新しい測深情報は増えません。`;
+}
 function updateBathymetryInfo(){
   const sea=data?.bathymetry;
   bathymetryInfo.hidden=!sea||!sea.seaCount;
@@ -199,6 +208,7 @@ function updateBathymetryInfo(){
     const ratio=Math.round(sea.contributionCount/sea.seaCount*100),names=sea.grids?.map(g=>g.name).join('・')||sea.metadata.name;
     document.querySelector('#bathymetry-depth').textContent=`この範囲の水深：約${Math.round(-sea.seaMax).toLocaleString()}〜${Math.round(-sea.seaMin).toLocaleString()}m。この場所の色表示尺度は0〜${scale.toLocaleString()}mです。${names}のデータを使用。高解像度資料の寄与を確認できた表示点は約${ratio}%。その他は基礎グリッドなどです。断面図・等高線も実際の負の標高で表示します。`;
   }
+  updateQualityGuide();
 }
 function updateBathymetryLegend(){
   const colors=SEABED_COLOR_STOPS.map((rgb,i)=>`rgb(${rgb.map(v=>Math.round(v*255)).join(' ')}) ${Math.round(i/(SEABED_COLOR_STOPS.length-1)*100)}%`);
@@ -230,11 +240,11 @@ async function refreshBathymetry(){
   ++bathymetryRequest;bathymetryController?.abort();bathymetryController=null;
   if(!bathymetryToggle.checked){
     bathymetryStatus.hidden=true;bathymetryRetry.hidden=true;bathymetryInfo.hidden=true;document.querySelector('#bathymetry-archipelago-note').hidden=true;
-    if(landData&&renderer&&!renderer.lost){data=landData;renderer.setMesh(createMesh(data,Number(slider.value)));profile?.setData(data);}
+    if(landData&&renderer&&!renderer.lost){data=landData;renderer.setMesh(createMesh(data,Number(slider.value)));profile?.setData(data);updateBathymetryInfo();}
     return;
   }
   if(loading||!landData||renderer?.lost)return;
-  const base=landData,request=bathymetryRequest+1,next=await bathymetryForLand(base,landmarkGuide.active?.bathymetry?.depthScaleMax);
+  const base=landData,request=bathymetryRequest+1,next=await bathymetryForLand(base,landmarkGuide.active?.bathymetry?.depthScaleMax??landmarkGuide.active?.bathymetryOptions?.depthScaleMax);
   if(request!==bathymetryRequest||landData!==base||loading)return;
   data=bathymetryToggle.checked?next:base;renderer.setMesh(createMesh(data,Number(slider.value)));profile?.setData(data);updateBathymetryInfo();
 }
@@ -478,8 +488,7 @@ async function load(depthScaleMaxOverride=null) {
     updateSurface();texturePromise=updateTexture();
     if(resetView) renderer.reset();
     if(!viewRangeBase||JSON.stringify(previousLocation)!==JSON.stringify(data.location))viewRangeBase=cameraPose();
-    document.querySelector('#quality-guide').textContent=(sharedQualityFallback?'この端末では共有リンクの画質設定に対応していないため、標準画質で表示しています。 ':'')+`${qualityNames[data.quality]}：約${Math.round(data.spacing*1000)} m間隔で地形を表示。`+(data.sourceZoom===14 ? 'この縮尺では標高データの細かさの上限に達しています。' : '高い画質ほど通信量と描画の負荷が増えます。');
-    if (data.fallbackTileCount) document.querySelector('#quality-guide').textContent += ' 一部の範囲は細かな標高データがないため、広域のデータで補完しています。補完部分の細かさは上記の間隔と異なります。';
+    updateQualityGuide();
     const spot=landmarkGuide?.active&&findSpot(landmarkGuide.active.id,landmarkGuide.spot);
     const name=spot&&matchesObservation(landmarkGuide.active,data.location,spot.id)?`${landmarkGuide.active.name}・${spot.name}`:locationName(data.location);
     document.querySelector('#loaded-location').textContent=name;

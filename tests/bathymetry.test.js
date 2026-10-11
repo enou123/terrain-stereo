@@ -59,6 +59,23 @@ test('recommended depth color scale changes only display coloring, never the mea
  const recommendedColor=createMesh(recommended,1).colors.slice(shallow*3,shallow*3+3);
  assert.notDeepEqual(recommendedColor,baseColor);
 });
+test('Kikai selects the overlapping Okinawa grid at about 877m, with no flagged high-resolution contribution',()=>{
+ const selected=bathymetryRegion({latitude:28.323,longitude:129.971,zoom:11});assert.equal(selected.id,'okinawa-islands');
+ const metadata=JSON.parse(readFileSync(new URL('../data/bathymetry/okinawa-islands.json',import.meta.url)));
+ const bytes=readFileSync(new URL(`../data/bathymetry/${metadata.file}`,import.meta.url));
+ const grid=decodeBathymetry(metadata,bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength));
+ assert.ok(metadata.actualSpacingMeters.every(value=>value>870&&value<885));
+ let validWater=0,highResolution=0;
+ for(let r=0;r<metadata.height;r++){
+  const latitude=metadata.lat0+r*metadata.dy;if(latitude<28.15||latitude>28.4)continue;
+  for(let c=0;c<metadata.width;c++){
+   const longitude=metadata.lon0+c*metadata.dx;if(longitude<129.6||longitude>130.1)continue;
+   const i=r*metadata.width+c;if(grid.values[i]===metadata.nodata)continue;
+   if(grid.values[i]<0){validWater++;highResolution+=(grid.coverage[i>>3]>>(i%8))&1;}
+  }
+ }
+ assert.ok(validWater>1000);assert.equal(highResolution,0);
+});
 test('wide GMRT snapshot covers both island centers and bathymetryRegion chooses narrow Aogashima grid when possible',()=>{
  const wide=JSON.parse(readFileSync(new URL('../data/bathymetry/hachijo-aogashima-gmrt-4.5.0.json',import.meta.url)));
  const wideBytes=readFileSync(new URL('../data/bathymetry/hachijo-aogashima-gmrt-4.5.0.bin',import.meta.url));

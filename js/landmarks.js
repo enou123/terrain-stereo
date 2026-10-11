@@ -3,13 +3,13 @@
 import { BATHYMETRY_SPOTS } from './bathymetry-spots.js?v=0.39.0';
 const jma = (area, volcano) => `https://www.data.jma.go.jp/vois/data/${area}/${volcano}/${volcano.split('_')[0]}_index.html`;
 const source = (title, url) => ({title, url, checked:'2026-10-09'});
-const entry = (id, name, prefecture, region, categories, latitude, longitude, zoom, height, pitch, summary, terrain, geology, rocks, age, points, geologyPoints, limitations, reference, coordinateNote, coverage) => ({
+const entry = (id, name, prefecture, region, categories, latitude, longitude, zoom, height, pitch, summary, terrain, geology, rocks, age, points, geologyPoints, limitations, reference, coordinateNote, coverage, bathymetryOptions=null) => ({
   id, name, prefecture, region, categories, center:{latitude,longitude}, summary,
   settings:{terrain:{zoom, exaggeration:height, surface:'elevation', quality:'standard', contours:false,
     sunAzimuth:145,sunAltitude:50,camera:{yaw:.38,pitch,distance:8}}, geology:{zoom,exaggeration:height,surface:'geology',quality:'standard',contours:false,sunAzimuth:145,sunAltitude:50,camera:{yaw:.38,pitch,distance:8}}},
   terrain:{summary,detail:terrain,points}, geology:{summary:rocks,detail:geology,rocks,age,points:geologyPoints},
   limitations, references:[reference,source('国土地理院・地理院地図（表示中心）',`https://maps.gsi.go.jp/#${zoom-1}/${latitude}/${longitude}/`)],
-  coordinateNote, coverage,
+  coordinateNote, coverage, ...(bathymetryOptions?{bathymetryOptions}:{}),
 });
 
 export const CATEGORIES = Object.freeze({volcano:'火山・カルデラ',mountain:'山岳・峡谷',karst:'カルスト・台地',island:'島・海岸',structure:'断層・地質構造',marineVolcano:'海底火山・火山島',trench:'海溝・トラフ',underseaRelief:'海底山脈・海底の高まり',coastalSeabed:'島々とその周辺海底',regionalSeabed:'広域の海底地形'});
@@ -143,7 +143,7 @@ export const LANDMARKS = [
     'サンゴ礁起源の石灰岩と砂・泥の地層','主なサンゴ礁段丘は第四紀。区分の年代は凡例で確認。',
     ['百之台付近の高い平坦面','島の海岸側と内陸側の高さを断面図で比べる'],['石灰岩の分布と段丘面を比較する'],
     ['島全体を優先した広域表示です。低い海岸段丘は拡大・画質変更で観察してください。低い段差には10 m等高線がおすすめです。'],source('喜界島ジオパーク・隆起する島','https://kikaijima-geo.com/'),
-    '国土地理院の喜界島北部・南部の図郭と地理院地図から島の中心を設定。',[129.89,28.26,130.055,28.39]),
+    '国土地理院の喜界島北部・南部の図郭と地理院地図から島の中心を設定。',[129.89,28.26,130.055,28.39],{depthScaleMax:1000}),
   entry('minamidaito','南大東島','沖縄県','九州・南西諸島',['island','karst'],25.8333,131.2333,12,4,1.05,
     '周囲が高く、中央が低い、隆起した環礁の島。',
     '外周の環状の高まりと、内側の低い盆地を上から比べます。見た目は火口に似ていても火山のカルデラではなく、海で育った環礁が隆起した地形です。',

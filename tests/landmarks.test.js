@@ -15,6 +15,7 @@ test('the five existing and twelve priority landmarks have unique, sourced learn
   assert.equal(BATHYMETRY_SPOTS.length,30);
   assert.deepEqual(LANDMARKS.slice(17).map(p=>p.id),BATHYMETRY_SPOTS.map(p=>p.id));
   assert.equal(new Set(LANDMARKS.map(p=>p.id)).size,47);
+  assert.equal(findLandmark('kikaijima').bathymetryOptions.depthScaleMax,1000,'Kikai nearshore colors use a shallower display scale');
   for(const p of LANDMARKS){
     assert.ok(p.name&&p.prefecture&&REGIONS.includes(p.region));
     assert.ok(p.categories.length&&p.categories.every(c=>c in CATEGORIES));
