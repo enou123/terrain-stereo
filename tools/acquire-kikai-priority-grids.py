@@ -43,7 +43,14 @@ def read(data):
   if t.a<=0 or t.e>=0:raise ValueError('not north-up')
   return a,t,src.bounds,dict(width=src.width,height=src.height,cells=int(a.size),bounds=list(src.bounds),transform=list(t)[:6],dtype=src.dtypes[0],nodata=src.nodata,missing=int((~np.isfinite(a)).sum()),spacingApprox=[t.a*111320*math.cos(math.radians((src.bounds.top+src.bounds.bottom)/2)),-t.e*111320])
 def load_existing(region_id):
- meta=json.loads((ROOT/'data/bathymetry'/f'{region_id}.json').read_text());raw=(ROOT/'data/bathymetry'/meta['file']).read_bytes();n=meta['width']*meta['height']
+ folder=ROOT/'data/bathymetry';meta=None
+ for path in folder.glob('*.json'):
+  try:candidate=json.loads(path.read_text())
+  except (OSError,json.JSONDecodeError):continue
+  if candidate.get('id')==region_id and candidate.get('format')=='gmrt-int16-mask-v1':
+   meta=candidate;break
+ if meta is None:raise FileNotFoundError(f'no grid manifest for baseline region {region_id}')
+ raw=(folder/meta['file']).read_bytes();n=meta['width']*meta['height']
  if sha(raw)!=meta['sha256']:raise ValueError(f'baseline hash mismatch: {region_id}')
  vals=np.frombuffer(raw[:n*2],'<i2').astype('float32').reshape(meta['height'],meta['width']);vals[vals==meta['nodata']]=np.nan
  return meta,vals
