@@ -15,11 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
+      - uses: actions/checkout@v4
       - name: Verify published release and GMRT assets
         run: |
           python - <<'PY'
           import hashlib, json, re, time, urllib.parse, urllib.request
           base = 'https://enou123.github.io/terrain-stereo/'
+          expected_release = json.load(open('package.json', encoding='utf-8'))['version']
           cache_key = str(time.time_ns())
           def fetch(path, limit=2_000_000):
               separator = '&' if '?' in path else '?'
@@ -31,11 +33,11 @@ jobs:
           for attempt in range(36):
               html = fetch('index.html').decode()
               app_match = re.search(r'<script\b[^>]*\bsrc=["\'](?:\./)?js/app\.js\?v=([^"\']+)', html)
-              if 'bathymetry-archipelago' in html and app_match:
+              if 'bathymetry-archipelago' in html and app_match and app_match.group(1) == expected_release:
                   break
               time.sleep(5)
           else:
-              raise AssertionError('GitHub Pages did not serve the terrain app entry point')
+              raise AssertionError(f'GitHub Pages did not serve expected release {expected_release}; last page release was {app_match.group(1) if app_match else None}')
           release = app_match.group(1)
           queue = ['js/app.js?v=' + release]
           seen = set()
