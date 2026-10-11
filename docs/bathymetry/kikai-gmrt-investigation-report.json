@@ -1,0 +1,492 @@
+{
+  "purpose": "Kikai source investigation; app unchanged",
+  "requestedBounds": {
+    "west": 129.78,
+    "east": 130.14,
+    "south": 28.18,
+    "north": 28.46
+  },
+  "requestedResolutionsMeters": [
+    500,
+    250,
+    100
+  ],
+  "retrievedAt": "2026-10-11T04:27:10.866358+00:00",
+  "baseline": {
+    "id": "okinawa-islands",
+    "sha256": "bdd972bf60d9f9efbf04ae865ac6a322e11e9d68cdb02c83dbf24facd212f73d",
+    "sourceVersion": "GMRT v4.5.0 (2026年6月)",
+    "actualSpacingMeters": [
+      876.7010038683464,
+      877.018504569885
+    ],
+    "quantizationMeters": 1,
+    "retrievedAt": "2026-10-10T10:27:20.974791+00:00"
+  },
+  "documents": [
+    {
+      "url": "https://www.gmrt.org/services/gridserverinfo.php",
+      "status": 200,
+      "bytes": 14910,
+      "sha256": "6ecbf309ed9253a2bd27e4e60e737a6070757790d32d1b3e27ecce3071fa6f84",
+      "seconds": 0.212,
+      "contentType": "text/html; charset=UTF-8",
+      "contentDisposition": null
+    },
+    {
+      "url": "https://www.gmrt.org/about/terms_of_use.php",
+      "status": 200,
+      "bytes": 6976,
+      "sha256": "5358440289a31369af4c1367aea6fcfec5784a8f5030e53a34f822ab4f38feee",
+      "seconds": 0.157,
+      "contentType": "text/html; charset=UTF-8",
+      "contentDisposition": null
+    }
+  ],
+  "resolutions": [
+    {
+      "requestedSpacingMeters": 500,
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo&format=geotiff&mresolution=500",
+          "status": 200,
+          "bytes": 1536382,
+          "sha256": "eeff2397455cc779f9f2233d594950deba72f011ede146fc62d4851515372da8",
+          "seconds": 1.275,
+          "contentType": "application/octet-stream",
+          "contentDisposition": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo-mask&format=geotiff&mresolution=500",
+          "status": 200,
+          "bytes": 1536382,
+          "sha256": "2324226739b8eb624dba1dc1ca033bc5a5c6de5fed302246dc6e58ae844a8a3d",
+          "seconds": 0.969,
+          "contentType": "application/octet-stream",
+          "contentDisposition": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ],
+      "topo": {
+        "width": 658,
+        "height": 583,
+        "cells": 383614,
+        "crs": "EPSG:4326",
+        "transform": [
+          0.0005501525042808219,
+          0.0,
+          129.77902179874786,
+          0.0,
+          -0.0004843998041498185,
+          28.461206945764445
+        ],
+        "bounds": [
+          129.77902179874786,
+          28.1788018599451,
+          130.14102214656464,
+          28.461206945764445
+        ],
+        "nodata": "None",
+        "dtype": "float32",
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "missingCount": 1316,
+        "actualSpacingMetersApprox": [
+          53.912913617692354,
+          53.9233861979578
+        ]
+      },
+      "topo-mask": {
+        "width": 658,
+        "height": 583,
+        "cells": 383614,
+        "crs": "EPSG:4326",
+        "transform": [
+          0.0005501525042808219,
+          0.0,
+          129.77902179874786,
+          0.0,
+          -0.0004843998041498185,
+          28.461206945764445
+        ],
+        "bounds": [
+          129.77902179874786,
+          28.1788018599451,
+          130.14102214656464,
+          28.461206945764445
+        ],
+        "nodata": "None",
+        "dtype": "float32",
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "missingCount": 366428,
+        "actualSpacingMetersApprox": [
+          53.912913617692354,
+          53.9233861979578
+        ]
+      },
+      "status": "ok",
+      "marineCells": 358338,
+      "marineDepthRangeMeters": [
+        0.009500453248620033,
+        1107.0936279296875
+      ],
+      "finiteMaskCells": 17186,
+      "marineContributionCells": 0,
+      "marineContributionPercent": 0.0,
+      "maskMinusTopo": {
+        "count": 17186,
+        "biasMeters": 0.0,
+        "rmseMeters": 0.0,
+        "absoluteP50Meters": 0.0,
+        "absoluteP95Meters": 0.0,
+        "absoluteMaxMeters": 0.0
+      },
+      "versus877m": {
+        "allMarine": {
+          "count": 358338,
+          "biasMeters": -9.133142356475199,
+          "rmseMeters": 33.19206184593693,
+          "absoluteP50Meters": 16.14613993481555,
+          "absoluteP95Meters": 71.10806502543291,
+          "absoluteMaxMeters": 224.02009739483947
+        },
+        "contributed": {
+          "count": 0
+        },
+        "background": {
+          "count": 358338,
+          "biasMeters": -9.133142356475199,
+          "rmseMeters": 33.19206184593693,
+          "absoluteP50Meters": 16.14613993481555,
+          "absoluteP95Meters": 71.10806502543291,
+          "absoluteMaxMeters": 224.02009739483947
+        }
+      }
+    },
+    {
+      "requestedSpacingMeters": 250,
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo&format=geotiff&mresolution=250",
+          "status": 200,
+          "bytes": 1536382,
+          "sha256": "eeff2397455cc779f9f2233d594950deba72f011ede146fc62d4851515372da8",
+          "seconds": 1.178,
+          "contentType": "application/octet-stream",
+          "contentDisposition": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo-mask&format=geotiff&mresolution=250",
+          "status": 200,
+          "bytes": 1536382,
+          "sha256": "2324226739b8eb624dba1dc1ca033bc5a5c6de5fed302246dc6e58ae844a8a3d",
+          "seconds": 0.805,
+          "contentType": "application/octet-stream",
+          "contentDisposition": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ],
+      "topo": {
+        "width": 658,
+        "height": 583,
+        "cells": 383614,
+        "crs": "EPSG:4326",
+        "transform": [
+          0.0005501525042808219,
+          0.0,
+          129.77902179874786,
+          0.0,
+          -0.0004843998041498185,
+          28.461206945764445
+        ],
+        "bounds": [
+          129.77902179874786,
+          28.1788018599451,
+          130.14102214656464,
+          28.461206945764445
+        ],
+        "nodata": "None",
+        "dtype": "float32",
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "missingCount": 1316,
+        "actualSpacingMetersApprox": [
+          53.912913617692354,
+          53.9233861979578
+        ]
+      },
+      "topo-mask": {
+        "width": 658,
+        "height": 583,
+        "cells": 383614,
+        "crs": "EPSG:4326",
+        "transform": [
+          0.0005501525042808219,
+          0.0,
+          129.77902179874786,
+          0.0,
+          -0.0004843998041498185,
+          28.461206945764445
+        ],
+        "bounds": [
+          129.77902179874786,
+          28.1788018599451,
+          130.14102214656464,
+          28.461206945764445
+        ],
+        "nodata": "None",
+        "dtype": "float32",
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "missingCount": 366428,
+        "actualSpacingMetersApprox": [
+          53.912913617692354,
+          53.9233861979578
+        ]
+      },
+      "status": "ok",
+      "marineCells": 358338,
+      "marineDepthRangeMeters": [
+        0.009500453248620033,
+        1107.0936279296875
+      ],
+      "finiteMaskCells": 17186,
+      "marineContributionCells": 0,
+      "marineContributionPercent": 0.0,
+      "maskMinusTopo": {
+        "count": 17186,
+        "biasMeters": 0.0,
+        "rmseMeters": 0.0,
+        "absoluteP50Meters": 0.0,
+        "absoluteP95Meters": 0.0,
+        "absoluteMaxMeters": 0.0
+      },
+      "versus877m": {
+        "allMarine": {
+          "count": 358338,
+          "biasMeters": -9.133142356475199,
+          "rmseMeters": 33.19206184593693,
+          "absoluteP50Meters": 16.14613993481555,
+          "absoluteP95Meters": 71.10806502543291,
+          "absoluteMaxMeters": 224.02009739483947
+        },
+        "contributed": {
+          "count": 0
+        },
+        "background": {
+          "count": 358338,
+          "biasMeters": -9.133142356475199,
+          "rmseMeters": 33.19206184593693,
+          "absoluteP50Meters": 16.14613993481555,
+          "absoluteP95Meters": 71.10806502543291,
+          "absoluteMaxMeters": 224.02009739483947
+        }
+      }
+    },
+    {
+      "requestedSpacingMeters": 100,
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 1536382,
+          "sha256": "eeff2397455cc779f9f2233d594950deba72f011ede146fc62d4851515372da8",
+          "seconds": 1.09,
+          "contentType": "application/octet-stream",
+          "contentDisposition": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo-mask&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 1536382,
+          "sha256": "2324226739b8eb624dba1dc1ca033bc5a5c6de5fed302246dc6e58ae844a8a3d",
+          "seconds": 0.829,
+          "contentType": "application/octet-stream",
+          "contentDisposition": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ],
+      "topo": {
+        "width": 658,
+        "height": 583,
+        "cells": 383614,
+        "crs": "EPSG:4326",
+        "transform": [
+          0.0005501525042808219,
+          0.0,
+          129.77902179874786,
+          0.0,
+          -0.0004843998041498185,
+          28.461206945764445
+        ],
+        "bounds": [
+          129.77902179874786,
+          28.1788018599451,
+          130.14102214656464,
+          28.461206945764445
+        ],
+        "nodata": "None",
+        "dtype": "float32",
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "missingCount": 1316,
+        "actualSpacingMetersApprox": [
+          53.912913617692354,
+          53.9233861979578
+        ]
+      },
+      "topo-mask": {
+        "width": 658,
+        "height": 583,
+        "cells": 383614,
+        "crs": "EPSG:4326",
+        "transform": [
+          0.0005501525042808219,
+          0.0,
+          129.77902179874786,
+          0.0,
+          -0.0004843998041498185,
+          28.461206945764445
+        ],
+        "bounds": [
+          129.77902179874786,
+          28.1788018599451,
+          130.14102214656464,
+          28.461206945764445
+        ],
+        "nodata": "None",
+        "dtype": "float32",
+        "tags": {
+          "AREA_OR_POINT": "Area"
+        },
+        "missingCount": 366428,
+        "actualSpacingMetersApprox": [
+          53.912913617692354,
+          53.9233861979578
+        ]
+      },
+      "status": "ok",
+      "marineCells": 358338,
+      "marineDepthRangeMeters": [
+        0.009500453248620033,
+        1107.0936279296875
+      ],
+      "finiteMaskCells": 17186,
+      "marineContributionCells": 0,
+      "marineContributionPercent": 0.0,
+      "maskMinusTopo": {
+        "count": 17186,
+        "biasMeters": 0.0,
+        "rmseMeters": 0.0,
+        "absoluteP50Meters": 0.0,
+        "absoluteP95Meters": 0.0,
+        "absoluteMaxMeters": 0.0
+      },
+      "versus877m": {
+        "allMarine": {
+          "count": 358338,
+          "biasMeters": -9.133142356475199,
+          "rmseMeters": 33.19206184593693,
+          "absoluteP50Meters": 16.14613993481555,
+          "absoluteP95Meters": 71.10806502543291,
+          "absoluteMaxMeters": 224.02009739483947
+        },
+        "contributed": {
+          "count": 0
+        },
+        "background": {
+          "count": 358338,
+          "biasMeters": -9.133142356475199,
+          "rmseMeters": 33.19206184593693,
+          "absoluteP50Meters": 16.14613993481555,
+          "absoluteP95Meters": 71.10806502543291,
+          "absoluteMaxMeters": 224.02009739483947
+        }
+      }
+    }
+  ],
+  "crossResolution": [
+    {
+      "fineRequestedMeters": 100,
+      "coarseRequestedMeters": 250,
+      "allMarine": {
+        "count": 358338,
+        "biasMeters": -1.2677484047831422e-13,
+        "rmseMeters": 5.3769601456538934e-11,
+        "absoluteP50Meters": 1.7251977624255233e-11,
+        "absoluteP95Meters": 1.1175416148034856e-10,
+        "absoluteMaxMeters": 3.2745361977504217e-09
+      },
+      "contributed": {
+        "count": 0
+      },
+      "background": {
+        "count": 358338,
+        "biasMeters": -1.2677484047831422e-13,
+        "rmseMeters": 5.3769601456538934e-11,
+        "absoluteP50Meters": 1.7251977624255233e-11,
+        "absoluteP95Meters": 1.1175416148034856e-10,
+        "absoluteMaxMeters": 3.2745361977504217e-09
+      }
+    },
+    {
+      "fineRequestedMeters": 100,
+      "coarseRequestedMeters": 500,
+      "allMarine": {
+        "count": 358338,
+        "biasMeters": -1.2677484047831422e-13,
+        "rmseMeters": 5.3769601456538934e-11,
+        "absoluteP50Meters": 1.7251977624255233e-11,
+        "absoluteP95Meters": 1.1175416148034856e-10,
+        "absoluteMaxMeters": 3.2745361977504217e-09
+      },
+      "contributed": {
+        "count": 0
+      },
+      "background": {
+        "count": 358338,
+        "biasMeters": -1.2677484047831422e-13,
+        "rmseMeters": 5.3769601456538934e-11,
+        "absoluteP50Meters": 1.7251977624255233e-11,
+        "absoluteP95Meters": 1.1175416148034856e-10,
+        "absoluteMaxMeters": 3.2745361977504217e-09
+      }
+    },
+    {
+      "fineRequestedMeters": 250,
+      "coarseRequestedMeters": 500,
+      "allMarine": {
+        "count": 358338,
+        "biasMeters": -1.2677484047831422e-13,
+        "rmseMeters": 5.3769601456538934e-11,
+        "absoluteP50Meters": 1.7251977624255233e-11,
+        "absoluteP95Meters": 1.1175416148034856e-10,
+        "absoluteMaxMeters": 3.2745361977504217e-09
+      },
+      "contributed": {
+        "count": 0
+      },
+      "background": {
+        "count": 358338,
+        "biasMeters": -1.2677484047831422e-13,
+        "rmseMeters": 5.3769601456538934e-11,
+        "absoluteP50Meters": 1.7251977624255233e-11,
+        "absoluteP95Meters": 1.1175416148034856e-10,
+        "absoluteMaxMeters": 3.2745361977504217e-09
+      }
+    }
+  ],
+  "interpretation": [
+    "Finer returned cells or residuals alone do not establish new measured detail.",
+    "topo-mask finite cells identify GMRT high-resolution contribution; preserve raw mask for review against official specification.",
+    "Contribution does not specify sounding accuracy or survey date.",
+    "Baseline is rounded to 1m; residuals include rounding, resampling and possible source-version changes.",
+    "No smoothing, invented detail or app-data replacement in this investigation."
+  ],
+  "allThreeSucceeded": true,
+  "totalDownloadedBytes": 9218292,
+  "highResolutionMarineContributionFound": false
+}
