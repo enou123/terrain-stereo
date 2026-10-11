@@ -13,14 +13,14 @@ OUT=pathlib.Path('output');OUT.mkdir(exist_ok=True)
 # on Minami-Daito while existing broad files continue to serve wide overviews.
 SITES=[
  dict(id='kikai-narrow',name='喜界島・狭域',center=[28.323,129.971],bounds=[129.78,130.14,28.18,28.46],depthScaleMax=1000,baseline='okinawa-islands'),
- dict(id='aogashima-narrow',name='青ヶ島・狭域',center=[32.46,139.76],bounds=[139.48,140.04,32.18,32.74],depthScaleMax=2000,baseline='aogashima'),
- dict(id='hachijo-narrow',name='八丈島・狭域',center=[32.99,139.86],bounds=[139.58,140.14,32.71,33.27],depthScaleMax=3000,baseline='hachijo-aogashima'),
- dict(id='satsuma-iwojima-narrow',name='薩摩硫黄島・狭域',center=[30.78,130.28],bounds=[130.00,130.56,30.50,31.06],depthScaleMax=3000,baseline='tokara-amami'),
- dict(id='suwanose-narrow',name='諏訪之瀬島・狭域',center=[29.64,129.72],bounds=[129.44,130.00,29.36,29.92],depthScaleMax=3000,baseline='tokara-amami'),
- dict(id='kuchinoerabu-narrow',name='口永良部島・狭域',center=[30.46,130.20],bounds=[129.92,130.48,30.18,30.74],depthScaleMax=3000,baseline='tokara-amami'),
- dict(id='nishinoshima-narrow',name='西之島・狭域',center=[27.25,140.88],bounds=[140.60,141.16,26.97,27.53],depthScaleMax=5000,baseline='izu-south'),
- dict(id='yonaguni-narrow',name='与那国島・狭域',center=[24.46,123.00],bounds=[122.72,123.28,24.18,24.74],depthScaleMax=5000,baseline='yaeyama'),
- dict(id='minamidaito-narrow',name='南大東島・狭域',center=[25.80,131.20],bounds=[130.96,131.44,25.56,26.04],depthScaleMax=3000,baseline='daito'),
+ dict(id='aogashima-narrow',name='青ヶ島・狭域',center=[32.46,139.76],bounds=[139.56,139.96,32.26,32.66],depthScaleMax=2000,baseline='aogashima'),
+ dict(id='hachijo-narrow',name='八丈島・狭域',center=[32.99,139.86],bounds=[139.66,140.06,32.79,33.19],depthScaleMax=3000,baseline='hachijo-aogashima'),
+ dict(id='satsuma-iwojima-narrow',name='薩摩硫黄島・狭域',center=[30.78,130.28],bounds=[130.08,130.48,30.58,30.98],depthScaleMax=3000,baseline='tokara-amami'),
+ dict(id='suwanose-narrow',name='諏訪之瀬島・狭域',center=[29.64,129.72],bounds=[129.52,129.92,29.44,29.84],depthScaleMax=3000,baseline='tokara-amami'),
+ dict(id='kuchinoerabu-narrow',name='口永良部島・狭域',center=[30.46,130.20],bounds=[130.00,130.40,30.26,30.66],depthScaleMax=3000,baseline='tokara-amami'),
+ dict(id='nishinoshima-narrow',name='西之島・狭域',center=[27.25,140.88],bounds=[140.68,141.08,27.05,27.45],depthScaleMax=5000,baseline='izu-south'),
+ dict(id='yonaguni-narrow',name='与那国島・狭域',center=[24.46,123.00],bounds=[122.80,123.20,24.26,24.66],depthScaleMax=5000,baseline='yaeyama'),
+ dict(id='minamidaito-narrow',name='南大東島・狭域',center=[25.80,131.20],bounds=[131.00,131.40,25.60,26.00],depthScaleMax=3000,baseline='daito'),
 ]
 RESOLUTION=100
 MAX_CELLS=900_000
