@@ -1,5 +1,6 @@
-import { LANDMARKS } from './landmarks.js?v=0.44.0';
-import { MAP_LOCATION_BOUNDS } from './map.js?v=0.44.0';
+import { LANDMARKS } from './landmarks.js?v=0.45.0';
+import { MAP_LOCATION_BOUNDS } from './map.js?v=0.45.0';
+import { NATURAL_PLACES } from './natural-places.js?v=0.45.0';
 
 export const SEARCH_BOUNDS = MAP_LOCATION_BOUNDS;
 const shortHosts = new Set(['maps.app.goo.gl','goo.gl']);
@@ -75,13 +76,46 @@ export function parseLocationInput(raw) {
   return {kind:'place',query:text,source:'入力した地名'};
 }
 
-const normalize=text=>String(text||'').normalize('NFKC').replace(/[・･\s　]/g,'').toLocaleLowerCase('ja');
-const ALIASES=Object.freeze({富士山:['fuji'],あそさん:['aso'],いしづちさん:['ishizuchi'],いしづち:['ishizuchi'],あおがしま:['aogashima'],にしのしま:['nishinoshima']});
+export const normalizeSearchName=text=>[...String(text||'').normalize('NFKC').toLocaleLowerCase('ja')]
+  .map(char=>char>='ァ'&&char<='ヶ'?String.fromCharCode(char.charCodeAt(0)-0x60):char)
+  .join('').replace(/[・･\s　]/g,'');
+const normalize=normalizeSearchName;
+const ALIASES=Object.freeze({
+  富士山:['fuji'],あそさん:['aso'],
+  いしづちさん:['ishizuchi'],いしづち:['ishizuchi'],あおがしま:['aogashima'],
+  にしのしま:['sea-nishinoshima'],'西之島':['sea-nishinoshima'],
+});
 export function catalogMatches(query){
   const key=normalize(query);if(!key)return [];
   const ids=ALIASES[key];
-  const found=ids?LANDMARKS.filter(place=>ids.includes(place.id)):LANDMARKS.filter(place=>normalize(place.name)===key||normalize(place.name).includes(key)||normalize(place.prefecture+place.name).includes(key));
-  return found.slice(0,8).map(place=>({name:place.name,detail:`名所ガイド登録地 · ${place.prefecture} · ${place.region}`,point:{...place.center},mapZoom:place.settings.terrain.zoom-1,source:'名所ガイド登録地',id:place.id}));
+  const found=ids?LANDMARKS.filter(place=>ids.includes(place.id)):LANDMARKS.filter(place=>normalize(place.name)===key);
+  return found.slice(0,8).map(place=>({name:place.name,detail:`${place.prefecture} · ${place.region} · 名所ガイド登録地`,point:{...place.center},mapZoom:place.settings.terrain.zoom-1,source:'名所ガイド登録地',sourceUrl:place.references?.[0]?.url||`https://maps.gsi.go.jp/#${place.settings.terrain.zoom-1}/${place.center.latitude}/${place.center.longitude}/`,id:place.id}));
+}
+
+export function naturalPlaceMatches(query){
+  const key=normalize(query);if(!key)return [];
+  return NATURAL_PLACES.filter(place=>[place.name,...place.aliases].some(name=>normalize(name)===key))
+    .map(place=>({name:place.name,detail:`${place.prefecture}・${place.municipality} · ${place.type} · ${place.detail} · 出典: ${place.source}`,point:{...place.point},mapZoom:place.mapZoom,source:place.source,sourceUrl:place.sourceUrl,placeType:place.type}));
+}
+
+function addressMatchScore(query,address){
+  const wanted=normalize(query).replaceAll('の',''),parts=String(address||'').split(/[\/／,、]/).map(normalize).filter(Boolean);
+  if(!wanted||!parts.length)return 0;
+  if(parts.includes(wanted))return 1;
+  // Accept a query spanning complete address components (e.g. prefecture+city),
+  // but never a short fragment embedded in a longer place name.
+  for(let start=0;start<parts.length;start++){
+    let joined='';
+    for(let end=start;end<parts.length;end++){
+      joined+=parts[end];
+      if(joined===wanted)return .98;
+    }
+  }
+  if(wanted.length>=4){
+    const hierarchy=parts.join('');
+    if(hierarchy.startsWith(wanted))return .82;
+  }
+  return 0;
 }
 
 const resultCache=new Map();
@@ -100,9 +134,11 @@ export async function searchCSIS(query,{signal,fetchImpl=fetch}={}){
       const number=tag=>Number(candidate.querySelector(tag)?.textContent);
       const point={latitude:number('latitude'),longitude:number('longitude')};
       if(!Number.isFinite(point.latitude)||!Number.isFinite(point.longitude))return null;
-      const address=candidate.querySelector('address')?.textContent?.trim()||q;
-      return {name:address.replaceAll('/',' '),detail:`CSISシンプルジオコーディング実験 · ${address.replaceAll('/',' ')}`,point,source:'CSISシンプルジオコーディング実験'};
-    }).filter(Boolean).slice(0,8);
+      const address=candidate.querySelector('address')?.textContent?.trim()||'';
+      const matchScore=addressMatchScore(q,address);
+      if(!matchScore)return null;
+      return {name:address.replaceAll('/',' '),detail:`住所検索 · ${address.replaceAll('/',' ')} · CSISシンプルジオコーディング実験`,point,source:'CSISシンプルジオコーディング実験',matchScore};
+    }).filter(Boolean).sort((a,b)=>b.matchScore-a.matchScore).slice(0,8);
     resultCache.set(key,items.map(item=>({...item})));if(resultCache.size>24)resultCache.delete(resultCache.keys().next().value);
     return items;
   }catch(error){

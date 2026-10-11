@@ -532,10 +532,13 @@ select:focus-visible { outline:2px solid #71914f; outline-offset:3px; }
 .search-status { color:#405441; font-size:12px; }
 .search-status[data-error="true"] { color:#8a382b; }
 .location-search-results { display:grid; gap:6px; margin-top:10px; max-height:240px; overflow:auto; }
+.location-search-row-item { min-width:0; }
 .location-search-result { display:block; width:100%; text-align:left; background:#fff; border-color:#cbd6c7; color:#233a30; }
 .location-search-result:hover,.location-search-result:focus-visible { border-color:#71914f; background:#eef3e9; }
+.location-search-result:disabled { cursor:not-allowed; opacity:.62; }
 .location-search-result strong,.location-search-result small { display:block; }
 .location-search-result small { margin-top:3px; color:#647263; font-size:10px; font-weight:400; }
+.search-result-source { display:inline-block; margin:3px 8px 1px; color:#385a39; font-size:10px; }
 .map-shell { position:relative; border:1px solid #c8d3c3; border-radius:8px; overflow:hidden; }
 .location-map { position:relative; height:360px; overflow:hidden; touch-action:none; background:#dce7ea; cursor:grab; }
 .location-map:active { cursor:grabbing; }

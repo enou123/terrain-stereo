@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseLocationInput, parseGoogleMapsInput, validateSearchCoordinate, catalogMatches, searchCSIS } from '../js/location-search.js';
+import { parseLocationInput, parseGoogleMapsInput, validateSearchCoordinate, catalogMatches, naturalPlaceMatches, searchCSIS } from '../js/location-search.js';
 
 test('latitude-longitude input accepts varying decimal precision and rejects reversed/out-of-coverage coordinates',()=>{
   assert.deepEqual(parseLocationInput('35.3606, 138.7274'),{kind:'coordinate',point:{latitude:35.3606,longitude:138.7274},source:'入力した座標'});
@@ -26,6 +26,17 @@ test('Google Maps URLs prefer selected feature coordinates over viewport coordin
 test('catalog matches are clearly separate and use catalog centers',()=>{
   const fuji=catalogMatches('富士山');assert.equal(fuji.length,1);assert.equal(fuji[0].source,'名所ガイド登録地');assert.deepEqual(fuji[0].point,{latitude:35.3606,longitude:138.7274});
   assert.ok(catalogMatches('阿蘇山').length);assert.ok(catalogMatches('青ヶ島').length);assert.ok(catalogMatches('西之島').length);
+  assert.deepEqual(catalogMatches('姫鶴平'),[]);assert.deepEqual(catalogMatches('姫'),[]);
+  assert.equal(catalogMatches('石鎚山').length,1);assert.equal(catalogMatches('石鎚').length,0);
+});
+
+test('reviewed natural place index uses exact names and explicit aliases with source context',()=>{
+  const shikoku=naturalPlaceMatches('四国カルスト');assert.equal(shikoku.length,1);assert.equal(shikoku[0].name,'四国カルスト');assert.match(shikoku[0].detail,/広域地名/);assert.ok(shikoku[0].sourceUrl);
+  const hime=naturalPlaceMatches('姫鶴平');assert.equal(hime.length,1);assert.equal(hime[0].point.latitude,33.4675);assert.match(hime[0].detail,/高原・カルスト/);
+  assert.equal(naturalPlaceMatches('メヅルダイラ')[0].name,'姫鶴平');
+  assert.deepEqual(naturalPlaceMatches('姫'),[]);
+  assert.equal(naturalPlaceMatches('阿蘇カルデラ')[0].name,'阿蘇カルデラ');
+  assert.equal(naturalPlaceMatches('仁淀川')[0].source.startsWith('地名集日本'),true);
 });
 
 test('CSIS explicit lookup parses candidates and caches one request per query',async()=>{
@@ -42,4 +53,19 @@ test('CSIS explicit lookup parses candidates and caches one request per query',a
 
 test('CSIS lookup reports transport failures without swallowing cancellation',async()=>{
   await assert.rejects(searchCSIS('松山市',{fetchImpl:async()=>{throw new TypeError('network');}}),/接続できません/);
+});
+
+test('CSIS keeps exact hierarchy matches and removes unrelated suffix fragments',async()=>{
+  const previous=globalThis.DOMParser;
+  const data=[
+    {address:'石川県/鳳珠郡/能登町/姫',latitude:'37.3',longitude:'137.0'},
+    {address:'和歌山県/東牟婁郡/串本町/姫',latitude:'33.5',longitude:'135.8'},
+    {address:'長野県/松本市',latitude:'36.2381',longitude:'137.9720'},
+    {address:'熊本県/松本町',latitude:'32.86',longitude:'130.81'},
+  ];
+  globalThis.DOMParser=class{parseFromString(){return{querySelector:()=>null,querySelectorAll:()=>data.map(item=>({querySelector(tag){return{textContent:item[tag]}}}))}}};
+  try{
+    const irrelevant=await searchCSIS('姫鶴平',{fetchImpl:async()=>({ok:true,text:async()=>'<results />'})});assert.deepEqual(irrelevant,[]);
+    const ranked=await searchCSIS('長野県の松本',{fetchImpl:async()=>({ok:true,text:async()=>'<results />'})});assert.deepEqual(ranked.map(item=>item.name),['長野県 松本市']);
+  }finally{globalThis.DOMParser=previous;}
 });

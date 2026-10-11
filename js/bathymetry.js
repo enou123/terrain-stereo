@@ -1,5 +1,5 @@
-import { worldPixel } from './elevation.js?v=0.44.0';
-import { BATHYMETRY_REGIONS } from './bathymetry-regions.js?v=0.44.0';
+import { worldPixel } from './elevation.js?v=0.45.0';
+import { BATHYMETRY_REGIONS } from './bathymetry-regions.js?v=0.45.0';
 
 const REGION_CACHE_MAX_BYTES=8*1024*1024;
 const REGION_CACHE_MAX_COUNT=8;

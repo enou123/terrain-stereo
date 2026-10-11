@@ -1,21 +1,21 @@
-import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.44.0';
-import { contourInterval } from './contours.js?v=0.44.0';
-import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.44.0';
-import { loadMapTexture, textureKey, texturePlan, textureResolution } from './texture.js?v=0.44.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.44.0';
-import { LocationMap } from './map.js?v=0.44.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.44.0';
-import { createMesh, SEABED_COLOR_STOPS } from './mesh.js?v=0.44.0';
-import { bathymetryRegion, bathymetryRegions, loadBathymetry, mergeBathymetry } from './bathymetry.js?v=0.44.0';
-import { TerrainRenderer } from './renderer.js?v=0.44.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.44.0';
-import { flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle, rebaseFlightTour } from './controls.js?v=0.44.0';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.44.0';
-import { setupAppTour } from './tour.js?v=0.44.0';
-import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.44.0';
-import { setupLandmarkGuide } from './landmark-guide.js?v=0.44.0';
-import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.44.0';
-import { catalogMatches, parseLocationInput, searchCSIS, validateSearchCoordinate } from './location-search.js?v=0.44.0';
+import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.45.0';
+import { contourInterval } from './contours.js?v=0.45.0';
+import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.45.0';
+import { loadMapTexture, textureKey, texturePlan, textureResolution } from './texture.js?v=0.45.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.45.0';
+import { LocationMap } from './map.js?v=0.45.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.45.0';
+import { createMesh, SEABED_COLOR_STOPS } from './mesh.js?v=0.45.0';
+import { bathymetryRegion, bathymetryRegions, loadBathymetry, mergeBathymetry } from './bathymetry.js?v=0.45.0';
+import { TerrainRenderer } from './renderer.js?v=0.45.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.45.0';
+import { flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle, rebaseFlightTour } from './controls.js?v=0.45.0';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.45.0';
+import { setupAppTour } from './tour.js?v=0.45.0';
+import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.45.0';
+import { setupLandmarkGuide } from './landmark-guide.js?v=0.45.0';
+import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.45.0';
+import { catalogMatches, naturalPlaceMatches, parseLocationInput, searchCSIS, validateSearchCoordinate } from './location-search.js?v=0.45.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -141,7 +141,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.44.0');
+  const {pickSurface}=await import('./profile.js?v=0.45.0');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -307,7 +307,7 @@ const searchForm=document.querySelector('#location-search-form'),searchInput=doc
 const searchStatus=document.querySelector('#location-search-status'),searchResults=document.querySelector('#location-search-results'),searchSubmit=document.querySelector('#location-search-submit');
 let searchController=null;
 function setSearchStatus(text,error=false){searchStatus.textContent=text;searchStatus.dataset.error=String(error);}
-function chooseSearchResult(result){
+function chooseSearchResult(result,{keepResults=false}={}){
   const validation=validateSearchCoordinate(result.point);
   if(!validation.ok){setSearchStatus(validation.reason,true);return;}
   const point=validation.point;
@@ -316,19 +316,26 @@ function chooseSearchResult(result){
   if(result.source==='名所ガイド登録地'&&result.id)landmarkGuide.ensureOption(result.id);
   document.querySelector('#selected-place-label').textContent=result.name;
   setSearchStatus(`「${result.name}」${result.source?`（${result.source}）`:''}を地図中央に合わせました。緯度 ${point.latitude.toFixed(5)}°、経度 ${point.longitude.toFixed(5)}°。3D表示は「ここを立体表示」を押してください。`);
-  searchResults.hidden=true;
+  searchResults.hidden=!keepResults;
 }
 function showSearchResults(results){
   searchResults.replaceChildren();
   for(const result of results){
+    const row=document.createElement('div');row.className='location-search-row-item';
     const button=document.createElement('button');button.type='button';button.className='location-search-result';
     const name=document.createElement('strong'),detail=document.createElement('small');name.textContent=result.name;detail.textContent=`${result.detail} · ${result.point.latitude.toFixed(5)}, ${result.point.longitude.toFixed(5)}`;
-    button.append(name,detail);button.addEventListener('click',()=>chooseSearchResult(result));searchResults.append(button);
+    const validation=validateSearchCoordinate(result.point);
+    if(!validation.ok){button.disabled=true;detail.textContent+=` · 対応範囲外 (${validation.reason})`;}
+    button.append(name,detail);button.addEventListener('click',()=>chooseSearchResult(result));row.append(button);
+    if(result.sourceUrl){const source=document.createElement('a');source.href=result.sourceUrl;source.target='_blank';source.rel='noopener noreferrer';source.className='search-result-source';source.textContent=`出典: ${result.source}`;row.append(source);}
+    searchResults.append(row);
   }
   searchResults.hidden=results.length===0;
-  if(results.length===1)chooseSearchResult(results[0]);
-  else setSearchStatus(results.length?`候補が${results.length}件あります。地図へ移動する地点を選んでください。`:'該当する場所が見つかりません。地図を動かして選ぶか、住所・座標を入力してください。',!results.length);
+  const eligible=results.filter(result=>validateSearchCoordinate(result.point).ok);
+  if(results.length===1&&eligible.length===1)chooseSearchResult(results[0],{keepResults:true});
+  else setSearchStatus(results.length?`候補が${results.length}件あります。出典・地形の種類・地域を確認して選んでください。${eligible.length?'':'対応範囲内の候補はありません。'}`:noSearchMatchMessage(),!eligible.length);
 }
+function noSearchMatchMessage(){return '正確な場所を特定できませんでした。地図を動かして選ぶか、Googleマップで場所の緯度・経度をコピーして貼り付けてください（緯度, 経度）。';}
 searchForm.addEventListener('submit',async event=>{
   event.preventDefault();if(searchSubmit.disabled)return;
   searchController?.abort();searchController=new AbortController();
@@ -341,13 +348,13 @@ searchForm.addEventListener('submit',async event=>{
     if(!validation.ok){setSearchStatus(validation.reason,true);return;}
     chooseSearchResult({name:parsed.source,detail:parsed.source,point:validation.point});return;
   }
-  const catalog=catalogMatches(parsed.query);
-  if(catalog.length){showSearchResults(catalog);return;}
+  const local=[...catalogMatches(parsed.query),...naturalPlaceMatches(parsed.query)];
+  if(local.length){showSearchResults(local);return;}
   searchSubmit.disabled=true;searchSubmit.textContent='検索中…';setSearchStatus('地名を検索しています…');
   try{
     const results=await searchCSIS(parsed.query,{signal:searchController.signal});
     showSearchResults(results);
-  }catch(error){setSearchStatus(error.message||'通信に失敗しました。もう一度お試しください。',true);}
+  }catch(error){setSearchStatus(`${error.message||'通信に失敗しました。もう一度お試しください。'} Googleマップで場所の緯度・経度をコピーして貼り付ける方法も使えます（緯度, 経度）。`,true);}
   finally{searchSubmit.disabled=false;searchSubmit.textContent='検索';searchController=null;}
 });
 showTerrain.addEventListener('click',()=>{
@@ -704,7 +711,7 @@ load(sharedView?.depthScaleMax??null);
 // Load section calculations/UI only when explicitly requested.
 async function getProfileTool(){
   if(!data||loading||renderer?.lost)throw new Error('地形が読み込み中です。');
-  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.44.0');profile=new SectionTool(renderer,viewerUI);}
+  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.45.0');profile=new SectionTool(renderer,viewerUI);}
   profile.setData(data);return profile;
 }
 document.querySelector('#profile-start').addEventListener('click',async()=>{
@@ -886,7 +893,7 @@ async function demoContours(api,signal){
 async function demoProfile(api,signal){
   applySelect(modeSelect,'mono');contoursToggle.checked=false;contoursToggle.dispatchEvent(new Event('change',{bubbles:true}));viewerUI.setSettingsOpen(true);
   const tool=await getProfileTool();tool.clear();await api.wait(2000);tool.start();api.focus('#terrain');await api.wait(700);
-  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.44.0');
+  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.45.0');
   if(signal.aborted)throw new DOMException('Stopped','AbortError');
   renderer.draw();const rect=terrainCanvas.getBoundingClientRect(),camera=renderer.cameras(undefined,undefined,true)[0];
   const candidates=[];

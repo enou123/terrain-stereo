@@ -1,4 +1,4 @@
-import { worldPixel, terrainZoom } from './elevation.js?v=0.44.0';
+import { worldPixel, terrainZoom } from './elevation.js?v=0.45.0';
 
 export const MAP_LOCATION_BOUNDS=Object.freeze({south:20,north:46,west:122,east:154});
 

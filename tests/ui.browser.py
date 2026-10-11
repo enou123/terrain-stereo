@@ -203,7 +203,8 @@ with sync_playwright() as p:
             page.click('[data-flight-laps="1"]');assert '遊覧中' in page.locator('#flight-toggle').inner_text()
             assert page.locator('#flight-pad').is_hidden()
             page.wait_for_timeout(3500);tour_pose=state()
-            assert tour_pose['target']!=start_flight['target'] and tour_pose['yaw']!=start_flight['yaw']
+            # The default centered orbit keeps the screen-center target fixed.
+            assert tour_pose['target']==start_flight['target'] and tour_pose['yaw']!=start_flight['yaw']
             page.screenshot(path=str(ARTIFACTS/f'{width}x{height}-tour.png'))
             terrain_box=page.locator('#terrain').bounding_box()
             before_input=state();before_base=page.evaluate('uiTest.flightBase');drag_canvas(page,touch,terrain_box);page.wait_for_timeout(250);after_drag=state();after_base=page.evaluate('uiTest.flightBase')

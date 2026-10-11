@@ -15,8 +15,8 @@
   <link rel="icon" type="image/png" sizes="192x192" href="icons/terrain-tanbo-192.png">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css?v=0.44.0">
-  <script type="module" src="js/app.js?v=0.44.0"></script>
+  <link rel="stylesheet" href="styles.css?v=0.45.0">
+  <script type="module" src="js/app.js?v=0.45.0"></script>
 </head>
 <body>
   <header class="header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">△</span> terrain<span>-stereo</span><span class="brand-subtitle">｜地形探訪</span></a><span class="edition">JAPAN TERRAIN EXPLORER</span></header>
@@ -28,7 +28,7 @@
       <form id="location-search-form" class="location-search" role="search">
         <label for="location-search-input">地名やGoogleマップから場所を検索</label>
         <div class="location-search-row"><input id="location-search-input" type="search" maxlength="240" autocomplete="off" placeholder="地名・住所・緯度経度・GoogleマップURL" aria-describedby="location-search-note location-search-status"><button id="location-search-submit" type="submit">検索</button></div>
-        <p id="location-search-note" class="search-note">座標は「緯度, 経度」の順です。地名検索はCSISへ送信されます。CSISはIPアドレス、アクセス時刻、変換件数・成功件数・処理時間を統計のために収集します。<a href="https://geocode.csis.u-tokyo.ac.jp/home/simple-geocoding/simple-geocoding-tems-of-use/" target="_blank" rel="noopener noreferrer">利用条件</a></p>
+        <p id="location-search-note" class="search-note">名所・一部の自然地名はアプリ内索引で検索します（出典は候補に表示）。一部の座標はOpenStreetMap由来です（<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">ODbL・クレジット</a>）。その他の地名はCSISへ送信され、IPアドレス・アクセス時刻・検索件数等が統計収集されます。座標は「緯度, 経度」の順です。短縮URLを解析できない場合は、Googleマップで座標をコピーしてください。<a href="https://geocode.csis.u-tokyo.ac.jp/home/simple-geocoding/simple-geocoding-tems-of-use/" target="_blank" rel="noopener noreferrer">CSIS利用条件</a></p>
         <p class="search-attribution"><a href="https://geocode.csis.u-tokyo.ac.jp/" target="_blank" rel="noopener noreferrer">CSISシンプルジオコーディング実験を利用</a></p>
         <p id="location-search-status" class="search-status" role="status" aria-live="polite"></p>
         <div id="location-search-results" class="location-search-results" aria-label="検索候補" hidden></div>

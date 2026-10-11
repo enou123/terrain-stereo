@@ -56,18 +56,40 @@ with sync_playwright() as p:
   assert '対応していない地域' in page.locator('#location-search-status').inner_text()
   page.locator('#location-search-input').fill('https://evil.example/maps/@35,139,10z');page.click('#location-search-submit')
   assert 'GoogleマップのURLとして認識できません' in page.locator('#location-search-status').inner_text()
-  page.locator('#location-search-input').fill('富士山');page.click('#location-search-submit')
-  assert page.locator('#selected-place-label').inner_text()=='富士山' and page.locator('#map-place').input_value()=='fuji'
-  assert len(csis)==0,'Catalog matches must not be confused with remote geocoding'
-  assert len(dem)==initial_dem
+  # Reviewed local natural-name records and catalog names must not call CSIS.
+  expected={
+   '富士山':('35.36060','138.72740'), '四国カルスト':('33.46681','132.96131'),
+   '姫鶴平':('33.46750','132.96250'), '石鎚山':('33.76700','133.11500'),
+   '仁淀川':('33.45000','133.48333'), '祖谷渓':('33.90600','133.81300'),
+   '阿蘇カルデラ':('32.93000','131.08000'), '桜島':('31.57722','130.65889'),
+   '青ヶ島':('32.45700','139.76200'), '西之島':('27.25000','140.88000'),
+   '鳥取砂丘':('35.54972','134.24472'), '富士五湖':('35.51767','138.76219'),
+  }
+  for query,coords in expected.items():
+   page.locator('#location-search-input').fill(query);page.click('#location-search-submit')
+   status=page.locator('#location-search-status').inner_text()
+   assert coords[0] in status and coords[1] in status,(query,status)
+   assert page.locator('.location-search-result').count()==1,query
+   assert page.locator('.search-result-source').count()==1,query
+   assert len(csis)==0,query
+   if query in ('四国カルスト','姫鶴平') and (width,height) in [(1440,900),(390,844)]:
+    page.locator('#place-picker').screenshot(path=str(OUT/f'{width}x{height}-{query}.png'))
+  assert page.locator('#selected-place-label').inner_text()=='富士五湖'
+  assert '石川県' not in page.locator('#location-search-results').inner_text()
+  assert '和歌山県' not in page.locator('#location-search-results').inner_text()
+  assert len(dem)==initial_dem,'Name searches must not load terrain'
   page.locator('#location-search-input').fill('長野県の松本');page.click('#location-search-submit')
-  page.wait_for_selector('.location-search-result');assert page.locator('.location-search-result').count()==2
-  page.locator('.location-search-result').nth(1).click();assert '32.86' in page.locator('#selected-location').inner_text()
+  page.wait_for_selector('.location-search-result');assert page.locator('.location-search-result').count()==1
+  assert '長野県 松本市' in page.locator('.location-search-result').inner_text()
+  assert '32.86' not in page.locator('.location-search-result').inner_text()
   assert '候補' not in page.locator('#location-search-status').inner_text()
-  page.locator('#location-search-input').fill('愛媛県松山市');page.click('#location-search-submit')
-  page.wait_for_function("document.querySelector('#selected-location').textContent.includes('33.8392')")
+  page.locator('#location-search-input').fill('松山市');page.click('#location-search-submit')
+  page.wait_for_function("document.querySelector('#location-search-status').textContent.includes('CSISシンプルジオコーディング実験')")
   assert 'CSISシンプルジオコーディング実験' in page.locator('#location-search-status').inner_text()
-  assert len(csis)==2 and len(dem)==initial_dem
+  page.locator('#location-search-input').fill('愛媛県松山市');page.click('#location-search-submit')
+  page.wait_for_function("document.querySelector('#location-search-status').textContent.includes('CSISシンプルジオコーディング実験')")
+  assert 'CSISシンプルジオコーディング実験' in page.locator('#location-search-status').inner_text()
+  assert len(csis)==3 and len(dem)==initial_dem
   if mobile:
    metrics=page.evaluate('({body:document.body.scrollWidth,viewport:innerWidth,input:document.querySelector("#location-search-input").getBoundingClientRect().width,button:document.querySelector("#location-search-submit").getBoundingClientRect().width})')
    assert metrics['body']<=metrics['viewport'],metrics
@@ -75,7 +97,7 @@ with sync_playwright() as p:
   page.locator('#show-terrain').click();page.wait_for_function('!searchTest.loading&&searchTest.data.location.latitude===33.8392',timeout=120000)
   assert page.locator('#message').is_hidden(),page.locator('#message').inner_text()
   assert not errors,errors
-  page.close();print(f'PASS {width}x{height}: coordinate, maps, catalog, CSIS fixture, unsupported/error states; DEM loads only after explicit button',flush=True)
+  page.close();print(f'PASS {width}x{height}: 12 required names, strict relevance, coordinate/maps, CSIS fixture and error states; DEM loads only after explicit button',flush=True)
  browser.close()
 server.shutdown()
 print('Fixtures/screenshots:',OUT,flush=True)
