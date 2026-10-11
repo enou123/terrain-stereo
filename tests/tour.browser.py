@@ -78,6 +78,7 @@ with sync_playwright() as p:
         page.goto(url);page.wait_for_function('window.uiTest && !document.querySelector("#quality").disabled',timeout=120000)
         page.wait_for_function("!uiTest.loading && uiTest.renderer.mesh && document.querySelector('#message').hidden",timeout=120000)
         assert page.locator('#message').is_hidden(),page.locator('#status').inner_text()
+        assert page.locator('#flight-path').input_value()=='centered'
         if width==1440:
             page.evaluate("window.tourMetric={heights:[],sun:[],surfaces:[],surfaceTimes:[],modes:[],contours:[]};document.querySelector('#exaggeration').addEventListener('input',e=>tourMetric.heights.push(+e.target.value));document.querySelector('#sun-azimuth').addEventListener('input',e=>tourMetric.sun.push(+e.target.value));document.querySelector('#surface').addEventListener('change',e=>{tourMetric.surfaces.push(e.target.value);tourMetric.surfaceTimes.push(performance.now())});document.querySelector('#view-mode').addEventListener('change',e=>tourMetric.modes.push(e.target.value));document.querySelector('#contours').addEventListener('change',e=>tourMetric.contours.push(e.target.checked));")
             page.locator('#start-app-tour').click()
@@ -124,15 +125,23 @@ with sync_playwright() as p:
             page.screenshot(path=str(OUT/'07-desktop-profile.png'));page.locator('.app-tour-next').click()
             page.wait_for_function("Math.abs(uiTest.data.location.latitude-35.3606)<0.0001 && document.querySelector('#message').hidden",timeout=120000)
             page.screenshot(path=str(OUT/'08-desktop-fuji.png'));page.locator('.app-tour-next').click()
+            page.wait_for_function("document.querySelector('#app-tour-title').textContent==='島と周囲の海底地形を見る'")
+            page.wait_for_function("uiTest.data?.bathymetry?.seaCount>0 && document.querySelector('#bathymetry').checked",timeout=120000)
+            assert page.locator('#bathymetry-info').is_visible()
+            assert page.evaluate("uiTest.data.bathymetry.grids.some(g=>g.id==='aogashima-narrow')")
+            page.screenshot(path=str(OUT/'09-desktop-bathymetry.png'))
+            page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('海底表示をOFFに戻しました')",timeout=15000)
+            assert not page.locator('#bathymetry').is_checked()
+            page.locator('.app-tour-next').click()
             flight_before=page.evaluate('uiTest.renderer.controls.yaw')
             page.wait_for_function("document.querySelector('.app-tour-status').textContent.includes('遊覧飛行を終え')",timeout=25000)
             assert abs(page.evaluate('uiTest.renderer.controls.yaw')-flight_before)>4
-            page.screenshot(path=str(OUT/'09-desktop-flight.png'))
+            page.screenshot(path=str(OUT/'10-desktop-flight.png'))
             flight_pixel=Image.open(BytesIO(page.locator('#viewer').screenshot())).convert('RGB').getpixel(sample)
             assert luma(flight_pixel)>=luma(viewer_before)*.9,(viewer_before,flight_pixel,'flight')
             page.locator('.app-tour-next').click()
             page.wait_for_function("document.querySelector('#app-tour-title').textContent==='見つけた地形を持ち帰る'")
-            page.screenshot(path=str(OUT/'10-desktop-share.png'))
+            page.screenshot(path=str(OUT/'11-desktop-share.png'))
             share_pixel=Image.open(BytesIO(page.locator('#viewer').screenshot())).convert('RGB').getpixel(sample)
             assert luma(share_pixel)>=luma(viewer_before)*.9,(viewer_before,share_pixel,'share')
             page.locator('.app-tour-auto').click()
@@ -141,12 +150,12 @@ with sync_playwright() as p:
             assert page.evaluate("uiTest.renderer.mode==='mono' && uiTest.renderer.contours===false && document.querySelector('#surface').value==='elevation'")
             assert page.evaluate('uiTest.renderer.gl.getError()')==0
             assert not errors,errors
-            results.append({'viewport':'1440x900','allTenDemos':True,'autoFinishedAndRestored':True,'webglError':0,'pageErrors':errors})
+            results.append({'viewport':'1440x900','allElevenDemos':True,'bathymetryRendered':True,'defaultFlightMode':'centered','autoFinishedAndRestored':True,'webglError':0,'pageErrors':errors})
         else:
             page.locator('#start-app-tour').click();page.wait_for_function('uiTest.tour.active')
             captured=set();checked=0
-            for step in range(1,11):
-                page.wait_for_function(f"document.querySelector('.app-tour-count').textContent==='{step} / 10'")
+            for step in range(1,12):
+                page.wait_for_function(f"document.querySelector('.app-tour-count').textContent==='{step} / 11'")
                 deadline=time.monotonic()+120
                 page.wait_for_timeout(400)
                 while True:
@@ -172,13 +181,13 @@ with sync_playwright() as p:
                     if info['status'] not in ['3D地形を動かしています…','実演を準備しています…']:break
                     page.wait_for_timeout(250)
                 page.screenshot(path=str(OUT/f'{width}x{height}-{step:02d}-complete.png'))
-                if step<10:page.locator('.app-tour-next').click()
-            expected={(1,'terrain'),(2,'exaggeration'),(3,'sun-azimuth'),(4,'surface'),(5,'view-mode'),(6,'contours'),(7,'profile-start'),(7,'terrain'),(7,'profile-chart'),(8,'map-place'),(8,'show-terrain'),(8,'terrain'),(9,'flight-toggle'),(9,'tour-toggle'),(10,'share-view')}
+                if step<11:page.locator('.app-tour-next').click()
+            expected={(1,'terrain'),(2,'exaggeration'),(3,'sun-azimuth'),(4,'surface'),(5,'view-mode'),(6,'contours'),(7,'profile-start'),(7,'terrain'),(7,'profile-chart'),(8,'map-place'),(8,'show-terrain'),(8,'terrain'),(9,'bathymetry-aogashima'),(10,'flight-toggle'),(10,'tour-toggle'),(11,'share-view')}
             assert expected<={(s,i) for s,i,_ in captured},expected-{(s,i) for s,i,_ in captured}
             page.locator('.app-tour-end').click();page.wait_for_function('!uiTest.tour.active')
             assert page.evaluate("document.querySelector('#view-settings').contains(document.querySelector('#surface')) && document.querySelector('.viewer-actions').contains(document.querySelector('#share-view'))")
             assert not errors,errors
-            results.append({'viewport':f'{width}x{height}','allTenDemos':True,'operationVisibilitySamples':checked,'noTargetOrTerrainBehindExplanation':True,'controlsRestored':True,'pageErrors':errors})
+            results.append({'viewport':f'{width}x{height}','allElevenDemos':True,'operationVisibilitySamples':checked,'noTargetOrTerrainBehindExplanation':True,'controlsRestored':True,'pageErrors':errors})
         page.close()
     browser.close();server.shutdown()
 (OUT/'results.json').write_text(json.dumps(results,ensure_ascii=False,indent=2))

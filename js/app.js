@@ -1,20 +1,20 @@
-import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.42.0';
-import { contourInterval } from './contours.js?v=0.42.0';
-import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.42.0';
-import { loadMapTexture, textureKey, texturePlan, textureResolution } from './texture.js?v=0.42.0';
-import { setupViewerUI } from './viewer-ui.js?v=0.42.0';
-import { LocationMap } from './map.js?v=0.42.0';
-import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.42.0';
-import { createMesh, SEABED_COLOR_STOPS } from './mesh.js?v=0.42.0';
-import { bathymetryRegion, bathymetryRegions, loadBathymetry, mergeBathymetry } from './bathymetry.js?v=0.42.0';
-import { TerrainRenderer } from './renderer.js?v=0.42.0';
-import { createShareUrl, readSharedView } from './share.js?v=0.42.0';
-import { flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle, rebaseFlightTour } from './controls.js?v=0.42.0';
-import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.42.0';
-import { setupAppTour } from './tour.js?v=0.42.0';
-import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.42.0';
-import { setupLandmarkGuide } from './landmark-guide.js?v=0.42.0';
-import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.42.0';
+import { movedRange, scaledRange, rangeKilometres } from './view-range.js?v=0.43.0';
+import { contourInterval } from './contours.js?v=0.43.0';
+import { findSpot, observationPreset, observationLocation, observationFocus, matchesObservation } from './landmark-spots.js?v=0.43.0';
+import { loadMapTexture, textureKey, texturePlan, textureResolution } from './texture.js?v=0.43.0';
+import { setupViewerUI } from './viewer-ui.js?v=0.43.0';
+import { LocationMap } from './map.js?v=0.43.0';
+import { LOCATION, loadElevation, terrainExtent } from './elevation.js?v=0.43.0';
+import { createMesh, SEABED_COLOR_STOPS } from './mesh.js?v=0.43.0';
+import { bathymetryRegion, bathymetryRegions, loadBathymetry, mergeBathymetry } from './bathymetry.js?v=0.43.0';
+import { TerrainRenderer } from './renderer.js?v=0.43.0';
+import { createShareUrl, readSharedView } from './share.js?v=0.43.0';
+import { flightTourPose, centeredOrbitPose, flightLapDuration, flightCycle, rebaseFlightTour } from './controls.js?v=0.43.0';
+import { fetchGeologyLegend, fetchGeologyPoint } from './geology-legend.js?v=0.43.0';
+import { setupAppTour } from './tour.js?v=0.43.0';
+import { LANDMARKS, matchingLandmark } from './landmarks.js?v=0.43.0';
+import { setupLandmarkGuide } from './landmark-guide.js?v=0.43.0';
+import { landmarkCamera, northTopCamera } from './landmark-camera.js?v=0.43.0';
 const viewerUI=setupViewerUI();
 const sharedView=readSharedView(window.location.search);
 const message=document.querySelector('#message'), status=document.querySelector('#status');
@@ -140,7 +140,7 @@ async function selectGeology(clientX,clientY){
   if(!data || loading || renderer?.lost || !renderer?.mesh || profile?.active || surfaceSelect.value!=='geology' || !textureStatus.hidden || !message.hidden)return;
   const request=++geologySelectionRequest,selectedData=data;
   geologyPointController?.abort();
-  const {pickSurface}=await import('./profile.js?v=0.42.0');
+  const {pickSurface}=await import('./profile.js?v=0.43.0');
   if(request!==geologySelectionRequest)return;
   const rect=renderer.canvas.getBoundingClientRect(),x=(clientX-rect.left)*renderer.canvas.width/rect.width,y=(clientY-rect.top)*renderer.canvas.height/rect.height;
   const camera=renderer.cameras(undefined,undefined,true).find(c=>x>=c.x&&x<c.x+c.width);
@@ -251,11 +251,13 @@ async function refreshBathymetry(){
 }
 bathymetryToggle.addEventListener('change',refreshBathymetry);
 bathymetryRetry.addEventListener('click',refreshBathymetry);
-document.querySelector('#bathymetry-aogashima').addEventListener('click',()=>{
-  if(loading||rangeBusy||appTour.active)return;
+async function showAogashimaBathymetry(fromTour=false){
+  if(loading||rangeBusy||appTour.active&&!fromTour)return false;
   bathymetryToggle.checked=true;requestedLocation={latitude:32.457,longitude:139.762,zoom:12};requestedQuality=qualitySelect.value;
-  map.setView(requestedLocation,11);resetView=true;load();document.querySelector('#workspace').scrollIntoView({block:'start'});
-});
+  map.setView(requestedLocation,11);resetView=true;document.querySelector('#workspace').scrollIntoView({block:'start'});
+  return load();
+}
+document.querySelector('#bathymetry-aogashima').addEventListener('click',()=>showAogashimaBathymetry());
 async function showBathymetryPreset(location,mapZoom,exaggeration,distance=null){
   if(loading||rangeBusy||appTour.active)return;
   stopFlightTour();bathymetryToggle.checked=true;requestedLocation=location;requestedQuality=qualitySelect.value;
@@ -517,7 +519,7 @@ let tourFrame=null,tourStarted=0,tourBase=null,tourDuration=32000,tourPaused=fal
 function updateFlightSummary(){
   const speed=Number(flightSpeed.value),laps=selectedFlightLaps==='infinite'?Infinity:Number(selectedFlightLaps),perLap=flightLapDuration(speed)/1000;
   flightSpeedValue.textContent=`${speed.toFixed(1)}×`;
-  const mode=flightPath.value==='centered'?'中央軸':'従来';
+  const mode=flightPath.value==='centered'?'中央固定':'視点変化';
   flightSummary.textContent=Number.isFinite(laps)?`${mode} · ${laps}周 · 約${Math.round(perLap*laps)}秒`:`${mode} · 連続 · 約${Math.round(perLap)}秒／周`;
 
 }
@@ -649,7 +651,7 @@ load(sharedView?.depthScaleMax??null);
 // Load section calculations/UI only when explicitly requested.
 async function getProfileTool(){
   if(!data||loading||renderer?.lost)throw new Error('地形が読み込み中です。');
-  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.42.0');profile=new SectionTool(renderer,viewerUI);}
+  if(!profile){const {SectionTool}=await import('./profile-ui.js?v=0.43.0');profile=new SectionTool(renderer,viewerUI);}
   profile.setData(data);return profile;
 }
 document.querySelector('#profile-start').addEventListener('click',async()=>{
@@ -764,7 +766,7 @@ async function restoreTourState(){
   setGeologyLegendOpen(saved.geologyOpen);document.querySelector('#geology-legend-panel').hidden=!saved.geologyPanelOpen;
   if(saved.geologyPanelOpen)await loadGeologyLegend();
   if(flightMode!==saved.flightMode)flightToggle.click();
-  flightPath.value=saved.flightPath||'classic';selectedFlightLaps=saved.flightLaps||'1';flightSpeed.value=saved.flightSpeed||'1';updateFlightSummary();
+  flightPath.value=saved.flightPath||'centered';selectedFlightLaps=saved.flightLaps||'1';flightSpeed.value=saved.flightSpeed||'1';updateFlightSummary();
   tourOptions.hidden=!saved.flightOptionsOpen;tourToggle.setAttribute('aria-expanded',String(saved.flightOptionsOpen));tourToggle.textContent=saved.flightOptionsOpen?'遊覧の設定を閉じる ▴':'遊覧飛行を選ぶ ▾';
   flightPad.hidden=!saved.flightMode;viewerUI.setSettingsOpen(saved.settingsOpen);
   window.scrollTo(saved.scrollX,saved.scrollY);
@@ -831,7 +833,7 @@ async function demoContours(api,signal){
 async function demoProfile(api,signal){
   applySelect(modeSelect,'mono');contoursToggle.checked=false;contoursToggle.dispatchEvent(new Event('change',{bubbles:true}));viewerUI.setSettingsOpen(true);
   const tool=await getProfileTool();tool.clear();await api.wait(2000);tool.start();api.focus('#terrain');await api.wait(700);
-  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.42.0');
+  const {projectPoint,gridPosition,gridSample}=await import('./profile.js?v=0.43.0');
   if(signal.aborted)throw new DOMException('Stopped','AbortError');
   renderer.draw();const rect=terrainCanvas.getBoundingClientRect(),camera=renderer.cameras(undefined,undefined,true)[0];
   const candidates=[];
@@ -860,17 +862,30 @@ async function demoLocation(api,signal){
   if(!ready)throw new Error(message.hidden?'富士山の地形を読み込めませんでした。':'地形データの読み込みに失敗しました。');
   return {message:'富士山周辺の地形へ移動しました。別の山も地図や一覧から選べます。'};
 }
+let tourBathymetryDemo=false;
+async function demoBathymetry(api,signal){
+  tourBathymetryDemo=true;
+  if(loading||rangeBusy)throw new Error('青ヶ島の表示を開始できません。');
+  if(!await showAogashimaBathymetry(true)||!await waitForTerrainReady(signal))throw new Error('青ヶ島の地形・海底データを読み込めませんでした。設定から再試行できます。');
+  if(!data?.bathymetry?.seaCount)throw new Error('この範囲の海底データを表示できませんでした。');
+  await api.wait(5500);
+  if(signal.aborted)throw new DOMException('Stopped','AbortError');
+  bathymetryToggle.checked=false;bathymetryToggle.dispatchEvent(new Event('change',{bubbles:true}));
+  await api.wait(250);
+  tourBathymetryDemo=false;
+  return {message:'青ヶ島の陸地と海底を実演し、海底表示をOFFに戻しました。'};
+}
 async function demoFlight(api,signal){
   await api.wait(1800);
-  if(!startFlightTour(14000,{path:'classic',laps:1,speed:1}))throw new Error('遊覧飛行を開始できませんでした。');
+  if(!startFlightTour(14000,{path:'centered',laps:1,speed:1}))throw new Error('遊覧飛行を開始できませんでした。');
   if(matchMedia('(max-width:900px)').matches)api.focus('#tour-toggle');
   await api.wait(14500);if(signal.aborted)throw new DOMException('Stopped','AbortError');
-  return {message:'山の上を一周する遊覧飛行を終えました。'};
+  return {message:'画面中央を軸に一周する遊覧飛行を終えました。'};
 }
 const appTour=setupAppTour({
   waitForReady:()=>waitForTerrainReady(),retry:async()=>{const ok=await load();return ok||await waitForTerrainReady();},
   capture:captureTourState,restore:restoreTourState,
   prepare:prepareTourTarget,setPaused:tourSetPaused,
-  stopDemo:()=>{stopFlightTour();flightPad.hidden=true;textureRequest++;textureController?.abort();textureController=null;textureStatus.hidden=true;textureRetry.hidden=true;if(profile?.active||profile?.points.length)profile.clear();},
-  demoTerrain,demoHeight,demoSun,demoSurfaces,demoStereo,demoContours,demoProfile,demoLocation,demoFlight,
+  stopDemo:()=>{stopFlightTour();if(tourBathymetryDemo){bathymetryToggle.checked=false;bathymetryToggle.dispatchEvent(new Event('change',{bubbles:true}));tourBathymetryDemo=false;}flightPad.hidden=true;textureRequest++;textureController?.abort();textureController=null;textureStatus.hidden=true;textureRetry.hidden=true;if(profile?.active||profile?.points.length)profile.clear();},
+  demoTerrain,demoHeight,demoSun,demoSurfaces,demoStereo,demoContours,demoProfile,demoLocation,demoBathymetry,demoFlight,
 });
