@@ -1,0 +1,33 @@
+name: Investigate Kikai GMRT source resolution
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/investigate-kikai-gmrt.yml
+      - tools/investigate-kikai-gmrt.py
+permissions:
+  contents: read
+concurrency:
+  group: kikai-gmrt-investigation
+  cancel-in-progress: false
+jobs:
+  investigate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install GeoTIFF readers
+        run: python -m pip install --disable-pip-version-check 'rasterio==1.4.3' 'numpy==2.2.6'
+      - name: Test diagnostic calculations
+        run: python tests/kikai-gmrt.test.py
+      - name: Acquire six bounded official rasters and compare sources
+        run: python tools/investigate-kikai-gmrt.py --output work/kikai-gmrt
+      - name: Preserve original rasters, official documentation and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kikai-gmrt-source-investigation
+          path: work/kikai-gmrt/
+          retention-days: 30
+          if-no-files-found: error
