@@ -16,7 +16,7 @@ test('official GMRT snapshot has realistic land and varied negative depths with 
  assert.ok(Number.isNaN(sampleBathymetry(grid,35,139).height));
  assert.equal(bathymetryRegion({latitude:35.36,longitude:138.72,zoom:12}).id,'suruga-sagami');
  assert.ok(['izu-north-north','izu-north-south','izu-south','hachijo-aogashima'].includes(bathymetryRegion({latitude:32.457,longitude:139.762,zoom:8}).id));
- assert.equal(bathymetryRegion({latitude:32.457,longitude:139.762,zoom:12}).id,'aogashima');
+ assert.equal(bathymetryRegion({latitude:32.457,longitude:139.762,zoom:12}).id,'aogashima-narrow');
 });
 test('adding bathymetry preserves valid GSI elevations and the fitted land positions',()=>{
  const size=9,heights=new Float32Array(size*size).fill(NaN);
@@ -112,6 +112,62 @@ test('Kikai narrow-grid request failure falls back to a containing broad grid',a
   assert.ok(result.stats.requests===2);assert.ok(bathymetryCacheStats().bytes<=8*1024*1024);
  }finally{globalThis.fetch=originalFetch;clearBathymetryCache();}
 });
+
+test('validated island-focused GMRT grids keep their hashes, spacing and narrow-area coverage',()=>{
+ const ids=['aogashima-narrow','hachijo-narrow','kuchinoerabu-narrow','nishinoshima-narrow','suwanose-narrow','yonaguni-narrow'];
+ const highResolutionMarine=['aogashima-narrow','hachijo-narrow','suwanose-narrow','yonaguni-narrow'];
+ for(const id of ids){
+  const metadata=JSON.parse(readFileSync(new URL(`../data/bathymetry/${id}.json`,import.meta.url)));
+  const bytes=readFileSync(new URL(`../data/bathymetry/${metadata.file}`,import.meta.url));
+  assert.equal(metadata.id,id);assert.equal(metadata.license,'CC BY 4.0');
+  assert.equal(bytes.byteLength,metadata.bytes);assert.ok(bytes.byteLength<2_000_000);
+  assert.equal(createHash('sha256').update(bytes).digest('hex'),metadata.sha256);
+  assert.ok(metadata.width*metadata.height<=900_000);
+  assert.ok(metadata.actualSpacingMeters.every(v=>v>=50&&v<56));
+  assert.ok(highResolutionMarine.includes(id)?metadata.marineHighResolutionContributionCount>0:metadata.marineHighResolutionContributionCount===0);
+  const grid=decodeBathymetry(metadata,bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength));
+  assert.ok(grid.values.some(value=>value<0&&value!==metadata.nodata),`${id} should contain water depths`);
+ }
+ const report=JSON.parse(readFileSync(new URL('../data/bathymetry/narrow-island-comparison-2026-10-11.json',import.meta.url)));
+ assert.equal(report.successful,9);assert.equal(report.failed,0);
+ assert.equal(report.sites.find(x=>x.id==='kikai-narrow').highResolutionMarineCells,0);
+});
+
+test('island observation windows automatically include available narrow overlays without changing the broad catalog',()=>{
+ const targets=[
+  [{latitude:28.323,longitude:129.971,zoom:11},'kikaijima-narrow'],
+  [{latitude:32.457,longitude:139.762,zoom:12},'aogashima-narrow'],
+  [{latitude:33.10,longitude:139.78,zoom:12},'hachijo-narrow'],
+  [{latitude:29.64,longitude:129.72,zoom:10},'suwanose-narrow'],
+  [{latitude:30.46,longitude:130.20,zoom:10},'kuchinoerabu-narrow'],
+  [{latitude:27.25,longitude:140.88,zoom:11},'nishinoshima-narrow'],
+  [{latitude:24.46,longitude:123.00,zoom:10},'yonaguni-narrow'],
+ ];
+ for(const [location,id] of targets)assert.ok(bathymetryRegions(location).some(region=>region.id===id),`${id} should be chosen for its focused view`);
+ const country=bathymetryRegions({latitude:31,longitude:141,zoom:5});
+ assert.ok(country.length>=6);assert.ok(country.every(region=>!region.narrow),'broad overviews retain only broad regional grids');
+ for(const location of [{latitude:31,longitude:141.3,zoom:6},{latitude:30.5,longitude:130,zoom:7}])
+  assert.ok(bathymetryRegions(location).every(region=>!region.narrow),'regional overviews do not fetch barely visible narrow tiles');
+});
+
+test('Aogashima narrow-grid failure falls back to a verified wide grid',async()=>{
+ const wide=JSON.parse(readFileSync(new URL('../data/bathymetry/aogashima-gmrt-4.5.0.json',import.meta.url)));
+ const wideBytes=readFileSync(new URL(`../data/bathymetry/${wide.file}`,import.meta.url));
+ const originalFetch=globalThis.fetch;clearBathymetryCache();
+ globalThis.fetch=async input=>{
+  const url=String(input);
+  if(url.endsWith('/aogashima-narrow.json'))return new Response('unavailable',{status:503});
+  if(url.endsWith('/aogashima-gmrt-4.5.0.json'))return new Response(JSON.stringify(wide),{status:200});
+  if(url.endsWith(`/${wide.file}`))return new Response(wideBytes,{status:200});
+  return new Response('unexpected '+url,{status:404});
+ };
+ try{
+  const result=await loadBathymetry({latitude:32.457,longitude:139.762,zoom:12});
+  assert.deepEqual(result.grids.map(g=>g.metadata.id),['aogashima']);
+  assert.deepEqual(result.stats.unavailableRegions.map(r=>r.id),['aogashima-narrow']);
+  assert.ok(bathymetryCacheStats().bytes<=8*1024*1024);
+ }finally{globalThis.fetch=originalFetch;clearBathymetryCache();}
+});
 test('wide GMRT snapshot covers both island centers and bathymetryRegion chooses narrow Aogashima grid when possible',()=>{
  const wide=JSON.parse(readFileSync(new URL('../data/bathymetry/hachijo-aogashima-gmrt-4.5.0.json',import.meta.url)));
  const wideBytes=readFileSync(new URL('../data/bathymetry/hachijo-aogashima-gmrt-4.5.0.bin',import.meta.url));
@@ -121,7 +177,7 @@ test('wide GMRT snapshot covers both island centers and bathymetryRegion chooses
  assert.ok(sampleBathymetry(wideGrid,32.46,139.76).height>0);
  assert.ok(sampleBathymetry(wideGrid,32.8,139.78).height<-400);
  assert.equal(bathymetryRegion({latitude:32.78,longitude:139.78,zoom:9}).id,'hachijo-aogashima');
- assert.equal(bathymetryRegion({latitude:32.457,longitude:139.762,zoom:12}).id,'aogashima');
+ assert.equal(bathymetryRegion({latitude:32.457,longitude:139.762,zoom:12}).id,'aogashima-narrow');
 });
 
 test('nine recovered GMRT regional grids match their manifests and recorded hashes',()=>{

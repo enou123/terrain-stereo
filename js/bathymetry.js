@@ -1,5 +1,5 @@
-import { worldPixel } from './elevation.js?v=0.40.0';
-import { BATHYMETRY_REGIONS } from './bathymetry-regions.js?v=0.40.0';
+import { worldPixel } from './elevation.js?v=0.42.0';
+import { BATHYMETRY_REGIONS } from './bathymetry-regions.js?v=0.42.0';
 
 const REGION_CACHE_MAX_BYTES=8*1024*1024;
 const REGION_CACHE_MAX_COUNT=8;
@@ -37,13 +37,14 @@ export function bathymetryRegions(location){
   const covering=BATHYMETRY_REGIONS.filter(r=>contains(r,box));
   if(covering.length){
     const primary=covering.sort((a,b)=>area(a)-area(b)||a.spacing-b.spacing)[0];
-    // Use a narrow raster as a local overlay while enough of it is visible on
-    // the 193-vertex mesh. Tiny slivers in country-scale views are not fetched.
-    const overlays=BATHYMETRY_REGIONS.filter(r=>r.narrow&&r.id!==primary.id&&intersects(r,box)&&projectedOverlayCells(r,location)>=8);
+    // Use a narrow raster as a local overlay only when it spans enough mesh
+    // samples to change the rendered surface. Avoid downloading tiny slivers
+    // during archipelago- and country-scale overviews.
+    const overlays=BATHYMETRY_REGIONS.filter(r=>r.narrow&&r.id!==primary.id&&intersects(r,box)&&projectedOverlayCells(r,location)>=32);
     return [primary,...overlays.sort((a,b)=>a.spacing-b.spacing||area(a)-area(b))];
   }
-  return BATHYMETRY_REGIONS.filter(r=>intersects(r,box)&&(!r.narrow||projectedOverlayCells(r,location)>=8))
-    // The registry is deliberately bounded (currently 13 regions). Keep every
+  return BATHYMETRY_REGIONS.filter(r=>intersects(r,box)&&(!r.narrow||projectedOverlayCells(r,location)>=32))
+    // The registry is deliberately bounded (currently 21 regions). Keep every
     // intersecting region for broad views so an arbitrary region-count cap
     // cannot leave an unrequested strip at the edge of the display.
     .sort((a,b)=>b.spacing-a.spacing||area(b)-area(a));

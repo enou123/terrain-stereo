@@ -55,13 +55,13 @@ with sync_playwright() as pw:
             page.select_option('#map-place',spot_id)
             page.click('#visit-landmark')
             page.wait_for_function("!marineTest.busy&&marineTest.data?.bathymetry?.seaCount>0",timeout=120000)
-            state=page.evaluate('''()=>({id:marineTest.guide.snapshot().id,location:marineTest.data.location,seaCount:marineTest.data.bathymetry.seaCount,seaMin:marineTest.data.bathymetry.seaMin,grids:marineTest.data.bathymetry.grids.map(x=>x.id),gl:marineTest.renderer.gl.getError(),triangles:marineTest.renderer.count/3,depthScaleMax:marineTest.data.bathymetry.depthScaleMax,depthLegend:document.querySelector('#bathymetry-depth').textContent})''')
+            state=page.evaluate('''()=>({id:marineTest.guide.snapshot().id,location:marineTest.data.location,seaCount:marineTest.data.bathymetry.seaCount,seaMin:marineTest.data.bathymetry.seaMin,grids:marineTest.data.bathymetry.grids.map(x=>x.id),gridStats:marineTest.data.bathymetry.stats,heapBytes:performance.memory?.usedJSHeapSize??null,gl:marineTest.renderer.gl.getError(),triangles:marineTest.renderer.count/3,depthScaleMax:marineTest.data.bathymetry.depthScaleMax,depthLegend:document.querySelector('#bathymetry-depth').textContent})''')
             assert state['id']==spot_id and state['seaCount']>0 and state['gl']==0 and state['triangles']>50000,(spot_id,state)
             if spot_id=='sea-kikai-caldera': assert state['depthScaleMax']==1500 and '0〜1,500m' in state['depthLegend'],state
             assert page.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),spot_id
             if not touch and spot_id in capture_ids: page.locator('#terrain').screenshot(path=str(OUT/f'{width}x{height}-{spot_id}.png'))
             if touch and spot_id in mobile_ids: page.locator('#terrain').screenshot(path=str(OUT/f'{width}x{height}-{spot_id}.png'))
-            result={'viewport':[width,height],'spot':spot_id,'regions':state['grids'],'seaSamples':state['seaCount'],'deepestM':round(-state['seaMin']),'depthScaleMax':state['depthScaleMax'],'triangles':state['triangles'],'glError':state['gl']}
+            result={'viewport':[width,height],'spot':spot_id,'regions':state['grids'],'seaSamples':state['seaCount'],'deepestM':round(-state['seaMin']),'depthScaleMax':state['depthScaleMax'],'triangles':state['triangles'],'gridStats':state['gridStats'],'heapBytes':state['heapBytes'],'glError':state['gl']}
             results.append(result);print('PASS',json.dumps(result,ensure_ascii=False),flush=True)
         assert not errors,errors
         page.close()

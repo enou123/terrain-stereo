@@ -1,0 +1,1212 @@
+{
+  "source": "GMRT official GridServer",
+  "regionGroup": "kikai-and-priority-eight",
+  "retrievedAt": "2026-10-11T06:25:57.540386+00:00",
+  "requestedSpacingMeters": 100,
+  "boundsRationale": "tight footprints around the catalog observation centers; existing regional data serves broad views",
+  "sites": [
+    {
+      "id": "kikai-narrow",
+      "name": "喜界島・狭域",
+      "baseline": {
+        "id": "okinawa-islands",
+        "gridMeters": [
+          876.7010038683464,
+          877.018504569885
+        ],
+        "sha256": "bdd972bf60d9f9efbf04ae865ac6a322e11e9d68cdb02c83dbf24facd212f73d"
+      },
+      "status": "ok",
+      "center": [
+        28.323,
+        129.971
+      ],
+      "bounds": {
+        "west": 129.78,
+        "east": 130.14,
+        "south": 28.18,
+        "north": 28.46
+      },
+      "topo": {
+        "width": 658,
+        "height": 583,
+        "cells": 383614,
+        "bounds": [
+          129.77902179874786,
+          28.1788018599451,
+          130.14102214656464,
+          28.461206945764445
+        ],
+        "transform": [
+          0.0005501525042808219,
+          0.0,
+          129.77902179874786,
+          0.0,
+          -0.0004843998041498185,
+          28.461206945764445
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 1316,
+        "spacingApprox": [
+          53.912913617692354,
+          53.9233861979578
+        ]
+      },
+      "mask": {
+        "width": 658,
+        "height": 583,
+        "cells": 383614,
+        "bounds": [
+          129.77902179874786,
+          28.1788018599451,
+          130.14102214656464,
+          28.461206945764445
+        ],
+        "transform": [
+          0.0005501525042808219,
+          0.0,
+          129.77902179874786,
+          0.0,
+          -0.0004843998041498185,
+          28.461206945764445
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 366428,
+        "spacingApprox": [
+          53.912913617692354,
+          53.9233861979578
+        ]
+      },
+      "requestedSpacingMeters": 100,
+      "actualSpacingMeters": [
+        53.912913617692354,
+        53.9233861979578
+      ],
+      "waterCells": 358338,
+      "waterDepthRangeM": [
+        0.009500453248620033,
+        1107.0936279296875
+      ],
+      "highResolutionMaskFinite": 17186,
+      "highResolutionMarineCells": 0,
+      "highResolutionMarinePercent": 0.0,
+      "differenceFromExisting": {
+        "allMarine": {
+          "n": 358338,
+          "biasM": -9.133142356475199,
+          "rmseM": 33.19206184593693,
+          "absP50M": 16.14613993481555,
+          "absP95M": 71.10806502543291,
+          "absMaxM": 224.02009739483947
+        },
+        "contributed": {
+          "n": 0
+        },
+        "background": {
+          "n": 358338,
+          "biasM": -9.133142356475199,
+          "rmseM": 33.19206184593693,
+          "absP50M": 16.14613993481555,
+          "absP95M": 71.10806502543291,
+          "absMaxM": 224.02009739483947
+        }
+      },
+      "packedBytes": 815180,
+      "packedSha256": "bd1bb772b1ca52e206009c2cc0b43b31090450c4edcbb5b571eb8b4e9823a4a4",
+      "sourceSha256": "eeff2397455cc779f9f2233d594950deba72f011ede146fc62d4851515372da8",
+      "topoMaskSha256": "2324226739b8eb624dba1dc1ca033bc5a5c6de5fed302246dc6e58ae844a8a3d",
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 1536382,
+          "seconds": 2.646,
+          "sha256": "eeff2397455cc779f9f2233d594950deba72f011ede146fc62d4851515372da8",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=129.78&east=130.14&south=28.18&north=28.46&layer=topo-mask&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 1536382,
+          "seconds": 2.582,
+          "sha256": "2324226739b8eb624dba1dc1ca033bc5a5c6de5fed302246dc6e58ae844a8a3d",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "aogashima-narrow",
+      "name": "青ヶ島・狭域",
+      "baseline": {
+        "id": "aogashima",
+        "gridMeters": [
+          206.81899904565043,
+          206.82635390854995
+        ],
+        "sha256": "776fbcdd1c56b901da0e7164a39a21b7bbe245d701748106c792facec1566c39"
+      },
+      "status": "ok",
+      "center": [
+        32.46,
+        139.76
+      ],
+      "bounds": {
+        "west": 139.56,
+        "east": 139.96,
+        "south": 32.26,
+        "north": 32.66
+      },
+      "topo": {
+        "width": 730,
+        "height": 864,
+        "cells": 630720,
+        "bounds": [
+          139.55905113691165,
+          32.25949793489423,
+          139.96060218340085,
+          32.66042009086242
+        ],
+        "transform": [
+          0.0005500699266975308,
+          0.0,
+          139.55905113691165,
+          0.0,
+          -0.00046403027311132597,
+          32.66042009086242
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 2190,
+        "spacingApprox": [
+          51.667029898810284,
+          51.65585000275281
+        ]
+      },
+      "mask": {
+        "width": 730,
+        "height": 864,
+        "cells": 630720,
+        "bounds": [
+          139.55905113691165,
+          32.25949793489423,
+          139.96060218340085,
+          32.66042009086242
+        ],
+        "transform": [
+          0.0005500699266975308,
+          0.0,
+          139.55905113691165,
+          0.0,
+          -0.00046403027311132597,
+          32.66042009086242
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 538621,
+        "spacingApprox": [
+          51.667029898810284,
+          51.65585000275281
+        ]
+      },
+      "requestedSpacingMeters": 100,
+      "actualSpacingMeters": [
+        51.667029898810284,
+        51.65585000275281
+      ],
+      "waterCells": 623317,
+      "waterDepthRangeM": [
+        0.11601171642541885,
+        1732.03271484375
+      ],
+      "highResolutionMaskFinite": 91722,
+      "highResolutionMarineCells": 89683,
+      "highResolutionMarinePercent": 14.388024071218979,
+      "differenceFromExisting": {
+        "allMarine": {
+          "n": 623317,
+          "biasM": -0.4189413279981147,
+          "rmseM": 10.658023823204031,
+          "absP50M": 3.153848826788817,
+          "absP95M": 19.514192629717613,
+          "absMaxM": 240.02939752407406
+        },
+        "contributed": {
+          "n": 89683,
+          "biasM": -2.6885906071463754,
+          "rmseM": 17.438216247345775,
+          "absP50M": 3.6942595923335375,
+          "absP95M": 34.330278071025596,
+          "absMaxM": 221.48191957299446
+        },
+        "background": {
+          "n": 533634,
+          "biasM": -0.03750207131309556,
+          "rmseM": 9.03206646396164,
+          "absP50M": 3.081964961190579,
+          "absP95M": 17.57604544100202,
+          "absMaxM": 240.02939752407406
+        }
+      },
+      "packedBytes": 1340280,
+      "packedSha256": "7ee50e16ffcd51f4749e369e93c21f47db19cb48e85a191057434062bb8a73b8",
+      "sourceSha256": "6ea18938da8e2b08ab59d307a0497dbde8d560ba60bedd55069157cb6c6b7c23",
+      "topoMaskSha256": "991095f5c2a4efe2d9318c9d0f42014ca6a6dd8a692bc67b1ef7ca282c0bd6d5",
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=139.56&east=139.96&south=32.26&north=32.66&layer=topo&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2526702,
+          "seconds": 3.02,
+          "sha256": "6ea18938da8e2b08ab59d307a0497dbde8d560ba60bedd55069157cb6c6b7c23",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=139.56&east=139.96&south=32.26&north=32.66&layer=topo-mask&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2526702,
+          "seconds": 2.864,
+          "sha256": "991095f5c2a4efe2d9318c9d0f42014ca6a6dd8a692bc67b1ef7ca282c0bd6d5",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "hachijo-narrow",
+      "name": "八丈島・狭域",
+      "baseline": {
+        "id": "hachijo-aogashima",
+        "gridMeters": [
+          411.9907676604459,
+          412.164375120709
+        ],
+        "sha256": "5fb21245acafc97d3b2c439acfd5609176142b04f234422df89afd00adddd6ed"
+      },
+      "status": "ok",
+      "center": [
+        32.99,
+        139.86
+      ],
+      "bounds": {
+        "west": 139.66,
+        "east": 140.06,
+        "south": 32.79,
+        "north": 33.19
+      },
+      "topo": {
+        "width": 731,
+        "height": 870,
+        "cells": 635970,
+        "bounds": [
+          139.65902672336526,
+          32.78935287443984,
+          140.0611270852285,
+          33.190663117207485
+        ],
+        "transform": [
+          0.0005500688944777397,
+          0.0,
+          139.65902672336526,
+          0.0,
+          -0.0004612761411122363,
+          33.190663117207485
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 2193,
+        "spacingApprox": [
+          51.360691518099586,
+          51.34926002861415
+        ]
+      },
+      "mask": {
+        "width": 731,
+        "height": 870,
+        "cells": 635970,
+        "bounds": [
+          139.65902672336526,
+          32.78935287443984,
+          140.0611270852285,
+          33.190663117207485
+        ],
+        "transform": [
+          0.0005500688944777397,
+          0.0,
+          139.65902672336526,
+          0.0,
+          -0.0004612761411122363,
+          33.190663117207485
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 574200,
+        "spacingApprox": [
+          51.360691518099586,
+          51.34926002861415
+        ]
+      },
+      "requestedSpacingMeters": 100,
+      "actualSpacingMeters": [
+        51.360691518099586,
+        51.34926002861415
+      ],
+      "waterCells": 599351,
+      "waterDepthRangeM": [
+        0.02531091868877411,
+        1676.2611083984375
+      ],
+      "highResolutionMaskFinite": 61402,
+      "highResolutionMarineCells": 34930,
+      "highResolutionMarinePercent": 5.827970588186221,
+      "differenceFromExisting": {
+        "allMarine": {
+          "n": 599351,
+          "biasM": -1.0685927780763618,
+          "rmseM": 15.369144144951765,
+          "absP50M": 3.0592510565998623,
+          "absP95M": 16.60641078109626,
+          "absMaxM": 1081.9744497567106
+        },
+        "contributed": {
+          "n": 34930,
+          "biasM": -6.832898663604132,
+          "rmseM": 52.41377209620305,
+          "absP50M": 6.722700058547332,
+          "absP95M": 51.21870729720272,
+          "absMaxM": 1081.9744497567106
+        },
+        "background": {
+          "n": 564421,
+          "biasM": -0.7118604726137991,
+          "rmseM": 8.989672280759786,
+          "absP50M": 2.944632253312548,
+          "absP95M": 14.818657328085521,
+          "absMaxM": 561.0244517777736
+        }
+      },
+      "packedBytes": 1351437,
+      "packedSha256": "e1d10e6aa9fa606e020698c9091e43009e2626e6858bb411fa45212f0b1612c7",
+      "sourceSha256": "b2b3a2b9733e594f2ab4439f51bbb8d660741f41da10da76cfdd34b87cb7e810",
+      "topoMaskSha256": "aa708dbfb9c332a2efff01da430d2e9af7e31a26950e74e242a354ebf2989902",
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=139.66&east=140.06&south=32.79&north=33.19&layer=topo&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2547726,
+          "seconds": 3.374,
+          "sha256": "b2b3a2b9733e594f2ab4439f51bbb8d660741f41da10da76cfdd34b87cb7e810",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=139.66&east=140.06&south=32.79&north=33.19&layer=topo-mask&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2547726,
+          "seconds": 3.04,
+          "sha256": "aa708dbfb9c332a2efff01da430d2e9af7e31a26950e74e242a354ebf2989902",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "satsuma-iwojima-narrow",
+      "name": "薩摩硫黄島・狭域",
+      "baseline": {
+        "id": "tokara-amami",
+        "gridMeters": [
+          850.5938146363892,
+          849.2911814425618
+        ],
+        "sha256": "a091928203ab3153acc16d429bf76ccb753e31b9df90ead724f4565c28ab7462"
+      },
+      "status": "ok",
+      "center": [
+        30.78,
+        130.28
+      ],
+      "bounds": {
+        "west": 130.08,
+        "east": 130.48,
+        "south": 30.58,
+        "north": 30.98
+      },
+      "topo": {
+        "width": 730,
+        "height": 850,
+        "cells": 620500,
+        "bounds": [
+          130.0794979142554,
+          30.57952426662181,
+          130.4810489607446,
+          30.981142048281598
+        ],
+        "transform": [
+          0.0005500699266975308,
+          0.0,
+          130.0794979142554,
+          0.0,
+          -0.00047249150783504345,
+          30.981142048281598
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 2190,
+        "spacingApprox": [
+          52.60812430805697,
+          52.59775465219704
+        ]
+      },
+      "mask": {
+        "width": 730,
+        "height": 850,
+        "cells": 620500,
+        "bounds": [
+          130.0794979142554,
+          30.57952426662181,
+          130.4810489607446,
+          30.981142048281598
+        ],
+        "transform": [
+          0.0005500699266975308,
+          0.0,
+          130.0794979142554,
+          0.0,
+          -0.00047249150783504345,
+          30.981142048281598
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 615501,
+        "spacingApprox": [
+          52.60812430805697,
+          52.59775465219704
+        ]
+      },
+      "requestedSpacingMeters": 100,
+      "actualSpacingMeters": [
+        52.60812430805697,
+        52.59775465219704
+      ],
+      "waterCells": 607636,
+      "waterDepthRangeM": [
+        0.020177407190203667,
+        590.3049926757812
+      ],
+      "highResolutionMaskFinite": 4999,
+      "highResolutionMarineCells": 0,
+      "highResolutionMarinePercent": 0.0,
+      "differenceFromExisting": {
+        "allMarine": {
+          "n": 607636,
+          "biasM": 0.1095755011560991,
+          "rmseM": 19.995440471536835,
+          "absP50M": 5.306893342537165,
+          "absP95M": 42.47203938545057,
+          "absMaxM": 231.57551449007303
+        },
+        "contributed": {
+          "n": 0
+        },
+        "background": {
+          "n": 607636,
+          "biasM": 0.1095755011560991,
+          "rmseM": 19.995440471536835,
+          "absP50M": 5.306893342537165,
+          "absP95M": 42.47203938545057,
+          "absMaxM": 231.57551449007303
+        }
+      },
+      "packedBytes": 1318563,
+      "packedSha256": "a8cbccb26dbe9c4b0686cce1df960443d052f44eaeb0df41d388f1bd4b970c79",
+      "sourceSha256": "85cc36fec0c4acc047aeb6e1f8393e0d753171b1a5552e0aa7dfd0d7ea93a1ae",
+      "topoMaskSha256": "7a60c4d608e38884908bec775f00933b62f6a0a9fad86c3d9ed366611205bfb9",
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=130.08&east=130.48&south=30.58&north=30.98&layer=topo&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2485766,
+          "seconds": 3.016,
+          "sha256": "85cc36fec0c4acc047aeb6e1f8393e0d753171b1a5552e0aa7dfd0d7ea93a1ae",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=130.08&east=130.48&south=30.58&north=30.98&layer=topo-mask&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2485766,
+          "seconds": 2.959,
+          "sha256": "7a60c4d608e38884908bec775f00933b62f6a0a9fad86c3d9ed366611205bfb9",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "suwanose-narrow",
+      "name": "諏訪之瀬島・狭域",
+      "baseline": {
+        "id": "tokara-amami",
+        "gridMeters": [
+          850.5938146363892,
+          849.2911814425618
+        ],
+        "sha256": "a091928203ab3153acc16d429bf76ccb753e31b9df90ead724f4565c28ab7462"
+      },
+      "status": "ok",
+      "center": [
+        29.64,
+        129.72
+      ],
+      "bounds": {
+        "west": 129.52,
+        "east": 129.92,
+        "south": 29.44,
+        "north": 29.84
+      },
+      "topo": {
+        "width": 731,
+        "height": 839,
+        "cells": 613309,
+        "bounds": [
+          129.51864586399026,
+          29.4393585631136,
+          129.9207462258535,
+          29.840406418161866
+        ],
+        "transform": [
+          0.0005500688944777397,
+          0.0,
+          129.51864586399026,
+          0.0,
+          -0.0004780069786034147,
+          29.840406418161866
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 1462,
+        "spacingApprox": [
+          53.22129853256671,
+          53.21173685813213
+        ]
+      },
+      "mask": {
+        "width": 731,
+        "height": 839,
+        "cells": 613309,
+        "bounds": [
+          129.51864586399026,
+          29.4393585631136,
+          129.9207462258535,
+          29.840406418161866
+        ],
+        "transform": [
+          0.0005500688944777397,
+          0.0,
+          129.51864586399026,
+          0.0,
+          -0.0004780069786034147,
+          29.840406418161866
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 531766,
+        "spacingApprox": [
+          53.22129853256671,
+          53.21173685813213
+        ]
+      },
+      "requestedSpacingMeters": 100,
+      "actualSpacingMeters": [
+        53.22129853256671,
+        53.21173685813213
+      ],
+      "waterCells": 586379,
+      "waterDepthRangeM": [
+        0.013895454816520214,
+        987.5404052734375
+      ],
+      "highResolutionMaskFinite": 81205,
+      "highResolutionMarineCells": 65560,
+      "highResolutionMarinePercent": 11.180482247829476,
+      "differenceFromExisting": {
+        "allMarine": {
+          "n": 586379,
+          "biasM": -1.0488943548953504,
+          "rmseM": 28.871295491014905,
+          "absP50M": 7.579814375916044,
+          "absP95M": 63.6497865627195,
+          "absMaxM": 463.0498441139289
+        },
+        "contributed": {
+          "n": 65560,
+          "biasM": -0.9897190514308064,
+          "rmseM": 15.368102171270747,
+          "absP50M": 4.500267138012532,
+          "absP95M": 20.024345046570645,
+          "absMaxM": 202.42638929021962
+        },
+        "background": {
+          "n": 520819,
+          "biasM": -1.0563432630479634,
+          "rmseM": 30.14545133319746,
+          "absP50M": 8.521786256634186,
+          "absP95M": 66.12309947496665,
+          "absMaxM": 463.0498441139289
+        }
+      },
+      "packedBytes": 1303282,
+      "packedSha256": "1bc68b830358b971fe96ba88f361059a2d462c8b518fdb142dca598d64f3a025",
+      "sourceSha256": "463fb5d35b806250d6b4e352e3fb321e7723dd0fa8e58a69dde9dd6d08640cf8",
+      "topoMaskSha256": "b27d165952125c502b431d96541850f96beb44341d627a3a551c9973bf6a9dc6",
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=129.52&east=129.92&south=29.44&north=29.84&layer=topo&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2456962,
+          "seconds": 3.086,
+          "sha256": "463fb5d35b806250d6b4e352e3fb321e7723dd0fa8e58a69dde9dd6d08640cf8",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=129.52&east=129.92&south=29.44&north=29.84&layer=topo-mask&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2456962,
+          "seconds": 2.967,
+          "sha256": "b27d165952125c502b431d96541850f96beb44341d627a3a551c9973bf6a9dc6",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "kuchinoerabu-narrow",
+      "name": "口永良部島・狭域",
+      "baseline": {
+        "id": "tokara-amami",
+        "gridMeters": [
+          850.5938146363892,
+          849.2911814425618
+        ],
+        "sha256": "a091928203ab3153acc16d429bf76ccb753e31b9df90ead724f4565c28ab7462"
+      },
+      "status": "ok",
+      "center": [
+        30.46,
+        130.2
+      ],
+      "bounds": {
+        "west": 130.0,
+        "east": 130.4,
+        "south": 30.26,
+        "north": 30.66
+      },
+      "topo": {
+        "width": 729,
+        "height": 846,
+        "cells": 616734,
+        "bounds": [
+          129.99929771842537,
+          30.259304646734968,
+          130.40029944954338,
+          30.660360333667064
+        ],
+        "transform": [
+          0.0005500709617530906,
+          0.0,
+          129.99929771842537,
+          0.0,
+          -0.0004740610956644148,
+          30.660360333667064
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 1458,
+        "spacingApprox": [
+          52.78268820140505,
+          52.772481169362656
+        ]
+      },
+      "mask": {
+        "width": 729,
+        "height": 846,
+        "cells": 616734,
+        "bounds": [
+          129.99929771842537,
+          30.259304646734968,
+          130.40029944954338,
+          30.660360333667064
+        ],
+        "transform": [
+          0.0005500709617530906,
+          0.0,
+          129.99929771842537,
+          0.0,
+          -0.0004740610956644148,
+          30.660360333667064
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 600327,
+        "spacingApprox": [
+          52.78268820140505,
+          52.772481169362656
+        ]
+      },
+      "requestedSpacingMeters": 100,
+      "actualSpacingMeters": [
+        52.78268820140505,
+        52.772481169362656
+      ],
+      "waterCells": 592408,
+      "waterDepthRangeM": [
+        0.0736607164144516,
+        666.646484375
+      ],
+      "highResolutionMaskFinite": 16240,
+      "highResolutionMarineCells": 0,
+      "highResolutionMarinePercent": 0.0,
+      "differenceFromExisting": {
+        "allMarine": {
+          "n": 592408,
+          "biasM": 2.8947975470831304,
+          "rmseM": 25.950565039084054,
+          "absP50M": 6.618973002944074,
+          "absP95M": 60.62508466979963,
+          "absMaxM": 206.5201747703881
+        },
+        "contributed": {
+          "n": 0
+        },
+        "background": {
+          "n": 592408,
+          "biasM": 2.8947975470831304,
+          "rmseM": 25.950565039084054,
+          "absP50M": 6.618973002944074,
+          "absP95M": 60.62508466979963,
+          "absMaxM": 206.5201747703881
+        }
+      },
+      "packedBytes": 1310560,
+      "packedSha256": "950ef93a8f83f06dfb801c5c72a5b33aca03109dd0b0101a77bba43a7bf59323",
+      "sourceSha256": "28b4ab33f2f3505476e9ca8a3c2e83ce2031438eaf5b29b1728a6fd1aaa4ecac",
+      "topoMaskSha256": "5c42be02168b2e109ad5060da4ed3b3a878aff9f7986a151c8243cb80de2e905",
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=130.0&east=130.4&south=30.26&north=30.66&layer=topo&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2470686,
+          "seconds": 2.988,
+          "sha256": "28b4ab33f2f3505476e9ca8a3c2e83ce2031438eaf5b29b1728a6fd1aaa4ecac",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=130.0&east=130.4&south=30.26&north=30.66&layer=topo-mask&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2470686,
+          "seconds": 2.583,
+          "sha256": "5c42be02168b2e109ad5060da4ed3b3a878aff9f7986a151c8243cb80de2e905",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "nishinoshima-narrow",
+      "name": "西之島・狭域",
+      "baseline": {
+        "id": "izu-south",
+        "gridMeters": [
+          1717.723329959789,
+          1711.2869639963376
+        ],
+        "sha256": "866f42c3b0e1410049dec8c91efd38eb14ca432a45a63d8f66e9ce495ca95263"
+      },
+      "status": "ok",
+      "center": [
+        27.25,
+        140.88
+      ],
+      "bounds": {
+        "west": 140.68,
+        "east": 141.08,
+        "south": 27.05,
+        "north": 27.45
+      },
+      "topo": {
+        "width": 729,
+        "height": 821,
+        "cells": 598509,
+        "bounds": [
+          140.67965660514412,
+          27.049586376153254,
+          141.08065833626213,
+          27.45100974106751
+        ],
+        "transform": [
+          0.0005500709617530906,
+          0.0,
+          140.67965660514412,
+          0.0,
+          -0.0004889444152426986,
+          27.45100974106751
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 1458,
+        "spacingApprox": [
+          54.437840407808956,
+          54.4292923048172
+        ]
+      },
+      "mask": {
+        "width": 729,
+        "height": 821,
+        "cells": 598509,
+        "bounds": [
+          140.67965660514412,
+          27.049586376153254,
+          141.08065833626213,
+          27.45100974106751
+        ],
+        "transform": [
+          0.0005500709617530906,
+          0.0,
+          140.67965660514412,
+          0.0,
+          -0.0004889444152426986,
+          27.45100974106751
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 598509,
+        "spacingApprox": [
+          54.437840407808956,
+          54.4292923048172
+        ]
+      },
+      "requestedSpacingMeters": 100,
+      "actualSpacingMeters": [
+        54.437840407808956,
+        54.4292923048172
+      ],
+      "waterCells": 593792,
+      "waterDepthRangeM": [
+        0.04354841262102127,
+        3369.709228515625
+      ],
+      "highResolutionMaskFinite": 0,
+      "highResolutionMarineCells": 0,
+      "highResolutionMarinePercent": 0.0,
+      "differenceFromExisting": {
+        "allMarine": {
+          "n": 593792,
+          "biasM": -8.706785600520549,
+          "rmseM": 56.91759150461268,
+          "absP50M": 31.914514084410257,
+          "absP95M": 110.02582086868924,
+          "absMaxM": 494.2492178220143
+        },
+        "contributed": {
+          "n": 0
+        },
+        "background": {
+          "n": 593792,
+          "biasM": -8.706785600520549,
+          "rmseM": 56.91759150461268,
+          "absP50M": 31.914514084410257,
+          "absP95M": 110.02582086868924,
+          "absMaxM": 494.2492178220143
+        }
+      },
+      "packedBytes": 1271832,
+      "packedSha256": "e2d09e872452eb219cd5da39a3a03c1992faf582b1aca674c1fc437dc3ac4dbf",
+      "sourceSha256": "78f23b6314253e93c005c54fefb3d16da2384264567700b1f59286639f7b26ce",
+      "topoMaskSha256": "b62f4d9323837b7fd6f4fed365b520ff20e66e7bf0c15a35a5caf58620495376",
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=140.68&east=141.08&south=27.05&north=27.45&layer=topo&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2397690,
+          "seconds": 2.689,
+          "sha256": "78f23b6314253e93c005c54fefb3d16da2384264567700b1f59286639f7b26ce",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=140.68&east=141.08&south=27.05&north=27.45&layer=topo-mask&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2397690,
+          "seconds": 2.66,
+          "sha256": "b62f4d9323837b7fd6f4fed365b520ff20e66e7bf0c15a35a5caf58620495376",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "yonaguni-narrow",
+      "name": "与那国島・狭域",
+      "baseline": {
+        "id": "yaeyama",
+        "gridMeters": [
+          895.1201034647676,
+          895.379701453449
+        ],
+        "sha256": "7222890c542d4ffa5849880decd868eceec2bcaaaa2a515e4cc13f2726dcfd56"
+      },
+      "status": "ok",
+      "center": [
+        24.46,
+        123.0
+      ],
+      "bounds": {
+        "west": 122.8,
+        "east": 123.2,
+        "south": 24.26,
+        "north": 24.66
+      },
+      "topo": {
+        "width": 729,
+        "height": 803,
+        "cells": 585387,
+        "bounds": [
+          122.79940758170662,
+          24.259235064687932,
+          123.20040931282462,
+          24.661246272223764
+        ],
+        "transform": [
+          0.0005500709617530906,
+          0.0,
+          122.79940758170662,
+          0.0,
+          -0.0005006366220869658,
+          24.661246272223764
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 1458,
+        "spacingApprox": [
+          55.73808475162055,
+          55.73086877072103
+        ]
+      },
+      "mask": {
+        "width": 729,
+        "height": 803,
+        "cells": 585387,
+        "bounds": [
+          122.79940758170662,
+          24.259235064687932,
+          123.20040931282462,
+          24.661246272223764
+        ],
+        "transform": [
+          0.0005500709617530906,
+          0.0,
+          122.79940758170662,
+          0.0,
+          -0.0005006366220869658,
+          24.661246272223764
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 555752,
+        "spacingApprox": [
+          55.73808475162055,
+          55.73086877072103
+        ]
+      },
+      "requestedSpacingMeters": 100,
+      "actualSpacingMeters": [
+        55.73808475162055,
+        55.73086877072103
+      ],
+      "waterCells": 569808,
+      "waterDepthRangeM": [
+        0.0077872308902442455,
+        1419.586669921875
+      ],
+      "highResolutionMaskFinite": 29531,
+      "highResolutionMarineCells": 20930,
+      "highResolutionMarinePercent": 3.673167101900991,
+      "differenceFromExisting": {
+        "allMarine": {
+          "n": 569808,
+          "biasM": 0.7881433806752789,
+          "rmseM": 20.98093716869766,
+          "absP50M": 8.234719899521338,
+          "absP95M": 44.30606856305218,
+          "absMaxM": 275.33348443883915
+        },
+        "contributed": {
+          "n": 20930,
+          "biasM": 4.104797605757798,
+          "rmseM": 45.7849198980062,
+          "absP50M": 20.94601480233598,
+          "absP95M": 99.92714126255028,
+          "absMaxM": 255.54479698189994
+        },
+        "background": {
+          "n": 548878,
+          "biasM": 0.6616716092962528,
+          "rmseM": 19.41778362484202,
+          "absP50M": 7.947645576235516,
+          "absP95M": 41.54763933412115,
+          "absMaxM": 275.33348443883915
+        }
+      },
+      "packedBytes": 1243948,
+      "packedSha256": "8f6b49b626163bf32797135425c05130d83830cb32d582b23736799dbe10a07a",
+      "sourceSha256": "86b07feeb60fdc1d90568a36c4b327cb9da76f5a3fdbcff02248e4b5900e0f53",
+      "topoMaskSha256": "e74efaddff85b5471c8e0fdd43b10036971b63f791f1fb83f1b6a98cee5147fd",
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=122.8&east=123.2&south=24.26&north=24.66&layer=topo&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2345130,
+          "seconds": 3.024,
+          "sha256": "86b07feeb60fdc1d90568a36c4b327cb9da76f5a3fdbcff02248e4b5900e0f53",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=122.8&east=123.2&south=24.26&north=24.66&layer=topo-mask&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2345130,
+          "seconds": 2.641,
+          "sha256": "e74efaddff85b5471c8e0fdd43b10036971b63f791f1fb83f1b6a98cee5147fd",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ]
+    },
+    {
+      "id": "minamidaito-narrow",
+      "name": "南大東島・狭域",
+      "baseline": {
+        "id": "daito",
+        "gridMeters": [
+          880.9187582926606,
+          880.8423102405773
+        ],
+        "sha256": "040dd3f9ff47523c023d9034b7be41adb59c2ee749a092f5dccedfd318bb6878"
+      },
+      "status": "ok",
+      "center": [
+        25.8,
+        131.2
+      ],
+      "bounds": {
+        "west": 131.0,
+        "east": 131.4,
+        "south": 25.6,
+        "north": 26.0
+      },
+      "topo": {
+        "width": 730,
+        "height": 810,
+        "cells": 591300,
+        "bounds": [
+          130.99960289472415,
+          25.59967312620492,
+          131.40115394121335,
+          26.00075986230179
+        ],
+        "transform": [
+          0.0005500699266975308,
+          0.0,
+          130.99960289472415,
+          0.0,
+          -0.0004951688099961357,
+          26.00075986230179
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 2190,
+        "spacingApprox": [
+          55.1298246936159,
+          55.12219192876983
+        ]
+      },
+      "mask": {
+        "width": 730,
+        "height": 810,
+        "cells": 591300,
+        "bounds": [
+          130.99960289472415,
+          25.59967312620492,
+          131.40115394121335,
+          26.00075986230179
+        ],
+        "transform": [
+          0.0005500699266975308,
+          0.0,
+          130.99960289472415,
+          0.0,
+          -0.0004951688099961357,
+          26.00075986230179
+        ],
+        "dtype": "float32",
+        "nodata": null,
+        "missing": 578754,
+        "spacingApprox": [
+          55.1298246936159,
+          55.12219192876983
+        ]
+      },
+      "requestedSpacingMeters": 100,
+      "actualSpacingMeters": [
+        55.1298246936159,
+        55.12219192876983
+      ],
+      "waterCells": 572058,
+      "waterDepthRangeM": [
+        0.018872149288654327,
+        4595.783203125
+      ],
+      "highResolutionMaskFinite": 12546,
+      "highResolutionMarineCells": 0,
+      "highResolutionMarinePercent": 0.0,
+      "differenceFromExisting": {
+        "allMarine": {
+          "n": 572058,
+          "biasM": 8.54747521204352,
+          "rmseM": 44.923993721058146,
+          "absP50M": 18.653701500938496,
+          "absP95M": 102.76481033143817,
+          "absMaxM": 568.7661808330837
+        },
+        "contributed": {
+          "n": 0
+        },
+        "background": {
+          "n": 572058,
+          "biasM": 8.54747521204352,
+          "rmseM": 44.923993721058146,
+          "absP50M": 18.653701500938496,
+          "absP95M": 102.76481033143817,
+          "absMaxM": 568.7661808330837
+        }
+      },
+      "packedBytes": 1256513,
+      "packedSha256": "ce845c354b5bd8f7c99dbb430af1731088f4fd78304662a6681c95c87f12c91c",
+      "sourceSha256": "54c1ff5274bbf01bf0ed2ff50dfd112f71838ab119a3dd86adf3fc4b3ce959f9",
+      "topoMaskSha256": "bbf16b1192b99183bdeeecf8eba6ef606cbc4c0f4c3f41ac7995d348253b6fdd",
+      "requests": [
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=131.0&east=131.4&south=25.6&north=26.0&layer=topo&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2368806,
+          "seconds": 2.794,
+          "sha256": "54c1ff5274bbf01bf0ed2ff50dfd112f71838ab119a3dd86adf3fc4b3ce959f9",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+        },
+        {
+          "url": "https://www.gmrt.org/services/GridServer?west=131.0&east=131.4&south=25.6&north=26.0&layer=topo-mask&format=geotiff&mresolution=100",
+          "status": 200,
+          "bytes": 2368806,
+          "seconds": 2.598,
+          "sha256": "bbf16b1192b99183bdeeecf8eba6ef606cbc4c0f4c3f41ac7995d348253b6fdd",
+          "filename": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+        }
+      ]
+    }
+  ],
+  "successful": 9,
+  "failed": 0,
+  "packedBytes": 11211595,
+  "totalTiffBytes": 42271700
+}

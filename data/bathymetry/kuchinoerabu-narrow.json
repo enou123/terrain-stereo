@@ -1,0 +1,69 @@
+{
+  "format": "gmrt-int16-mask-v1",
+  "id": "kuchinoerabu-narrow",
+  "name": "口永良部島・狭域",
+  "width": 729,
+  "height": 846,
+  "lon0": 129.99957275390625,
+  "lat0": 30.66012330311923,
+  "dx": 0.0005500709617530906,
+  "dy": -0.0004740610956644148,
+  "nodata": -32768,
+  "file": "kuchinoerabu-narrow-gmrt-4.5.0.bin",
+  "bytes": 1310560,
+  "sha256": "950ef93a8f83f06dfb801c5c72a5b33aca03109dd0b0101a77bba43a7bf59323",
+  "sourceSha256": "28b4ab33f2f3505476e9ca8a3c2e83ce2031438eaf5b29b1728a6fd1aaa4ecac",
+  "maskSourceSha256": "5c42be02168b2e109ad5060da4ed3b3a878aff9f7986a151c8243cb80de2e905",
+  "sourceVersion": "GMRT v4.5.0 (response filename, 2026-10)",
+  "baseSource": "GMRT GridServer topo product; background edition is not stated by this GridServer page. topo-mask records higher-resolution marine contributions.",
+  "retrievedAt": "2026-10-11T06:25:57.540386+00:00",
+  "requestedBounds": {
+    "west": 130.0,
+    "east": 130.4,
+    "south": 30.26,
+    "north": 30.66
+  },
+  "actualRasterBounds": [
+    129.99929771842537,
+    30.259304646734968,
+    130.40029944954338,
+    30.660360333667064
+  ],
+  "requestedSpacingMeters": 100,
+  "actualSpacingMeters": [
+    52.78268820140505,
+    52.772481169362656
+  ],
+  "depthScaleMax": 3000,
+  "quantizationMeters": 1,
+  "license": "CC BY 4.0",
+  "citation": "Ryan et al. (2009), doi:10.1029/2008GC002332; GMRT data doi:10.1594/IEDA.100001",
+  "termsUrl": "https://www.gmrt.org/about/terms_of_use.php",
+  "sourceUrl": "https://www.gmrt.org/services/GridServer?west=130.0&east=130.4&south=30.26&north=30.66&layer=topo&format=geotiff&mresolution=100",
+  "maskSourceUrl": "https://www.gmrt.org/services/GridServer?west=130.0&east=130.4&south=30.26&north=30.66&layer=topo-mask&format=geotiff&mresolution=100",
+  "minimum": -666.646484375,
+  "maximum": 848.6488647460938,
+  "seaMinimum": -666.646484375,
+  "seaMaximum": -0.0736607164144516,
+  "missingCount": 1458,
+  "highResolutionContributionCount": 16407,
+  "marineHighResolutionContributionCount": 0,
+  "requests": [
+    {
+      "url": "https://www.gmrt.org/services/GridServer?west=130.0&east=130.4&south=30.26&north=30.66&layer=topo&format=geotiff&mresolution=100",
+      "status": 200,
+      "bytes": 2470686,
+      "seconds": 2.988,
+      "sha256": "28b4ab33f2f3505476e9ca8a3c2e83ce2031438eaf5b29b1728a6fd1aaa4ecac",
+      "filename": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+    },
+    {
+      "url": "https://www.gmrt.org/services/GridServer?west=130.0&east=130.4&south=30.26&north=30.66&layer=topo-mask&format=geotiff&mresolution=100",
+      "status": 200,
+      "bytes": 2470686,
+      "seconds": 2.583,
+      "sha256": "5c42be02168b2e109ad5060da4ed3b3a878aff9f7986a151c8243cb80de2e905",
+      "filename": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+    }
+  ]
+}

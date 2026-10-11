@@ -1,0 +1,69 @@
+{
+  "format": "gmrt-int16-mask-v1",
+  "id": "hachijo-narrow",
+  "name": "八丈島・狭域",
+  "width": 731,
+  "height": 870,
+  "lon0": 139.6593017578125,
+  "lat0": 33.19043247913693,
+  "dx": 0.0005500688944777397,
+  "dy": -0.0004612761411122363,
+  "nodata": -32768,
+  "file": "hachijo-narrow-gmrt-4.5.0.bin",
+  "bytes": 1351437,
+  "sha256": "e1d10e6aa9fa606e020698c9091e43009e2626e6858bb411fa45212f0b1612c7",
+  "sourceSha256": "b2b3a2b9733e594f2ab4439f51bbb8d660741f41da10da76cfdd34b87cb7e810",
+  "maskSourceSha256": "aa708dbfb9c332a2efff01da430d2e9af7e31a26950e74e242a354ebf2989902",
+  "sourceVersion": "GMRT v4.5.0 (response filename, 2026-10)",
+  "baseSource": "GMRT GridServer topo product; background edition is not stated by this GridServer page. topo-mask records higher-resolution marine contributions.",
+  "retrievedAt": "2026-10-11T06:25:57.540386+00:00",
+  "requestedBounds": {
+    "west": 139.66,
+    "east": 140.06,
+    "south": 32.79,
+    "north": 33.19
+  },
+  "actualRasterBounds": [
+    139.65902672336526,
+    32.78935287443984,
+    140.0611270852285,
+    33.190663117207485
+  ],
+  "requestedSpacingMeters": 100,
+  "actualSpacingMeters": [
+    51.360691518099586,
+    51.34926002861415
+  ],
+  "depthScaleMax": 2000,
+  "quantizationMeters": 1,
+  "license": "CC BY 4.0",
+  "citation": "Ryan et al. (2009), doi:10.1029/2008GC002332; GMRT data doi:10.1594/IEDA.100001",
+  "termsUrl": "https://www.gmrt.org/about/terms_of_use.php",
+  "sourceUrl": "https://www.gmrt.org/services/GridServer?west=139.66&east=140.06&south=32.79&north=33.19&layer=topo&format=geotiff&mresolution=100",
+  "maskSourceUrl": "https://www.gmrt.org/services/GridServer?west=139.66&east=140.06&south=32.79&north=33.19&layer=topo-mask&format=geotiff&mresolution=100",
+  "minimum": -1676.2611083984375,
+  "maximum": 829.879150390625,
+  "seaMinimum": -1676.2611083984375,
+  "seaMaximum": -0.02531091868877411,
+  "missingCount": 2193,
+  "highResolutionContributionCount": 61770,
+  "marineHighResolutionContributionCount": 35298,
+  "requests": [
+    {
+      "url": "https://www.gmrt.org/services/GridServer?west=139.66&east=140.06&south=32.79&north=33.19&layer=topo&format=geotiff&mresolution=100",
+      "status": 200,
+      "bytes": 2547726,
+      "seconds": 3.374,
+      "sha256": "b2b3a2b9733e594f2ab4439f51bbb8d660741f41da10da76cfdd34b87cb7e810",
+      "filename": "attachment; filename=GMRTv4_5_0_20261011topo.tif"
+    },
+    {
+      "url": "https://www.gmrt.org/services/GridServer?west=139.66&east=140.06&south=32.79&north=33.19&layer=topo-mask&format=geotiff&mresolution=100",
+      "status": 200,
+      "bytes": 2547726,
+      "seconds": 3.04,
+      "sha256": "aa708dbfb9c332a2efff01da430d2e9af7e31a26950e74e242a354ebf2989902",
+      "filename": "attachment; filename=GMRTv4_5_0_20261011topo-mask.tif"
+    }
+  ]
+}
