@@ -6,7 +6,7 @@ const view = {
   location: { latitude: 35.3606, longitude: 138.7274, zoom: 12 },
   camera: { yaw: -1.2173, pitch: 1.1, distance: 13.25, target: [3.4, 2.1, -4.5] },
   exaggeration: 2.3, mode: 'cross', quality: 'high', surface: 'photo', strength: 1.4,
-  bathymetry:false, contours: true, contourInterval:20, sunAzimuth: 250, sunAltitude: 48
+  bathymetry:false, depthScaleMax:1500, contours: true, contourInterval:20, sunAzimuth: 250, sunAltitude: 48
 };
 
 test('shared view URL round trips location, camera, and display settings', () => {
@@ -29,6 +29,13 @@ test('shared view parameters are clamped and invalid choices use safe defaults',
   assert.equal(parsed.exaggeration, .5);
   assert.equal(parsed.mode, 'mono'); assert.equal(parsed.quality, 'standard'); assert.equal(parsed.surface, 'elevation');
   assert.equal(parsed.strength, 2); assert.equal(parsed.contours, false); assert.equal(parsed.sunAzimuth, 0); assert.equal(parsed.sunAltitude, 85);
+});
+
+test('old links omit the optional seabed color scale and new links restore it',()=>{
+ assert.equal(readSharedView('?sea=1').depthScaleMax,undefined);
+ const parsed=readSharedView(new URL(createShareUrl('https://example.test/',{...view,depthScaleMax:3250})).search);
+ assert.equal(parsed.depthScaleMax,3250);
+ assert.equal(readSharedView('?depthScale=99999').depthScaleMax,10000);
 });
 
 test('shared geology surface is restored as a valid surface', () => {

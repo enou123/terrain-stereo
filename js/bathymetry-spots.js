@@ -37,7 +37,7 @@ export const BATHYMETRY_SPOTS=Object.freeze([
   place('sea-izu-bonin-wide','伊豆・小笠原諸島の広域海底','伊豆・小笠原諸島',['regionalSeabed','underseaRelief'],31.0,141.3,6,1.2,10000,['izu-north-north','izu-north-south','izu-south'],'伊豆諸島から小笠原方面までの島列と海底の広域的な起伏を眺めます。',['島列に沿う海底の高まり','島列の東側に続く深い海域']),
   place('sea-izu-bonin-trench','伊豆・小笠原海溝周辺','伊豆・小笠原諸島',['trench','regionalSeabed'],29.6,145.1,6,1.1,10000,['izu-south'],'海溝付近の長く連なる水深変化を広域で観察します。',['海底が深くなる帯状の部分','海溝沿い・横断方向の水深差']),
 
-  place('sea-kikai-caldera','鬼界カルデラ・薩摩硫黄島沖','トカラ・奄美',['marineVolcano','underseaRelief'],30.78,130.28,9,1.8,5000,['tokara-amami'],'薩摩硫黄島周辺の島と海底の起伏を見ます。表示だけでカルデラ縁の位置や地下の連続性を断定しません。',['硫黄島近くの浅い海底','沖合へ向かう斜面']),
+  place('sea-kikai-caldera','鬼界カルデラ・薩摩硫黄島沖','トカラ・奄美',['marineVolcano','underseaRelief'],30.78,130.28,9,1.8,1500,['tokara-amami'],'薩摩硫黄島周辺の島と海底の起伏を見ます。表示だけでカルデラ縁の位置や地下の連続性を断定しません。',['硫黄島近くの浅い海底','沖合へ向かう斜面']),
   place('sea-kuchinoerabu','口永良部島と周辺海底','トカラ・奄美',['coastalSeabed','marineVolcano'],30.46,130.20,10,1.8,3000,['tokara-amami'],'島の火山地形と海底斜面を比べます。噴火履歴や火口の解釈は気象庁資料と合わせて確認してください。',['島の高い部分から海岸への斜面','島の周囲で水深が深まる方向']),
   place('sea-suwanose','諏訪之瀬島と周辺海底','トカラ・奄美',['coastalSeabed','marineVolcano'],29.64,129.72,10,1.8,3000,['tokara-amami'],'火山島の陸上斜面と海中へ沈む斜面を続けて観察します。',['島の周囲の等深線状の起伏','沖合への深まり']),
   place('sea-nakanoshima','中之島とトカラ列島の海底','トカラ・奄美',['coastalSeabed','marineVolcano'],29.86,129.86,10,1.8,3000,['tokara-amami'],'島々の間の海底がどのように上下するかを観察します。',['島の間の鞍部状の地形','島の周囲の深まり']),

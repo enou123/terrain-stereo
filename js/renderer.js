@@ -1,9 +1,9 @@
-import { contourInterval } from './contours.js?v=0.38.0';
-import { lookAt } from './math.js?v=0.38.0';
-import { ObservationOverlay } from './observation.js?v=0.38.0';
-import { fitMeshPositions } from './mesh.js?v=0.38.0';
-import { stereoCamera } from './stereo.js?v=0.38.0';
-import { OrbitControls } from './controls.js?v=0.38.0';
+import { contourInterval } from './contours.js?v=0.39.0';
+import { lookAt } from './math.js?v=0.39.0';
+import { ObservationOverlay } from './observation.js?v=0.39.0';
+import { fitMeshPositions } from './mesh.js?v=0.39.0';
+import { stereoCamera } from './stereo.js?v=0.39.0';
+import { OrbitControls } from './controls.js?v=0.39.0';
 const vertexSource = `
 attribute vec3 aPosition;
 attribute vec3 aNormal;
@@ -48,7 +48,9 @@ varying float vSeabed;
 void main() {
   float light = max(dot(normalize(vNormal), normalize(uSunDirection)), 0.0);
   vec3 color = mix(vColor, vec3(0.68), uShading) * (0.38 + 0.78 * light);
-  if (vSeabed > 0.5) color = vColor * (0.55 + 0.65 * light);
+  // Keep the sun-facing maximum unchanged while deepening the shaded slopes
+  // so ridges, canyons and trench walls remain legible in broad sea areas.
+  if (vSeabed > 0.5) color = vColor * (0.42 + 0.78 * light);
   if (uTextureEnabled > 0.5 && vSeabed <= 0.5) {
     vec4 texel = texture2D(uTexture, vUV);
     color = mix(color, texel.rgb * (0.65 + 0.35 * light), texel.a);

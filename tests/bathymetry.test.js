@@ -44,9 +44,20 @@ test('seabed depth palette has shared exact stops and clamps at 2000m',async()=>
  const {SEABED_COLOR_STOPS,seabedColorAtDepth}=await import('../js/mesh.js');
  assert.equal(SEABED_COLOR_STOPS.length,4);
  assert.deepEqual(seabedColorAtDepth(0),SEABED_COLOR_STOPS[0]);
- assert.deepEqual(seabedColorAtDepth(2000).map(v=>Math.round(v*255)),[20,43,89]);
+ assert.deepEqual(seabedColorAtDepth(2000).map(v=>Math.round(v*255)),[11,28,69]);
  assert.notDeepEqual(seabedColorAtDepth(8000,10000),seabedColorAtDepth(2000,10000));
- assert.deepEqual(seabedColorAtDepth(2000).map(v=>Math.round(v*255)),[20,43,89]);
+ assert.deepEqual(seabedColorAtDepth(2000).map(v=>Math.round(v*255)),[11,28,69]);
+});
+test('recommended depth color scale changes only display coloring, never the measured bathymetry',()=>{
+ const size=9,heights=new Float32Array(size*size).fill(NaN);
+ const land={size,heights,spacing:1.37,min:0,max:0,location:{latitude:32.457,longitude:139.762,zoom:12}};
+ const base=mergeBathymetry(land,grid),recommended=mergeBathymetry(land,grid,1500);
+ assert.equal(base.bathymetry.depthScaleMax,2000);assert.equal(recommended.bathymetry.depthScaleMax,1500);
+ assert.deepEqual(recommended.heights,base.heights);
+ const shallow=base.heights.findIndex(h=>h<0&&h>-1000);assert.notEqual(shallow,-1);
+ const baseColor=createMesh(base,1).colors.slice(shallow*3,shallow*3+3);
+ const recommendedColor=createMesh(recommended,1).colors.slice(shallow*3,shallow*3+3);
+ assert.notDeepEqual(recommendedColor,baseColor);
 });
 test('wide GMRT snapshot covers both island centers and bathymetryRegion chooses narrow Aogashima grid when possible',()=>{
  const wide=JSON.parse(readFileSync(new URL('../data/bathymetry/hachijo-aogashima-gmrt-4.5.0.json',import.meta.url)));

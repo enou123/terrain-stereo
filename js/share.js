@@ -1,4 +1,4 @@
-import { contourInterval } from './contours.js?v=0.38.0';
+import { contourInterval } from './contours.js?v=0.39.0';
 const MODES = new Set(['mono', 'parallel', 'cross', 'anaglyph']);
 const QUALITIES = new Set(['standard', 'high', 'ultra']);
 const SURFACES = new Set(['elevation', 'shading', 'map', 'photo', 'geology']);
@@ -10,10 +10,10 @@ function number(params, key, fallback, min, max) {
 
 export function readSharedView(search) {
   const params = new URLSearchParams(search);
-  if (!['lat', 'lon', 'z', 'yaw', 'pitch', 'dist', 'tx', 'ty', 'tz', 'h', 'mode', 'quality', 'surface', 'strength', 'contours', 'ci', 'sun', 'alt', 'sea'].some(key => params.has(key))) return null;
+  if (!['lat', 'lon', 'z', 'yaw', 'pitch', 'dist', 'tx', 'ty', 'tz', 'h', 'mode', 'quality', 'surface', 'strength', 'contours', 'ci', 'sun', 'alt', 'sea', 'depthScale'].some(key => params.has(key))) return null;
   const mode = params.get('mode'), quality = params.get('quality'), surface = params.get('surface');
   const sun = params.get('sun'), altitude = params.get('alt');
-  return {
+  const view={
     location: {
       latitude: number(params, 'lat', 33.767, 20, 46),
       longitude: number(params, 'lon', 133.115, 122, 154),
@@ -36,6 +36,8 @@ export function readSharedView(search) {
     sunAzimuth: number(params, 'sun', 315, 0, 359),
     sunAltitude: number(params, 'alt', 35, 5, 85)
   };
+  if(params.has('depthScale'))view.depthScaleMax=number(params,'depthScale',null,100,10000);
+  return view;
 }
 
 export function createShareUrl(base, state) {
@@ -48,6 +50,7 @@ export function createShareUrl(base, state) {
   add('h', state.exaggeration, 1); params.set('mode', state.mode); params.set('quality', state.quality);
   params.set('surface', state.surface); add('strength', state.strength, 1);
   if(state.bathymetry)params.set('sea','1');
+  if(Number.isFinite(state.depthScaleMax)&&state.depthScaleMax>0)add('depthScale',state.depthScaleMax,0);
   params.set('contours', state.contours ? '1' : '0'); params.set('ci', String(contourInterval(state.contourInterval))); add('sun', state.sunAzimuth, 0); add('alt', state.sunAltitude, 0);
   url.search = params.toString();
   url.hash = '';

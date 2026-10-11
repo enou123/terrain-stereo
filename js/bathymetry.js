@@ -1,5 +1,5 @@
-import { worldPixel } from './elevation.js?v=0.38.0';
-import { BATHYMETRY_REGIONS } from './bathymetry-regions.js?v=0.38.0';
+import { worldPixel } from './elevation.js?v=0.39.0';
+import { BATHYMETRY_REGIONS } from './bathymetry-regions.js?v=0.39.0';
 
 const REGION_CACHE_MAX_BYTES=8*1024*1024;
 const REGION_CACHE_MAX_COUNT=8;
@@ -117,7 +117,7 @@ export function sampleBathymetry(source,latitude,longitude){
   return {...fine,height:coarse.height*(1-weight)+fine.height*weight,contribution:fine.contribution&&coarse.contribution};
 }
 
-export function mergeBathymetry(land,source){
+export function mergeBathymetry(land,source,depthScaleMaxOverride=null){
   const grids=source?.grids||[source];
   const heights=land.heights.slice(),seaMask=new Float32Array(heights.length);
   const [cx,cy]=worldPixel(land.location.latitude,land.location.longitude,land.location.zoom);
@@ -138,7 +138,8 @@ export function mergeBathymetry(land,source){
     for(const ids of [[i,i+land.size,i+1],[i+1,i+land.size,i+land.size+1]])if(ids.every(j=>Number.isFinite(land.heights[j])))for(const j of ids){fitMin=Math.min(fitMin,land.heights[j]);fitMax=Math.max(fitMax,land.heights[j]);}
   }
   if(!Number.isFinite(fitMin))fitMin=fitMax=0;
-  const depthScaleMax=Math.max(...grids.map(g=>g.metadata.depthScaleMax||2000));
+  const regionalDepthScale=Math.max(...grids.map(g=>g.metadata.depthScaleMax||2000));
+  const depthScaleMax=Number.isFinite(depthScaleMaxOverride)&&depthScaleMaxOverride>0?depthScaleMaxOverride:regionalDepthScale;
   const regionSummaries=grids.map(g=>({id:g.metadata.id,name:g.metadata.name,spacing:g.metadata.actualSpacingMeters,contributionCount:g.metadata.highResolutionContributionCount||0}));
   return {...land,heights,seaMask,min,max,landData:land,fitHeightRange:[fitMin,fitMax],bathymetry:{metadata:source?.metadata||grids[0]?.metadata,grids:regionSummaries,depthScaleMax,stats:source?.stats||{},seaCount,supplementLandCount,contributionCount,seaMin,seaMax}};
 }
